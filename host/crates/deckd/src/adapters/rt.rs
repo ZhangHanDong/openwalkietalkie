@@ -307,7 +307,7 @@ impl Adapters {
         }
     }
 
-    /// Peer inbox metadata, never a transport for operator orders.
+    /// The inbox the core posts an order to, if the agent has one.
     #[must_use]
     pub fn inbox(&self, agent: &AgentId) -> Option<crate::inbox::Inbox> {
         self.inboxes.lock().ok()?.get(agent).cloned()

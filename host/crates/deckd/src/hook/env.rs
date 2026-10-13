@@ -19,8 +19,8 @@
 //! session's own message inbox (cross-session messaging, Claude Code
 //! v2.1.224+): the Unix socket the session reads peer messages from and the
 //! per-session token that makes a post from this daemon count as the
-//! session's own child. These remain peer-messaging metadata; spoken
-//! orders use guarded terminal input (§5.5). The token is a secret
+//! session's own child. They are how a spoken order reaches a Claude
+//! session without typing into its terminal (§5.5). The token is a secret
 //! and is treated as one: the daemon keeps it in memory, never in a
 //! snapshot, an event or a log line.
 use std::collections::BTreeMap;

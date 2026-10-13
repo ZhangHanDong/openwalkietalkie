@@ -2317,7 +2317,16 @@ mod tests {
         assert!(knock > 10.0, "the chime is a 220 Hz knock: {knock} dB");
         let stats = out.stats();
         assert_eq!((stats.spurts, stats.dropped, stats.cut), (1, 0, 0));
-        assert!(faults.take().is_empty(), "no xrun");
+        // A shared CI runner can deschedule the speaker beyond MAX_BEHIND.
+        // The pacer reports that as an xrun without dropping queued audio;
+        // the frame, sample and spurt assertions above still require delivery.
+        // Its timing and stall recovery are checked with explicit instants in
+        // the Pacer test, independently of this threaded integration test.
+        let faults = faults.take();
+        assert!(
+            faults.iter().all(|fault| *fault == Fault::Xrun),
+            "unexpected stream faults: {faults:?}"
+        );
     }
 
     /// `voice.test`'s path with `transport = "ble"`: the core queues

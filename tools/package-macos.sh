@@ -130,6 +130,10 @@ install -m 644 "$packaging/$label.plist" "$agents/$label.plist"
 ditto "$sparkle_root/Sparkle.framework" "$frameworks/Sparkle.framework"
 install -m 644 "$sparkle_root/LICENSE" "$resources/licenses/Sparkle-LICENSE.txt"
 install -m 644 "$root/LICENSE" "$resources/licenses/OpenWalkieTalkie-LICENSE.txt"
+install -m 644 "$root/host/crates/openwalkietalkie-app/assets/fonts/OFL.txt" "$resources/licenses/Geist-OFL.txt"
+install -m 644 "$root/assets/fonts/OFL.txt" "$resources/licenses/NotoSans-OFL.txt"
+install -m 644 "$root/assets/fonts/NotoSansMono-OFL.txt" "$resources/licenses/NotoSansMono-OFL.txt"
+install -m 644 "$root/assets/lucide/LICENSE" "$resources/licenses/Lucide-LICENSE.txt"
 # Each release carries both board images. The daemon verifies the manifest
 # hash again before using a bundled image.
 firmware_dir=${OWT_FIRMWARE_DIR:-$root/dist/firmware}

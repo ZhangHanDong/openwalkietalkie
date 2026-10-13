@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 66] = [
+const DECK_SCENES: [&str; 70] = [
     "roster",
     "roster-page2",
     "roster-offline",
@@ -43,6 +43,10 @@ const DECK_SCENES: [&str; 66] = [
     "channel-rich-chat",
     "channel-tools",
     "channel-tool-open",
+    "workflow",
+    "workflow-complete",
+    "workflow-tool-open",
+    "workflow-question",
     "channel-gone",
     "card-question",
     "card-question-sent",
@@ -197,6 +201,37 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 ui.agents.reply_top = 0;
             }
         }
+        "workflow" | "workflow-complete" | "workflow-tool-open" | "workflow-question" => {
+            let agent = &mut ui.deck.agents[0];
+            agent.has_card = scene == "workflow-question";
+            agent.name.set("Workflow");
+            agent.state = if scene == "workflow-complete" { deck::msg::AgentState::Ready }
+                else if agent.has_card { deck::msg::AgentState::Question } else { deck::msg::AgentState::Working };
+            agent.last_reply.set("Workflow");
+            agent.reply_kind = deck::msg::DocKind::Workflow;
+            agent.reply_rev = 1;
+            agent.reply.id = 1;
+            agent.reply.font = deck::msg::DocFont::RichRow;
+            let lines: &[&str] = if scene == "workflow-tool-open" { &[
+                "T002Run cargo test · failed", "h0Bash", "c0\u{e000}Ccargo test workflow", "p0One test needs attention.",
+                "c0\u{e000}Sassert_eq!\u{e000}C(done, total);", "p0Expected: 5", "p0Actual: 4", "t003Read workflow.rs · done",
+            ] } else if scene == "workflow-complete" { &[
+                "h0\u{e000}BPlan · 5/5 complete", "w00505", "t040Full plan · 5 steps", "p03. Done: Build the workflow UI", "p04. Done: Verify live updates", "p05. Done: Review the result", "h0\u{e000}BRecent activity", "t001Read agents.rs · done", "t002Run cargo test · done",
+            ] } else { &[
+                "h0\u{e000}BPlan · 3/5 complete", "w00305", "t040Full plan · 5 steps", "p03. Done: Build the workflow UI", "q04. Now: Verify live updates", "p05. Next: Review the result", "h0\u{e000}BRecent activity", "t001Read agents.rs · done", "t002Run cargo test · running",
+            ] };
+            for (slot, text) in agent.reply.lines.iter_mut().zip(lines) { slot.set(text); }
+            if agent.has_card { agent.reply.lines[4].set("q04. Paused: Verify live updates"); }
+            agent.reply.first = 0;
+            agent.reply.held = lines.len() as u8;
+            agent.reply.total = lines.len() as u16;
+            ui.agents.view = AgentsView::Channel;
+            ui.agents.agent = 1;
+            ui.agents.highlight = 1;
+            ui.agents.reply_top = 0;
+            ui.agents.reply_follow = false;
+            ui.global.active_channel = 1;
+        }
         "channel-rich-chat" | "channel-tools" | "channel-tool-open" => {
             let agent = &mut ui.deck.agents[0];
             agent.has_card = false;
@@ -246,6 +281,7 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 ],
             };
             for (slot, text) in agent.reply.lines.iter_mut().zip(lines) { slot.set(text); }
+            if agent.has_card { agent.reply.lines[4].set("q04. Paused: Verify live updates"); }
             agent.reply.first = 0;
             agent.reply.held = lines.len() as u8;
             agent.reply.total = lines.len() as u16;

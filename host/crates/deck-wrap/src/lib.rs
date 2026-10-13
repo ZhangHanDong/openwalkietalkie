@@ -32,7 +32,7 @@ mod deck;
 mod ui;
 mod rich;
 mod syntax;
-pub use rich::{activity_row, tool_disclosure, tool_header, wrap_rich_reply};
+pub use rich::{activity_row, disclosure, tool_disclosure, tool_header, wrap_rich_reply};
 pub use ui::rich::tool as tool_entry;
 
 use deck_proto::{DocFont, DocKind};
@@ -91,7 +91,7 @@ pub fn question_visible(font: DocFont) -> usize {
 pub fn visible(kind: DocKind, font: DocFont) -> usize {
     match kind {
         DocKind::Card => question_visible(font),
-        DocKind::Reply | DocKind::Tr => reply_visible(font),
+        DocKind::Reply | DocKind::Workflow | DocKind::Tr => reply_visible(font),
     }
 }
 
@@ -100,7 +100,7 @@ pub fn visible(kind: DocKind, font: DocFont) -> usize {
 pub fn lane_width(kind: DocKind) -> i32 {
     match kind {
         DocKind::Card => ui::layout::CARD_QUESTION.width(),
-        DocKind::Reply | DocKind::Tr => ui::layout::CHANNEL_REPLY.width(),
+        DocKind::Reply | DocKind::Workflow | DocKind::Tr => ui::layout::CHANNEL_REPLY.width(),
     }
 }
 

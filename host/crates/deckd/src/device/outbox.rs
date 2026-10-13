@@ -336,6 +336,10 @@ impl Outbox {
         match self.in_flight.take() {
             Some(InFlight::Key(key)) => {
                 self.shadow.written.remove(&key);
+                if let Key::DocText(slot, DocKind::Reply | DocKind::Workflow, _) = key {
+                    // Its revision envelope may have been in the same batch.
+                    self.shadow.written.remove(&Key::Reply(slot));
+                }
                 self.entries.entry(key).or_insert(Entry { since: now });
             }
             Some(InFlight::Control(control)) => self.controls.push_front(control),
@@ -378,8 +382,21 @@ impl Outbox {
             // The barrier dumps the view's latest for this key when it gets there.
             return;
         }
+        // A live document can change revision repeatedly while HID is busy.
+        // Keep only its newest window, retaining the oldest enqueue time so
+        // updates cannot postpone it forever. An in-flight frame may finish.
+        let mut since = now;
+        if let Key::DocText(slot, doc, _) = key {
+            self.entries.retain(|old, entry| {
+                if *old != key && super::view::same_document(slot, doc, *old) {
+                    since = since.min(entry.since);
+                    false
+                } else { true }
+            });
+            self.shadow.written.retain(|old, _| *old == key || !super::view::same_document(slot, doc, *old));
+        }
         // Keep-latest: the entry keeps its age, the view holds the content.
-        self.entries.entry(key).or_insert(Entry { since: now });
+        self.entries.entry(key).or_insert(Entry { since });
     }
 
     fn remove(&mut self, key: Key, now: Instant) {
@@ -521,6 +538,29 @@ impl Outbox {
         if !self.framer.has_pending() {
             loop {
                 let (line, origin) = self.next_line(view, now)?;
+                // An aged document can outrank its newly queued revision
+                // envelope. Freeze the pair in the framer so a stream of newer
+                // revisions cannot leave every window rejected by the device.
+                if let HostLine::DocText { slot, doc: DocKind::Reply | DocKind::Workflow, id, .. } = &line {
+                    let parent = Key::Reply(Slot(*slot));
+                    if let Some(envelope @ HostLine::Reply { rev, .. }) = view.get(&parent) {
+                        if rev == id && self.shadow.written.get(&parent) != Some(envelope) {
+                            match self.framer.push_line(envelope) {
+                                Ok(_) => {
+                                    self.shadow.written.insert(parent, envelope.clone());
+                                    self.entries.remove(&parent);
+                                    self.lines_sent += 1;
+                                    self.recent_lines.push_back(now);
+                                }
+                                Err(e) => {
+                                    self.encode_errors += 1;
+                                    tracing::warn!(error = %e, "document revision dropped: cannot encode");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
                 match self.framer.push_line(&line) {
                     Ok(_) => {
                         self.in_flight = origin;
@@ -885,6 +925,76 @@ fn refill(b: &Bucket, now: Instant) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn workflow_windows_keep_their_revision_envelope_during_a_live_stream() {
+        let now = Instant::now();
+        let mut outbox = Outbox::new(PACE_FLOOR, 1);
+        let mut view = DeviceView::new();
+        let mut partial = Vec::new();
+        let mut device_rev = 0;
+        let mut windows = 0;
+        for rev in 1..=1000 {
+            let at = now + PACE_FLOOR * u32::from(rev);
+            put(&mut outbox, &mut view, Key::Reply(Slot(1)), HostLine::Reply {
+                slot: 1, text: "Workflow".into(), rev,
+            }, at);
+            put(&mut outbox, &mut view, Key::DocText(Slot(1), DocKind::Workflow, rev), HostLine::DocText {
+                slot: 1, doc: DocKind::Workflow, id: rev, first: 0, total: 10,
+                font: deck_proto::DocFont::RichRow, lines: vec!["p0A live workflow step".into(); 10],
+            }, at);
+            if let Some(report) = outbox.next_report(&view, at) {
+                partial.extend_from_slice(&report[3..3 + report[2] as usize]);
+                if partial.last() == Some(&b'\n') {
+                    match deck_proto::parse_host_line(&partial[..partial.len() - 1]).unwrap() {
+                        HostLine::Reply { rev, .. } => device_rev = rev,
+                        HostLine::DocText { id, .. } => {
+                            assert_eq!(id, device_rev, "the firmware would reject an unpaired window");
+                            windows += 1;
+                        }
+                        _ => panic!("unexpected stream line"),
+                    }
+                    partial.clear();
+                }
+                outbox.report_written();
+            }
+        }
+        assert!(windows > 50, "continuous updates must not starve the document");
+        assert!(view.len() <= 2);
+        assert!(outbox.entries.len() <= 2);
+
+        // A failure part way through a frozen pair must resend its envelope.
+        outbox.clear_link(now + Duration::from_secs(9));
+        partial.clear();
+        let lines = drain(&mut outbox, &view, now + Duration::from_secs(10));
+        for line in lines {
+            match deck_proto::parse_host_line(line.as_bytes()).unwrap() {
+                HostLine::Reply { rev, .. } => device_rev = rev,
+                HostLine::DocText { id, .. } => assert_eq!(id, device_rev),
+                _ => panic!("unexpected stream line"),
+            }
+        }
+        assert_eq!(device_rev, 1000);
+    }
+
+    #[test]
+    fn workflow_revision_flood_keeps_one_document_and_its_original_queue_age() {
+        let now = Instant::now();
+        let mut outbox = Outbox::new(PACE_FLOOR, 1);
+        let mut view = DeviceView::new();
+        for rev in 1..=1000 {
+            let doc = if rev % 2 == 0 { DocKind::Workflow } else { DocKind::Reply };
+            let key = Key::DocText(Slot(1), doc, rev);
+            let line = HostLine::DocText { slot: 1, doc, id: rev, first: 0, total: 1,
+                font: deck_proto::DocFont::RichRow, lines: vec!["p0Latest step".into()] };
+            put(&mut outbox, &mut view, key, line, now + Duration::from_millis(rev as u64));
+            assert_eq!(view.len(), 1);
+            assert_eq!(outbox.entries.len(), 1);
+            assert_eq!(outbox.entries[&key].since, now + Duration::from_millis(1));
+        }
+        assert!(view.get(&Key::DocText(Slot(1), DocKind::Workflow, 1000)).is_some());
+    }
+
     use deck_model::{AgentState, FaceEntry, FaceId, Kind, SetKey, SyncReason, Template};
 
     fn title(slot: u8, t: &str) -> HostLine {

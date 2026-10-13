@@ -315,6 +315,146 @@ pub fn tool_summary(text: &str) -> (String, String) {
     ("Use".into(), heading.into())
 }
 
+/// The device's compact workflow document. Reserved disclosure indices 64/65
+/// address the plan and older activity; 0..63 still address retained messages.
+/// It shares the chat viewer's font, windowing and syntax-highlighted output.
+pub fn device_lines(
+    agent: &Agent,
+    size: u8,
+    expanded: Option<&std::collections::BTreeSet<String>>,
+) -> (deck_proto::DocFont, Vec<String>) {
+    let open = |key: &str| expanded.is_some_and(|set| set.contains(key));
+    let (font, mut lines) = deck_wrap::wrap_rich_reply("## Workflow", size);
+    if let Some(plan) = agent
+        .workflow
+        .as_ref()
+        .filter(|plan| !plan.steps.is_empty())
+    {
+        lines = deck_wrap::wrap_rich_reply(
+            &format!(
+                "## Plan · {}/{} complete",
+                plan.completed(),
+                plan.steps.len()
+            ),
+            size,
+        )
+        .1;
+        lines.push(format!(
+            "w0{:02x}{:02x}",
+            plan.completed(),
+            plan.steps.len()
+        ));
+        let all = open("workflow:plan");
+        let current = plan
+            .steps
+            .iter()
+            .position(|step| step.status == StepStatus::InProgress)
+            .or_else(|| {
+                plan.steps
+                    .iter()
+                    .position(|step| step.status == StepStatus::Pending)
+            })
+            .unwrap_or(plan.steps.len() - 1);
+        let start = if all {
+            0
+        } else {
+            current
+                .saturating_sub(1)
+                .min(plan.steps.len().saturating_sub(3))
+        };
+        let end = if all {
+            plan.steps.len()
+        } else {
+            (start + 3).min(plan.steps.len())
+        };
+        // Keep the disclosure before the changing content so expanding it
+        // preserves its scroll anchor and reveals the first hidden step.
+        if plan.steps.len() > 3 || plan.explanation.is_some() {
+            lines.push(deck_wrap::disclosure(
+                &format!(
+                    "{} plan · {} steps",
+                    if all { "Compact" } else { "Full" },
+                    plan.steps.len()
+                ),
+                size,
+                64,
+                all,
+            ));
+        }
+        if all {
+            if let Some(text) = &plan.explanation {
+                lines.extend(deck_wrap::wrap_rich_reply(text, size).1);
+            }
+        }
+        for (i, step) in plan.steps.iter().enumerate().take(end).skip(start) {
+            let (prefix, state) = match step.status {
+                StepStatus::Completed => ("", "Done"),
+                StepStatus::InProgress => (
+                    "> ",
+                    if agent.state == AgentState::Working {
+                        "Now"
+                    } else {
+                        "Paused"
+                    },
+                ),
+                StepStatus::Pending => ("", "Next"),
+            };
+            lines.extend(
+                deck_wrap::wrap_rich_reply(
+                    &format!("{prefix}{}. {state}: {}", i + 1, step.step),
+                    size,
+                )
+                .1,
+            );
+        }
+    }
+    let tools = activity(agent);
+    if !tools.is_empty() {
+        lines.extend(deck_wrap::wrap_rich_reply("## Recent activity", size).1);
+        let all = open("workflow:tools");
+        let first = tools.len().saturating_sub(3);
+        if tools.len() > 3 {
+            lines.push(deck_wrap::disclosure(
+                &format!(
+                    "{} tools · {}",
+                    if all { "Recent" } else { "All" },
+                    tools.len()
+                ),
+                size,
+                65,
+                all,
+            ));
+        }
+        for (i, tool) in tools.iter().enumerate() {
+            let expanded = open(&tool.message.message.id);
+            if !all && i < first && tool.status != ActivityStatus::Running && !expanded {
+                continue;
+            }
+            let index = agent
+                .messages
+                .iter()
+                .position(|m| m.message.id == tool.message.message.id)
+                .unwrap_or(0) as u8;
+            let title = format!("{} · {}", tool.title, tool.status.label());
+            // Bound by the real firmware font while preserving stopped/failed status.
+            let row = deck_wrap::tool_header(
+                &title,
+                size,
+                index,
+                expanded,
+                tool.status == ActivityStatus::Running,
+            );
+            lines.push(row);
+            if expanded {
+                lines.extend(deck_wrap::wrap_rich_reply(&tool.message.text, size).1);
+            }
+        }
+    } else if agent.workflow.is_none() {
+        lines.extend(deck_wrap::wrap_rich_reply("Waiting for plan or tool activity.", size).1);
+    }
+    (font, lines)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

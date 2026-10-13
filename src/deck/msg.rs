@@ -116,6 +116,7 @@ impl DocFont {
 pub enum DocKind {
     Card,
     Reply,
+    Workflow,
     Tr,
 }
 

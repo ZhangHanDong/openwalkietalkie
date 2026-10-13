@@ -86,13 +86,25 @@ walkie-talkie channel; one is active at a time.
 - **Channel.** State line, conversation history (SCROLL browses it) and the
   pending card: a Question with exactly two choices shows both as buttons (tap
   answers), other Questions show "Answer · N choices", a Ready shows "Ready
-  summary". ENTER opens the card; LEFT/RIGHT go to the neighbouring agents
+  summary". ENTER opens the card, or switches Chat/Workflow when no card is
+  pending; LEFT/RIGHT go to the neighbouring agents
   (across every page, in roster order); CANCEL goes back to the roster.
   Tool activity occupies one summary row per entry; tap its arrow or label
   to expand the details, and tap again to collapse. Live updates keep that
   choice. The conversation opens at the tail and follows incoming text while
   the end is visible. Scrolling away holds the reading position; scrolling
   back to the end or SHIFT+ENTER resumes following.
+- **Workflow.** Tap **Workflow** in the channel's state row to see live plan
+  progress and recent tool activity. The compact plan shows three steps around
+  the current step; tap **Full plan** for all steps and the explanation.
+  The latest three tools, running tools and expanded tools stay visible;
+  tap a tool for its input/output, including syntax-highlighted code, or
+  **All tools** for older activity. SCROLL browses the view; SHIFT+ENTER returns
+  to the top. Tap **Chat** or press CANCEL to return to the conversation.
+  Pending cards remain accessible and take priority on ENTER. PTT continues
+  to address the selected agent. Progress comes from explicit plan statuses;
+  sessions without a plan show activity without an invented percentage.
+  This view requires both the updated host and device firmware.
 
 - **Question card.** SCROLL chooses; ENTER or a tap confirms under the guard and
   sends `answer`. The card then shows "sent" and locks until the host clears it;

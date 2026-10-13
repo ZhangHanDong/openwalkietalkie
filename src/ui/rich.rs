@@ -25,10 +25,21 @@ pub fn tool(line: &str) -> Option<(u8, bool)> {
     if b.len() < 4 || !matches!(b[0], b't' | b'T') || b[1] != b'0' { return None; }
     let hex = |b: u8| match b { b'0'..=b'9' => Some(b - b'0'), b'a'..=b'f' => Some(b - b'a' + 10), _ => None };
     let index = hex(b[2])? * 16 + hex(b[3])?;
-    (index < 64).then_some((index, b[0] == b'T'))
+    (index <= 65).then_some((index, b[0] == b'T'))
+}
+
+/// A bounded plan progress row, carrying completed/total as two hex bytes.
+pub fn progress(line: &str) -> Option<(u8, u8)> {
+    if !line.starts_with("w0") || line.len() != 6 { return None; }
+    let bytes = line.as_bytes();
+    let hex = |b: u8| (b as char).to_digit(16).map(|n| n as u8);
+    let done = hex(bytes[2])? * 16 + hex(bytes[3])?;
+    let total = hex(bytes[4])? * 16 + hex(bytes[5])?;
+    (total > 0 && total <= 64 && done <= total).then_some((done, total))
 }
 
 pub fn header(line: &str) -> (u8, i32, &str) {
+    if progress(line).is_some() { return (b'w', 0, ""); }
     if tool(line).is_some() { return (line.as_bytes()[0], 24, &line[4..]); }
     let b = line.as_bytes();
     if b.len() >= 2 && matches!(b[0], b'p' | b'h' | b'c' | b'q' | b'r' | b'b') && b[1].is_ascii_digit() {
@@ -75,6 +86,11 @@ pub fn draw(band: &mut Band, base: Font, x: i32, baseline: i32, width: i32, line
     let (kind, indent, body) = header(line);
     let top = baseline - font::ascent(base);
     let height = font::line_height(base);
+    if let Some((done, total)) = progress(line) {
+        fill(band, x, top + height / 2, width, 5, theme::OUTLINE);
+        fill(band, x, top + height / 2, width * done as i32 / total as i32, 5, theme::BLUE);
+        return;
+    }
     let disclosure = tool(line);
     let bg = if kind == b'c' { theme::OUTLINE } else if disclosure.is_some() { theme::CHIP_FILL } else { theme::CANVAS };
     if kind == b'c' || disclosure.is_some() { fill(band, x, top, width, height, bg); }
@@ -111,4 +127,20 @@ pub fn draw(band: &mut Band, base: Font, x: i32, baseline: i32, width: i32, line
         if flags & EMPHASIS != 0 { fill(band, x + pen, baseline + 2, advance, 1, color); }
         pen += advance;
     });
+}
+
+#[cfg(test)]
+mod workflow_tests {
+    use super::*;
+    #[test]
+    fn progress_rows_validate_counts_and_utf8_without_panicking() {
+        assert_eq!(progress("w00004"), Some((0, 4)));
+        assert_eq!(progress("w00404"), Some((4, 4)));
+        for invalid in ["w00504", "w00000", "w000ff", "w0界x", "w0😀", "w0zz01"] {
+            assert_eq!(progress(invalid), None);
+        }
+        assert_eq!(tool("t040Full plan"), Some((64, false)));
+        assert_eq!(tool("T041Recent tools"), Some((65, true)));
+        assert_eq!(tool("t042Invalid"), None);
+    }
 }

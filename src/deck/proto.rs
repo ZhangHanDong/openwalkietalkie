@@ -109,6 +109,7 @@ const fn doc_name(doc: DocKind) -> &'static str {
     match doc {
         DocKind::Card => "c",
         DocKind::Reply => "r",
+        DocKind::Workflow => "w",
         DocKind::Tr => "t",
     }
 }
@@ -120,7 +121,7 @@ const DOC_FONTS: &[(&str, DocFont)] =
 /// one 61-byte report. With `"d":"r"` the longest one encodes to 63 B and
 /// would be dropped by the framer; `"d":"r"` makes it 59.
 const DOC_KINDS: &[(&str, DocKind)] =
-    &[("c", DocKind::Card), ("r", DocKind::Reply), ("t", DocKind::Tr)];
+    &[("c", DocKind::Card), ("r", DocKind::Reply), ("w", DocKind::Workflow), ("t", DocKind::Tr)];
 const TONES: &[(&str, Tone)] = &[
     ("blue", Tone::Blue),
     ("amber", Tone::Amber),

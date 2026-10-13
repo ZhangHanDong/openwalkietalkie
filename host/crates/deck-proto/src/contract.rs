@@ -1512,3 +1512,19 @@ fn styled_lines_survive_the_real_firmware_parser() {
         assert!(matches!(*parsed, HostMsg::DocText { font: f, lines, .. } if f == expected && lines[0].as_str() == line));
     }
 }
+
+#[test]
+fn workflow_windows_and_disclosures_round_trip_through_real_firmware_codec() {
+    let line = HostLine::DocText { slot: 1, doc: DocKind::Workflow, id: 42, first: 0, total: 2,
+        font: DocFont::RichText, lines: vec!["w00205".into(), "t040Full plan · 5 steps".into()] };
+    let bytes = encode(&line).unwrap();
+    assert!(matches!(*fw_parse(&stripped(&bytes)).unwrap(), HostMsg::DocText {
+        doc: msg::DocKind::Workflow, id: 42, line_count: 2, .. }));
+    let bytes = fw_encode(Event::DocLines { agent: 1, doc: msg::DocKind::Workflow, id: 42, first: 0 }, &ui());
+    assert_eq!(parse_device_line(&bytes).unwrap(), DeviceLine::DocLines { slot: 1, doc: DocKind::Workflow, id: 42, first: 0 });
+    for index in [64, 65] {
+        let bytes = fw_encode(Event::Tool { agent: 1, id: 42, index }, &ui());
+        assert_eq!(parse_device_line(&bytes).unwrap(), DeviceLine::Tool { slot: 1, id: 42, index });
+        assert!(bytes.len() <= PAYLOAD_MAX);
+    }
+}

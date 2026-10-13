@@ -259,12 +259,32 @@ pub(super) fn show_roster(ui: &mut UiState, _at_ms: u32) {
     ui.agents.pressed = None;
 }
 
+pub fn reading_doc(ui: &UiState) -> DocKind {
+    ui.deck.agent(ui.agents.agent).map_or(DocKind::Reply, |agent| agent.reply_kind)
+}
+
+fn toggle_workflow(ui: &mut UiState, at_ms: u32, out: &mut Update) {
+    if !online(ui) { return; }
+    let Some(agent) = ui.deck.agent_mut(ui.agents.agent) else { return; };
+    agent.reply_kind = if agent.reply_kind == DocKind::Workflow { DocKind::Reply } else { DocKind::Workflow };
+    agent.reply.forget();
+    let (slot, doc, id) = (agent.id, agent.reply_kind, agent.reply_rev);
+    ui.agents.reply_follow = doc == DocKind::Reply;
+    ui.agents.reply_top = if ui.agents.reply_follow { u16::MAX } else { 0 };
+    ui.agents.tool_pending = None;
+    ui.agents.lines_asked = None;
+    ui.agents.pressed = None;
+    ask_doc_lines(ui, slot, doc, id, ui.agents.reply_top, at_ms, out);
+    out.dirty = true;
+}
+
 /// `agent`'s channel (ENTER, a sibling, a jump whose card is gone, focus).
 pub(super) fn show_channel(ui: &mut UiState, agent: u8, at_ms: u32) {
     ui.agents.view = AgentsView::Channel;
     ui.agents.agent = agent;
-    ui.agents.reply_top = if ui.deck.agent(agent).is_some_and(|a| a.reply.font.rich()) { u16::MAX } else { 0 };
-    ui.agents.reply_follow = true;
+    let workflow = reading_doc(ui) == DocKind::Workflow;
+    ui.agents.reply_top = if !workflow && ui.deck.agent(agent).is_some_and(|a| a.reply.font.rich()) { u16::MAX } else { 0 };
+    ui.agents.reply_follow = !workflow;
     ui.agents.tool_pending = None;
     ui.agents.pressed = None;
     set_highlight(ui, agent);
@@ -482,6 +502,7 @@ fn scroll_reply(ui: &mut UiState, step: i32, at_ms: u32, out: &mut Update) {
     let Some(agent) = ui.deck.agent(agent_slot) else {
         return;
     };
+    let doc = agent.reply_kind;
     let visible = faces::agents::reply_visible(ui, agent);
     let total = faces::agents::reply_lines(ui, agent);
     let (windowed, id, first, end) = (
@@ -494,7 +515,7 @@ fn scroll_reply(ui: &mut UiState, step: i32, at_ms: u32, out: &mut Update) {
     let want = (current as i32 + step).clamp(0, total.saturating_sub(visible) as i32);
     // Reaching the actual document end resumes following, including when
     // the last window still needs to arrive from the host.
-    ui.agents.reply_follow = agent.reply.font.rich() && want as usize + visible >= total;
+    ui.agents.reply_follow = agent.reply_kind == DocKind::Reply && agent.reply.font.rich() && want as usize + visible >= total;
     let shown = faces::agents::reply_clamp(ui, agent, want.max(0) as u16);
     if shown != ui.agents.reply_top {
         ui.agents.reply_top = shown;
@@ -507,12 +528,12 @@ fn scroll_reply(ui: &mut UiState, step: i32, at_ms: u32, out: &mut Update) {
     let want = want.max(0) as usize;
     if ui.agents.reply_follow {
         ui.agents.reply_top = u16::MAX;
-        ask_doc_lines(ui, agent_slot, DocKind::Reply, id, u16::MAX, at_ms, out);
+        ask_doc_lines(ui, agent_slot, doc, id, u16::MAX, at_ms, out);
     } else if let Some(chunk) = next_chunk(want, visible, first, end, total) {
-        ask_doc_lines(ui, agent_slot, DocKind::Reply, id, chunk, at_ms, out);
+        ask_doc_lines(ui, agent_slot, doc, id, chunk, at_ms, out);
     } else if rich {
         // Tell the host where we are reading, even inside the held buffer.
-        ask_doc_lines(ui, agent_slot, DocKind::Reply, id, want as u16, at_ms, out);
+        ask_doc_lines(ui, agent_slot, doc, id, want as u16, at_ms, out);
     }
 }
 
@@ -540,10 +561,10 @@ pub(super) fn on_control(
         if ui.agents.view == AgentsView::Channel && control == Control::Button(Button::Enter, Edge::Press) {
             let slot = ui.agents.agent;
             if let Some(agent) = ui.deck.agent(slot) {
-                let id = agent.reply.id;
-                ui.agents.reply_top = u16::MAX;
-                ui.agents.reply_follow = true;
-                ask_doc_lines(ui, slot, DocKind::Reply, id, u16::MAX, at_ms, out);
+                let (id, doc) = (agent.reply_rev, agent.reply_kind);
+                ui.agents.reply_follow = doc == DocKind::Reply;
+                ui.agents.reply_top = if ui.agents.reply_follow { u16::MAX } else { 0 };
+                ask_doc_lines(ui, slot, doc, id, ui.agents.reply_top, at_ms, out);
                 out.dirty = true;
             }
         }
@@ -576,7 +597,11 @@ pub(super) fn on_control(
             }
         }
         (AgentsView::Channel, Control::Button(Button::Enter, Edge::Press)) => {
-            open_card(ui, ui.agents.agent, at_ms, out);
+            if ui.deck.card(ui.agents.agent).is_some_and(|card| card.open()) {
+                open_card(ui, ui.agents.agent, at_ms, out);
+            } else {
+                toggle_workflow(ui, at_ms, out);
+            }
         }
         (AgentsView::Channel, Control::Button(button @ (Button::Left | Button::Right), Edge::Press)) => {
             let step = if button == Button::Right { 1 } else { -1 };
@@ -587,8 +612,12 @@ pub(super) fn on_control(
             }
         }
         (AgentsView::Channel, Control::Button(Button::Cancel, Edge::Press)) => {
-            show_roster(ui, at_ms);
-            out.dirty = true;
+            if reading_doc(ui) == DocKind::Workflow && online(ui) {
+                toggle_workflow(ui, at_ms, out);
+            } else {
+                show_roster(ui, at_ms);
+                out.dirty = true;
+            }
         }
         (AgentsView::Channel, Control::Wheel(wheel)) => {
             scroll_reply(ui, step(wheel), at_ms, out);
@@ -692,6 +721,9 @@ pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target>
         }
         AgentsView::Channel => {
             if online(ui) {
+                if faces::agents::WORKFLOW_TOGGLE.contains(x, y) {
+                    return Some(Target::tap(faces::agents::WORKFLOW_TOGGLE, 2));
+                }
                 if let Some(agent) = ui.deck.agent(ui.agents.agent).filter(|a| a.reply.font.rich()) {
                     let lane = faces::agents::reply_rect(ui, agent);
                     let lh = crate::ui::font::line_height(faces::agents::doc_face(agent.reply.font));
@@ -776,6 +808,10 @@ pub(super) fn on_touch(
         (AgentsView::Channel, TouchAct::Activate) => {
             ui.agents.pressed = None;
             let agent = ui.agents.agent;
+            if id == 2 {
+                toggle_workflow(ui, at_ms, out);
+                return;
+            }
             if id >= 16 {
                 let (x, y) = target.rect.center();
                 if hit(ui, 0, x, y).is_none_or(|now| now.id != target.id) { return; }
@@ -822,13 +858,20 @@ pub(super) fn on_host(
     out: &mut Update,
 ) {
     validate(ui, Some(fx), at_ms, out);
-    if let HostMsg::DocText { agent, doc: DocKind::Reply, id, font, .. } = msg {
-        if *agent == ui.agents.agent && font.rich() && ui.deck.agent(*agent).is_some_and(|a| a.reply.id == *id) {
+    if matches!(msg, HostMsg::Synced) && ui.agents.view == AgentsView::Channel && reading_doc(ui) == DocKind::Workflow {
+        if let Some(agent) = ui.deck.agent(ui.agents.agent) {
+            let (slot, id) = (agent.id, agent.reply_rev);
+            ui.agents.lines_asked = None;
+            ask_doc_lines(ui, slot, DocKind::Workflow, id, ui.agents.reply_top, at_ms, out);
+        }
+    }
+    if let HostMsg::DocText { agent, doc, id, font, .. } = msg {
+        if *agent == ui.agents.agent && *doc == reading_doc(ui) && matches!(doc, DocKind::Reply | DocKind::Workflow) && font.rich() && ui.deck.agent(*agent).is_some_and(|a| a.reply.id == *id) {
             if ui.agents.tool_pending.is_some_and(|previous| previous != *id) {
                 ui.agents.tool_pending = None;
                 if let Some(owner) = ui.deck.agent(*agent) {
                     let top = faces::agents::reply_clamp(ui, owner, ui.agents.reply_top) as usize;
-                    ui.agents.reply_follow = top + faces::agents::reply_visible(ui, owner) >= owner.reply.total as usize;
+                    ui.agents.reply_follow = *doc == DocKind::Reply && top + faces::agents::reply_visible(ui, owner) >= owner.reply.total as usize;
                     if ui.agents.reply_follow { ask_doc_lines(ui, *agent, DocKind::Reply, *id, u16::MAX, at_ms, out); }
                 }
             }
@@ -933,6 +976,15 @@ fn validate(ui: &mut UiState, fx: Option<&Effects>, at_ms: u32, out: &mut Update
 /// Displayed ages roll over, the unacknowledged-answer timeout, the re-sort.
 pub(super) fn on_tick(ui: &mut UiState, now_ms: u32, out: &mut Update) {
     validate(ui, None, now_ms, out);
+    // A dropped or revision-stale mode request must not leave an empty view.
+    if ui.agents.view == AgentsView::Channel {
+        if let Some(agent) = ui.deck.agent(ui.agents.agent) {
+            if !agent.reply.windowed() && (agent.reply_kind == DocKind::Workflow || ui.agents.lines_asked.is_some()) {
+                let (slot, doc, id) = (agent.id, agent.reply_kind, agent.reply_rev);
+                ask_doc_lines(ui, slot, doc, id, ui.agents.reply_top, now_ms, out);
+            }
+        }
+    }
     for slot in 0..MAX_AGENTS {
         let agent = &ui.deck.agents[slot];
         if agent.present
@@ -1787,6 +1839,46 @@ mod tests {
     }
 
     #[test]
+    fn workflow_switch_is_requested_and_ignores_in_flight_chat_windows() {
+        let mut ui = hosted();
+        show_channel(&mut ui, 3, 100);
+        host(&mut ui, &HostMsg::Reply { agent: 3, text: Text::from_str("Chat"), rev: 1 }, 110);
+        let out = tap(&mut ui, 380, 82, 200);
+        assert!(matches!(events(&out).as_slice(), [Event::DocLines { doc: DocKind::Workflow, id: 1, first: 0, .. }]));
+        let mut window = reply_window(3, 1, 0, 10);
+        host(&mut ui, &window, 250);
+        assert!(!ui.deck.agent(3).unwrap().reply.windowed(), "late chat must not paint the workflow");
+        if let HostMsg::DocText { doc, .. } = &mut window { *doc = DocKind::Workflow; }
+        host(&mut ui, &window, 260);
+        assert!(ui.deck.agent(3).unwrap().reply.windowed());
+        assert_eq!(ui.agents.reply_top, 0, "workflow stays at current steps, not the chat tail");
+        assert!(!ui.agents.reply_follow);
+        let out = press(&mut ui, Button::Cancel, 300);
+        assert!(matches!(events(&out).as_slice(), [Event::DocLines { doc: DocKind::Reply, first: u16::MAX, .. }]));
+        assert_eq!(ui.agents.view, AgentsView::Channel);
+        host(&mut ui, &window, 350);
+        assert!(!ui.deck.agent(3).unwrap().reply.windowed(), "late workflow must not paint chat");
+    }
+
+    #[test]
+    fn workflow_keeps_permission_enter_and_retries_missing_windows() {
+        let mut ui = hosted();
+        show_channel(&mut ui, 1, 100);
+        toggle_workflow(&mut ui, 200, &mut Update::new());
+        let out = press(&mut ui, Button::Enter, 300);
+        assert_eq!(ui.agents.view, AgentsView::Card);
+        assert!(events(&out).is_empty(), "opening the card does not answer it");
+        show_channel(&mut ui, 1, 400);
+        let mut out = Update::new();
+        on_tick(&mut ui, 6000, &mut out);
+        assert!(events(&out).iter().any(|e| matches!(e, Event::DocLines { doc: DocKind::Workflow, .. })));
+        let mut out = Update::new();
+        host(&mut ui, &HostMsg::Synced, 6100);
+        on_host(&mut ui, &HostMsg::Synced, &Effects::new(), 6101, &mut out);
+        assert!(events(&out).iter().any(|e| matches!(e, Event::DocLines { doc: DocKind::Workflow, .. })));
+    }
+
+    #[test]
     fn ready_card_steps_answer_and_enter_with_none_acknowledges() {
         let mut ui = hosted();
         ui.deck.notices[0] = crate::deck::Notice::new(2, 2, CardKind::Ready, 0).filed();
@@ -1805,7 +1897,8 @@ mod tests {
         assert_eq!(out.deck_events().count(), 0);
         assert!(ui.deck.card(2).unwrap().acknowledged);
         assert_eq!((ui.agents.view, ui.deck.notice_count()), (AgentsView::Channel, 0));
-        assert_eq!(press(&mut ui, Button::Enter, 1800).deck_events().count(), 0);
+        assert!(matches!(events(&press(&mut ui, Button::Enter, 1800)).as_slice(),
+            [Event::DocLines { doc: DocKind::Workflow, .. }]));
         assert_eq!(ui.agents.view, AgentsView::Channel, "an acknowledged Ready card does not reopen");
         // Nor does a tap where its button was, or LEFT/RIGHT from another card.
         let (x, y) = layout::CHANNEL_BUTTON.center();

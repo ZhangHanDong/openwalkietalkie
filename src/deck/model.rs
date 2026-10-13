@@ -216,6 +216,8 @@ pub struct Agent {
     /// stays the capped line the `reply` message carries, so a lane with no
     /// window behaves exactly as it did before.
     pub reply: Doc,
+    /// Selected reading mode; chat and workflow share one bounded buffer.
+    pub reply_kind: DocKind,
     /// The `rev` of the reply currently held; a window for an older one is
     /// dropped rather than drawn over the new text.
     pub reply_rev: u16,
@@ -236,6 +238,7 @@ impl Agent {
             title: Text::new(),
             last_reply: Text::new(),
             reply: Doc::new(DocFont::Row),
+            reply_kind: DocKind::Reply,
             reply_rev: 0,
             state_since_ms: 0,
             has_card: false,
@@ -938,7 +941,7 @@ impl Deck {
                         .card
                         .body
                         .merge(*id, *first, *total, *font, lines, *line_count),
-                    DocKind::Reply if owner.reply_rev == *id => owner
+                    DocKind::Reply | DocKind::Workflow if owner.reply_rev == *id && owner.reply_kind == *doc => owner
                         .reply
                         .merge(*id, *first, *total, *font, lines, *line_count),
                     _ => {}
@@ -1157,6 +1160,9 @@ fn clear_agent(agent: &mut Agent) {
     agent.project.clear();
     agent.title.clear();
     agent.last_reply.clear();
+    agent.reply.forget();
+    agent.reply_rev = 0;
+    agent.reply_kind = DocKind::Reply;
     agent.state_since_ms = 0;
     agent.has_card = false;
 }

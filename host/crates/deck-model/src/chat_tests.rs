@@ -246,3 +246,59 @@ fn workflow_content_obeys_snapshot_and_event_permissions() {
     assert_eq!(redact_event(&event, &[Scope::Observe], true).unwrap(), event);
     assert_eq!(redact_event(&event, &[Scope::ObserveContent], false).unwrap(), event);
 }
+
+#[test]
+fn device_workflow_is_opt_in_updates_live_and_survives_resync() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    plan_message(&mut sim, &agent, "plan", "inProgress");
+    assert!(!sim.store.project().iter().any(|op| matches!(op,
+        DeviceOp::Put(_, HostLine::DocText { doc: DocKind::Workflow, .. }))));
+    let rev = sim.store.snapshot().agents[&agent].chat_rev;
+    sim.apply(Command::Device(DeviceLine::DocLines { slot: 1, doc: DocKind::Workflow, id: rev, first: 0 }));
+    let Some(HostLine::DocText { lines, first: 0, .. }) = sim.line(Key::DocText(Slot(1), DocKind::Workflow, rev)) else { panic!("workflow window"); };
+    assert!(lines.iter().any(|line| line == "w00001"));
+    plan_message(&mut sim, &agent, "plan", "completed");
+    let rev = sim.store.snapshot().agents[&agent].chat_rev;
+    let Some(HostLine::DocText { lines, first: 0, .. }) = sim.line(Key::DocText(Slot(1), DocKind::Workflow, rev)) else { panic!("live workflow window"); };
+    assert!(lines.iter().any(|line| line == "w00101"));
+    assert!(sim.store.project().iter().any(|op| matches!(op,
+        DeviceOp::Put(_, HostLine::DocText { doc: DocKind::Workflow, first: 0, .. }))));
+    sim.apply(Command::Device(DeviceLine::DocLines { slot: 1, doc: DocKind::Reply, id: rev, first: u16::MAX }));
+    send(&mut sim, &agent, "a1", ChatRole::Assistant, false, "Finished");
+    assert!(sim.line(Key::DocText(Slot(1), DocKind::Reply, rev)).is_some());
+    assert!(!sim.effects.iter().any(|e| matches!(e, Effect::Device(DeviceOp::Put(_, HostLine::DocText { doc: DocKind::Workflow, .. })))));
+}
+
+#[test]
+fn device_workflow_disclosures_keep_outputs_collapsed_and_reject_stale_taps() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    let plan = workflow::Plan::codex(&serde_json::json!({"plan":(0..8).map(|i|
+        serde_json::json!({"step":format!("Step {i}"), "status":if i < 5 {"completed"} else if i == 5 {"inProgress"} else {"pending"}})).collect::<Vec<_>>()})).unwrap();
+    sim.api(UID, SessionId(1), Request::Reply(ReplySet { agent: agent.clone(), text: plan.text(),
+        message: Some(MessageMeta { id: "p".into(), role: ChatRole::Tool, streaming: false, plan: Some(plan), activity: None }),
+        speak: false, announce: None, lane: None })).unwrap();
+    send(&mut sim, &agent, "t1", ChatRole::Tool, false, "**Bash · failed**\n\n```\ncargo test\n```\n\nprivate output");
+    let rev = sim.store.snapshot().agents[&agent].chat_rev;
+    sim.apply(Command::Device(DeviceLine::DocLines { slot: 1, doc: DocKind::Workflow, id: rev, first: 0 }));
+    let (_, lines) = workflow::device_lines(&sim.store.snapshot().agents[&agent], 0, None);
+    assert!(lines.join(" ").contains("Step 5"));
+    assert!(!lines.join(" ").contains("Step 0"));
+    assert!(!lines.join(" ").contains("private output"));
+    assert!(lines.iter().any(|s| deck_wrap::tool_entry(s) == Some((64, false))));
+    let anchor = lines.iter().position(|s| deck_wrap::tool_entry(s) == Some((64, false))).unwrap();
+    sim.apply(Command::Device(DeviceLine::Tool { slot: 1, id: rev, index: 64 }));
+    let new_rev = sim.store.snapshot().agents[&agent].chat_rev;
+    assert_ne!(new_rev, rev);
+    let full = &sim.store.aux[&agent].expanded_tools;
+    let (_, lines) = workflow::device_lines(&sim.store.snapshot().agents[&agent], 0, Some(full));
+    assert!(lines.join(" ").contains("Step 0"));
+    assert_eq!(lines.iter().position(|s| deck_wrap::tool_entry(s) == Some((64, true))), Some(anchor));
+    assert!(lines[anchor + 1].contains("Step 0"));
+    sim.apply(Command::Device(DeviceLine::Tool { slot: 1, id: rev, index: 64 }));
+    assert_eq!(sim.store.snapshot().agents[&agent].chat_rev, new_rev);
+    sim.apply(Command::Device(DeviceLine::Tool { slot: 1, id: new_rev, index: 1 }));
+    let (_, lines) = workflow::device_lines(&sim.store.snapshot().agents[&agent], 0, Some(&sim.store.aux[&agent].expanded_tools));
+    assert!(lines.join(" ").contains("private output"));
+}

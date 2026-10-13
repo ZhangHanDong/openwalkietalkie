@@ -103,6 +103,7 @@ pub(crate) const fn doc_name(doc: DocKind) -> &'static str {
     match doc {
         DocKind::Card => "c",
         DocKind::Reply => "r",
+        DocKind::Workflow => "w",
         DocKind::Tr => "t",
     }
 }

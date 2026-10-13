@@ -233,7 +233,7 @@ pub fn tool_header(text: &str, size: u8, index: u8, expanded: bool, streaming: b
     if name.is_empty() { name.push_str("Tool"); }
     let status_text = first.split_once('·').map_or("", |(_, status)| status).to_ascii_lowercase();
     let failed = status_text.contains("failed") || status_text.contains("error");
-    let status = if streaming { "running" } else if failed { "failed" } else { "done" };
+    let status = if streaming { "running" } else if failed { "failed" } else if status_text.contains("stopped") { "stopped" } else { "done" };
     let base = match size { 0 => Font::Row, 1 => Font::Text, _ => Font::Reading };
     let mut clipped = false;
     loop {
@@ -255,8 +255,13 @@ pub fn activity_row(verb: &str, target: &str, size: u8) -> String {
 
 pub fn tool_disclosure(size: u8, index: u8, expanded: bool, count: usize) -> String {
     let label = format!("{} details · {count}", if expanded { "Hide" } else { "Show" });
+    disclosure(&label, size, index, expanded)
+}
+
+/// A bounded disclosure without a tool completion status.
+pub fn disclosure(label: &str, size: u8, index: u8, expanded: bool) -> String {
     let mut glyphs = Vec::new();
-    push(&mut glyphs, &label, 0);
+    push(&mut glyphs, label, 0);
     let mut row = bounded_row('p', 2, glyphs, size);
     row.replace_range(..2, &format!("{}0{index:02x}", if expanded { 'T' } else { 't' }));
     // The disclosure's extra index bytes count against the wire limit.
@@ -280,6 +285,19 @@ fn bounded_row(kind: char, indent: u8, mut glyphs: Vec<Glyph>, size: u8) -> Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn workflow_disclosures_fit_every_reading_size() {
+        for size in 0..=2 {
+            let base = match size { 0 => Font::Row, 1 => Font::Text, _ => Font::Reading };
+            for (index, label) in [(64, "Compact plan · 64 steps"), (65, "Recent tools · 64")] {
+                let row = disclosure(label, size, index, true);
+                assert_eq!(rich::tool(&row), Some((index, true)));
+                assert!(row.len() <= deck_proto::caps().doc_line);
+                assert!(rich::measure(base, &row) <= lane_width(DocKind::Reply));
+            }
+        }
+    }
     #[test]
     fn tool_headers_stay_one_row_with_unicode_and_long_names() {
         for size in 0..=2 {

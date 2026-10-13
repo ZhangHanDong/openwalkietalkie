@@ -37,6 +37,14 @@ pub struct DeviceView {
     faces: Vec<FaceEntry>,
 }
 
+/// Chat and workflow share the firmware's one reading buffer. Older windows
+/// (including the other mode) must not accumulate or reappear on reconnect.
+pub(super) fn same_document(slot: Slot, doc: deck_model::DocKind, key: Key) -> bool {
+    let Key::DocText(other, kind, _) = key else { return false; };
+    let reading = |kind| matches!(kind, deck_model::DocKind::Reply | deck_model::DocKind::Workflow);
+    other == slot && (kind == doc || reading(kind) && reading(doc))
+}
+
 impl DeviceView {
     pub fn new() -> Self {
         Self::default()
@@ -47,6 +55,9 @@ impl DeviceView {
         match op {
             DeviceOp::Put(key, line) => {
                 if key.in_barrier() {
+                    if let Key::DocText(slot, doc, _) = key {
+                        self.entries.retain(|old, _| !same_document(*slot, *doc, *old) || old == key);
+                    }
                     self.entries.insert(*key, line.clone());
                 }
             }

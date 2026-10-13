@@ -23,7 +23,7 @@
 //! "sent" and the others dim; without a deck host (and not demo) the tag reads
 //! "offline" and the hint bar says so.
 use crate::deck::model::{Agent, Card, MAX_AGENTS};
-use crate::deck::msg::{AgentKind, AgentState, DocFont, CardKind};
+use crate::deck::msg::{AgentKind, AgentState, DocFont, DocKind, CardKind};
 use crate::deck::text::Text;
 use crate::display::Band;
 use crate::ui::kit::list::Viewport;
@@ -79,6 +79,8 @@ fn reply_lane(ui: &UiState, agent: &Agent) -> Rect {
 /// Ready summary, ending just above the first step row.
 pub const SUMMARY_LANE: Rect = Rect::new(32, 60, 416, 157);
 pub const BUTTON_LANE: Rect = layout::CHANNEL_BUTTON;
+/// Mode switch shares the state line, leaving the entire reading lane intact.
+pub const WORKFLOW_TOGGLE: Rect = Rect::new(316, 68, 128, 30);
 /// A roster row and the active-channel bar beside it.
 pub const fn roster_lane(slot: u8) -> Rect {
     let row = layout::roster_row(slot);
@@ -104,7 +106,9 @@ const BACK: Hint<'static> = h("CANCEL", "back");
 pub const ROSTER_HINTS: [Hint<'static>; 4] = [PROJECT, h("SCROLL", "select"), h("ENTER", "open"), TALK];
 pub const CHANNEL_CARD_HINTS: [Hint<'static>; 4] = [AGENT, h("ENTER", "card"), TALK, BACK];
 pub const CHANNEL_SHIFT_HINTS: [Hint<'static>; 2] = [h("ENTER", "latest message"), h("SCROLL", "face")];
-pub const CHANNEL_HINTS: [Hint<'static>; 4] = [AGENT, h("SCROLL", "chat"), TALK, BACK];
+pub const CHANNEL_HINTS: [Hint<'static>; 4] = [h("ENTER", "workflow"), h("SCROLL", "chat"), TALK, BACK];
+pub const WORKFLOW_HINTS: [Hint<'static>; 4] = [h("ENTER", "chat"), h("SCROLL", "steps"), TALK, BACK];
+pub const WORKFLOW_SHIFT_HINTS: [Hint<'static>; 2] = [h("ENTER", "current step"), h("SCROLL", "face")];
 pub const QUESTION_HINTS: [Hint<'static>; 4] =
     [h("SCROLL", "choose"), h("ENTER", "confirm"), h("PTT", "reply"), h("CANCEL", "snooze")];
 pub const QUESTION_VOICE_HINTS: [Hint<'static>; 2] = [h("PTT", "reply"), h("CANCEL", "snooze")];
@@ -115,11 +119,13 @@ pub const READY_SEND_HINTS: [Hint<'static>; 4] = [h("SCROLL", "steps"), h("ENTER
 pub const READY_PLAIN_HINTS: [Hint<'static>; 3] = [h("ENTER", "open"), TALK, BACK];
 pub const READY_OFFLINE_HINTS: [Hint<'static>; 3] = [h("", "offline \u{b7} steps need the host"), h("ENTER", "open"), BACK];
 pub const EMPTY_HINTS: [Hint<'static>; 1] = [BACK];
-pub const ALL_HINTS: [&[Hint<'static>]; 15] = [
+pub const ALL_HINTS: [&[Hint<'static>]; 17] = [
     &ROSTER_HINTS,
     &CHANNEL_CARD_HINTS,
     &CHANNEL_HINTS,
     &CHANNEL_SHIFT_HINTS,
+    &WORKFLOW_HINTS,
+    &WORKFLOW_SHIFT_HINTS,
     &QUESTION_HINTS,
     &QUESTION_VOICE_HINTS,
     &QUESTION_SENT_HINTS,
@@ -514,6 +520,14 @@ fn channel_hints(card: Option<&Card>) -> &'static [Hint<'static>] {
     }
 }
 
+fn reading_hints(ui: &UiState, agent: &Agent, card: Option<&Card>) -> &'static [Hint<'static>] {
+    if agent.reply_kind == DocKind::Workflow {
+        if ui.global.shift { &WORKFLOW_SHIFT_HINTS }
+        else if card.is_some_and(Card::open) { &CHANNEL_CARD_HINTS }
+        else { &WORKFLOW_HINTS }
+    } else if ui.global.shift { &CHANNEL_SHIFT_HINTS } else { channel_hints(card) }
+}
+
 fn draw_channel(band: &mut Band, ui: &UiState, agent: &Agent) {
     header_with_dot(band, ui, agent, kit::status_tag(ui));
     draw_state_line(band, ui, agent);
@@ -522,15 +536,19 @@ fn draw_channel(band: &mut Band, ui: &UiState, agent: &Agent) {
     if let Some(card) = card {
         draw_card_block(band, ui, card);
     }
-    kit::hint_bar(band, if ui.global.shift { &CHANNEL_SHIFT_HINTS } else { channel_hints(card) });
+    kit::hint_bar(band, reading_hints(ui, agent, card));
 }
 
 /// "Question · blocked 2m" in the state colour, then secondary text.
 fn draw_state_line(band: &mut Band, ui: &UiState, agent: &Agent) {
-    let lane = layout::CHANNEL_STATE;
-    if !kit::visible(band, lane) {
+    let lane = Rect::new(layout::CHANNEL_STATE.left(), layout::CHANNEL_STATE.top(), WORKFLOW_TOGGLE.left() - layout::CHANNEL_STATE.left() - 8, layout::CHANNEL_STATE.height());
+    if !kit::visible(band, Rect::new(32, 66, 416, 34)) {
         return;
     }
+    let bg = surface(band, WORKFLOW_TOGGLE, false, ui.agents.pressed == Some(2), true);
+    text(band, Font::Body, WORKFLOW_TOGGLE.center().0, CHANNEL_STATE_BASELINE,
+        if agent.reply_kind == DocKind::Workflow { "Chat" } else { "Workflow" },
+        theme::TEXT_PRIMARY, bg, WORKFLOW_TOGGLE.width() - 12, Align::Center);
     let gray = agent.stale || offline(ui);
     let word = if gray { "Offline" } else { state_word(agent.state) };
     let used = text(band, Font::Body, lane.left(), CHANNEL_STATE_BASELINE, word, dot_color(ui, agent), theme::CANVAS, lane.width(), Align::Left);
@@ -628,7 +646,11 @@ fn draw_reply(band: &mut Band, ui: &UiState, agent: &Agent) {
     let visible = reply_visible(ui, agent);
     let lh = font::line_height(face);
     let first = lane.top() + font::ascent(face);
-    if agent.last_reply.is_empty() {
+    if !agent.reply.windowed() && agent.reply_kind == DocKind::Workflow {
+        text(band, face, lane.left(), first, "Waiting for workflow…", theme::TEXT_FAINT, theme::CANVAS, lane.width(), Align::Left);
+        return;
+    }
+    if agent.last_reply.is_empty() && !agent.reply.windowed() {
         text(band, face, lane.left(), first, "No reply yet", theme::TEXT_FAINT, theme::CANVAS, lane.width(), Align::Left);
         return;
     }
@@ -713,14 +735,15 @@ fn draw_card_block(band: &mut Band, ui: &UiState, card: &Card) {
 
 fn channel_signature(ui: &UiState, agent: &Agent, sig: &mut SigBuilder) {
     sig.region_with(HEADER_LANE, |h| hash_header(h, ui, agent, kit::status_tag(ui)));
-    sig.region_with(layout::CHANNEL_STATE, |h| {
+    sig.region_with(Rect::new(32, 66, 416, 34), |h| {
+        h.u8(agent.reply_kind as u8).u8(ui.agents.pressed.unwrap_or(255));
         h.u8(agent.state as u8).u32(dot_color(ui, agent)).bool(agent.stale || offline(ui)).u32(age_step(ui, agent));
     });
     sig.region_with(reply_lane(ui, agent), |h| {
         // The window's own lines, not just the capped text: a new window for
         // the same reply changes what is drawn and must repaint the lane.
         let top = reply_clamp(ui, agent, ui.agents.reply_top);
-        h.text(&agent.last_reply).u16(top).u16(agent.reply.total).u16(agent.reply.id).u8(reply_face(ui, agent) as u8);
+        h.u8(agent.reply_kind as u8).text(&agent.last_reply).u16(top).u16(agent.reply.total).u16(agent.reply.id).u8(reply_face(ui, agent) as u8);
         h.u8(ui.agents.pressed.filter(|i| *i >= 16).unwrap_or(u8::MAX));
         if agent.reply.windowed() {
             for slot in 0..reply_visible(ui, agent) {
@@ -750,7 +773,7 @@ fn channel_signature(ui: &UiState, agent: &Agent, sig: &mut SigBuilder) {
             None => h.bool(false),
         };
     });
-    sig.region(HINT_LANE, hint_variant(if ui.global.shift { &CHANNEL_SHIFT_HINTS } else { channel_hints(card) }));
+    sig.region(HINT_LANE, hint_variant(reading_hints(ui, agent, card)));
 }
 
 // ---- cards ----------------------------------------------------------------------

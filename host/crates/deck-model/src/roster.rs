@@ -675,6 +675,10 @@ impl Store {
             self.principal_of(&id),
             serde_json::json!({"agent": id, "text": r.text, "message": meta}),
         );
+        if self.aux.get(&id).is_some_and(|a| a.workflow_view) {
+            let agent = self.snapshot.agents.get_mut(&id).unwrap();
+            agent.chat_rev = agent.chat_rev.wrapping_add(1).max(1);
+        }
         self.put_reply(&id);
         if r.speak && meta.role == crate::ChatRole::Assistant && !meta.streaming {
             let lane = r.lane.as_deref().unwrap_or("chatter").to_string();

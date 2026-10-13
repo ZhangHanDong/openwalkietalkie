@@ -830,10 +830,10 @@ resolver bug invisible.
 | host → device | `doc` | `{agent, d, id, first, total, font, lines[]}` |
 | device → host | `doclines` | `{agent, d, id, first}` |
 
-- **`d`** is `c` \| `r` \| `t` — card, reply, transcript. **Single letters, measured**: `doclines` is a
+- **`d`** is `c` \| `r` \| `w` \| `t` — card, reply, workflow, transcript. **Single letters, measured**: `doclines` is a
   device→host line and must fit one 61-byte report, and `"d":"reply"` makes it 63 B, which the framer
   drops. `"d":"r"` makes it 59.
-- **`id`** is the card id for `c`, and a per-slot **revision** for `r`/`t`; the `reply` line carries
+- **`id`** is the card id for `c`, and a per-slot **revision** for `r`/`w`/`t`; the `reply` line carries
   the same `rev`, so a chunk of a body that has since been replaced is dropped rather than drawn over
   the new one. `Key::DocText` is declared **after** `Card` and `Reply`: the enum's order is the
   barrier's order, and a chunk arriving before the line carrying its id would be dropped as belonging
@@ -1148,7 +1148,9 @@ v1 ships four screens plus the tray and a 3-step Welcome: **Deck**, **Integratio
 
 The Mac app’s Deck detail pane shows a live **Workflow** below any pending card. Explicit Codex `turn/plan/updated` events and Claude `TodoWrite` inputs supply plan steps; observed tools supply recent activity. The current step stays visible in long plans, with **Show all steps** for the full list. The latest four tools and any still running or expanded tools are shown by default; click a tool to reveal its input/output. Expansion survives updates and switching agents. Completed counts come only from explicit plan statuses, and an idle or disconnected session does not animate. Sessions without an explicit plan show tool activity without a guessed percentage.
 
-`agent.reply.message` optionally carries `plan:{explanation?,steps:[{step,status}]}` (`status`: `pending`, `in_progress`, `completed`) and `activity` (`running`, `completed`, `failed`, `stopped`). Existing messages need neither field. `Agent.workflow` retains the latest plan after its message leaves the bounded chat tail, and a new user message clears it. Plans are limited to 64 steps, each 256 bytes, with a 1024-byte explanation. Plans and tool text follow the existing owner/`observe:content` rules; an `observe` snapshot or event reveals no plan text. The physical deck continues to use its existing compact chat/tool view.
+`agent.reply.message` optionally carries `plan:{explanation?,steps:[{step,status}]}` (`status`: `pending`, `in_progress`, `completed`) and `activity` (`running`, `completed`, `failed`, `stopped`). Existing messages need neither field. `Agent.workflow` retains the latest plan after its message leaves the bounded chat tail, and a new user message clears it. Plans are limited to 64 steps, each 256 bytes, with a 1024-byte explanation. Plans and tool text follow the existing owner/`observe:content` rules; an `observe` snapshot or event reveals no plan text.
+
+The physical deck has a **Workflow/Chat** toggle in each channel. Workflow uses the existing reading buffer and font sizes, showing a completed-count bar, three steps around the current step, and the latest three tools plus running or expanded tools. Tap disclosures for the full plan, older activity or syntax-highlighted tool output. ENTER switches views unless a pending card needs attention; CANCEL returns from Workflow to Chat; SHIFT+ENTER returns to the workflow's top. PTT and permission cards remain available. Firmware opts in through `doclines d:"w"`, so older firmware keeps receiving chat. Workflow updates invalidate moved line offsets; the outbox keeps only the latest window and sends its matching revision envelope first. Both host and firmware must be updated.
 
 The Codex event shape is documented in the [official app-server turn events](https://learn.chatgpt.com/docs/app-server#turn-events). Screenshot scenes `workflow`, `workflow-expanded`, and `workflow-complete` stage synthetic content only in the Mac window’s mirror.
 

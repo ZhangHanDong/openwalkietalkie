@@ -148,6 +148,8 @@ pub const USAGE_REFRESH_GRACE: Duration = Duration::from_millis(1500);
 pub(crate) struct AgentAux {
     /// Last requested reading window; updates must not pull the reader away.
     pub(crate) reply_first: Option<u16>,
+    /// Opt-in: older firmware continues to receive only chat documents.
+    pub(crate) workflow_view: bool,
     /// Tool message ids explicitly expanded on the deck (bounded by history).
     pub(crate) expanded_tools: std::collections::BTreeSet<String>,
     pub(crate) lease_ttl: Duration,
@@ -569,6 +571,12 @@ impl Store {
             let line = agent_state_line(slot, agent, now);
             self.device_op(DeviceOp::Put(Key::AgentState(slot), line));
         }
+        if self.aux.get(id).is_some_and(|a| a.workflow_view) {
+            if let Some(agent) = self.snapshot.agents.get_mut(id) {
+                agent.chat_rev = agent.chat_rev.wrapping_add(1).max(1);
+            }
+            self.put_reply(id);
+        }
     }
 
     pub(crate) fn put_agent_title(&mut self, id: &AgentId) {
@@ -641,18 +649,19 @@ impl Store {
     }
 
     pub(crate) fn put_reply(&mut self, id: &AgentId) {
+        let doc = if self.aux.get(id).is_some_and(|a| a.workflow_view) { DocKind::Workflow } else { DocKind::Reply };
         let Some((slot, text, rev)) = self.snapshot.agents.get(id).and_then(|a| {
-            a.slot.zip(doc_body(a, DocKind::Reply))
+            a.slot.zip(doc_body(a, doc))
                 .map(|(slot, (text, rev))| (slot, text, rev))
         }) else {
             return;
         };
         let size = self.text_size();
         if let Some(aux) = self.aux.get_mut(id) {
-            aux.expanded_tools.retain(|key| self.snapshot.agents[id].messages.iter().any(|m| &m.message.id == key));
+            aux.expanded_tools.retain(|key| key.starts_with("workflow:") || self.snapshot.agents[id].messages.iter().any(|m| &m.message.id == key));
         }
-        let first = self.aux.get(id).and_then(|aux| aux.reply_first).unwrap_or(u16::MAX);
-        let window = agent_doc_window(&self.snapshot.agents[id], DocKind::Reply, first, size, self.aux.get(id).map(|a| &a.expanded_tools));
+        let first = self.aux.get(id).and_then(|aux| aux.reply_first).unwrap_or(if doc == DocKind::Workflow { 0 } else { u16::MAX });
+        let window = agent_doc_window(&self.snapshot.agents[id], doc, first, size, self.aux.get(id).map(|a| &a.expanded_tools));
         self.device_op(DeviceOp::Put(
             Key::Reply(slot),
             HostLine::Reply {
@@ -663,7 +672,7 @@ impl Store {
         ));
         if let Some(window) = window {
             self.device_op(DeviceOp::Put(
-                Key::DocText(slot, DocKind::Reply, rev),
+                Key::DocText(slot, doc, rev),
                 window,
             ));
         }
@@ -1063,9 +1072,10 @@ fn project_with(snapshot: &Snapshot, now: Ts, aux: Option<&BTreeMap<AgentId, Age
                 ));
             }
         }
-        if let Some((text, rev)) = doc_body(agent, DocKind::Reply) {
-            let view = aux.and_then(|a| a.get(&agent.id));
-            let window = agent_doc_window(agent, DocKind::Reply, view.and_then(|a| a.reply_first).unwrap_or(u16::MAX), size, view.map(|a| &a.expanded_tools));
+        let view = aux.and_then(|a| a.get(&agent.id));
+        let doc = if view.is_some_and(|a| a.workflow_view) { DocKind::Workflow } else { DocKind::Reply };
+        if let Some((text, rev)) = doc_body(agent, doc) {
+            let window = agent_doc_window(agent, doc, view.and_then(|a| a.reply_first).unwrap_or(if doc == DocKind::Workflow { 0 } else { u16::MAX }), size, view.map(|a| &a.expanded_tools));
             ops.push(DeviceOp::Put(
                 Key::Reply(slot),
                 HostLine::Reply {
@@ -1076,7 +1086,7 @@ fn project_with(snapshot: &Snapshot, now: Ts, aux: Option<&BTreeMap<AgentId, Age
             ));
             if let Some(window) = window {
                 ops.push(DeviceOp::Put(
-                    Key::DocText(slot, DocKind::Reply, rev),
+                    Key::DocText(slot, doc, rev),
                     window,
                 ));
             }
@@ -1183,6 +1193,7 @@ pub(crate) fn card_line(slot: Slot, card: &crate::Card) -> HostLine {
 /// transcript is not a document the store keeps, so it has no entry here.
 pub(crate) fn doc_body(agent: &crate::Agent, doc: DocKind) -> Option<(String, u16)> {
     match doc {
+        DocKind::Workflow => Some(("Workflow".into(), if agent.messages.is_empty() { agent.reply_rev } else { agent.chat_rev })),
         DocKind::Card => agent
             .card
             .as_ref()
@@ -1229,14 +1240,14 @@ pub(crate) fn doc_window(
     let caps = deck_proto::caps();
     let (font, lines) = match doc {
         DocKind::Card => deck_wrap::wrap_question(body),
-        DocKind::Reply => deck_wrap::wrap_rich_reply(body, size),
+        DocKind::Reply | DocKind::Workflow => deck_wrap::wrap_rich_reply(body, size),
         DocKind::Tr => deck_wrap::wrap_reply(body, size),
     };
     // The cap on the flat line this document already rides on: below it the
     // deck can lay the body out itself and no window is spent.
     let flat_cap = match doc {
         DocKind::Card => caps.card_text,
-        DocKind::Reply => caps.reply,
+        DocKind::Reply | DocKind::Workflow => caps.reply,
         DocKind::Tr => caps.transcript,
     };
     if doc != DocKind::Reply && lines.len() <= deck_wrap::visible(doc, font) && body.len() <= flat_cap {
@@ -1247,6 +1258,10 @@ pub(crate) fn doc_window(
 
 pub(crate) fn agent_doc_window(agent: &crate::Agent, doc: DocKind, first: u16, size: u8, expanded: Option<&std::collections::BTreeSet<String>>) -> Option<HostLine> {
     let slot = agent.slot?;
+    if doc == DocKind::Workflow {
+        let (font, lines) = crate::workflow::device_lines(agent, size, expanded);
+        return lines_window(slot, doc, doc_body(agent, doc)?.1, first, font, &lines);
+    }
     if doc != DocKind::Reply || agent.messages.is_empty() {
         let (body, id) = doc_body(agent, doc)?;
         return doc_window(slot, doc, id, &body, first, size);

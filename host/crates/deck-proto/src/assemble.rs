@@ -292,7 +292,7 @@ pub fn parse_device_line(bytes: &[u8]) -> Result<DeviceLine, DecodeError> {
         "tool" => DeviceLine::Tool {
             slot: slot(o.need_u8("agent", 8)?)?,
             id: o.need_u16("id")?,
-            index: o.need_u8("i", 63)?,
+            index: o.need_u8("i", 65)?,
         },
         "macro" => DeviceLine::Macro {
             f: slot_field(o.need_u8("f", 8)?, "f")?,
@@ -353,6 +353,7 @@ fn doc_kind(name: &str) -> Result<crate::DocKind, DecodeError> {
     match name {
         "c" => Ok(crate::DocKind::Card),
         "r" => Ok(crate::DocKind::Reply),
+        "w" => Ok(crate::DocKind::Workflow),
         "t" => Ok(crate::DocKind::Tr),
         _ => Err(DecodeError::Unknown("d".to_string())),
     }

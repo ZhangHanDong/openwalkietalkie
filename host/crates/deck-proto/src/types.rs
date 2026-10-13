@@ -68,6 +68,7 @@ pub enum DocFont {
 pub enum DocKind {
     Card,
     Reply,
+    Workflow,
     /// The live STT tail. Its window sits at the **end** of the body, not the
     /// start: what the operator wants to see is the newest speech.
     Tr,

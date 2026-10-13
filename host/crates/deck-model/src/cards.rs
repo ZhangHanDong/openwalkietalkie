@@ -851,13 +851,23 @@ impl Store {
             };
             match crate::store::doc_body(agent, doc) {
                 Some(pair) => pair,
+                None if doc == DocKind::Reply => (String::new(), agent.reply_rev),
                 None => return,
             }
         };
         if current != id {
             return;
         }
-        let window = if doc == DocKind::Tr {
+        if matches!(doc, DocKind::Reply | DocKind::Workflow) {
+            if let Some(agent) = self.snapshot.agent_at(slot) {
+                let aux = self.aux.entry(agent.id.clone()).or_default();
+                aux.workflow_view = doc == DocKind::Workflow;
+                aux.reply_first = Some(first);
+            }
+        }
+        let window = if doc == DocKind::Reply && body.is_empty() {
+            crate::store::doc_window(slot, doc, id, "No messages yet", first, self.text_size())
+        } else if doc == DocKind::Tr {
             crate::store::doc_window(slot, doc, id, &body, first, self.text_size())
         } else {
             self.snapshot.agent_at(slot).and_then(|agent| crate::store::agent_doc_window(agent, doc, first, self.text_size(), self.aux.get(&agent.id).map(|a| &a.expanded_tools)))
@@ -865,21 +875,24 @@ impl Store {
         let Some(window) = window else {
             return;
         };
-        if doc == DocKind::Reply {
-            if let Some(agent) = self.snapshot.agent_at(slot) {
-                self.aux.entry(agent.id.clone()).or_default().reply_first = Some(first);
-            }
-        }
         self.device_op(DeviceOp::Put(Key::DocText(slot, doc, id), window));
     }
 
     pub(crate) fn on_device_tool(&mut self, slot: Slot, id: u16, index: u8) {
         let Some(agent) = self.snapshot.agent_at(slot).filter(|a| a.chat_rev == id) else { return; };
-        let Some(entry) = agent.messages.get(index as usize).filter(|m| m.message.role == crate::ChatRole::Tool) else { return; };
-        let key = entry.message.id.clone();
+        let workflow = self.aux.get(&agent.id).is_some_and(|a| a.workflow_view);
+        let key = match (workflow, index) {
+            (true, 64) => "workflow:plan".to_owned(),
+            (true, 65) => "workflow:tools".to_owned(),
+            _ => {
+                let Some(entry) = agent.messages.get(index as usize).filter(|m| m.message.role == crate::ChatRole::Tool) else { return; };
+                entry.message.id.clone()
+            }
+        };
         let agent_id = agent.id.clone();
         let expanded = self.aux.get(&agent_id).map(|a| &a.expanded_tools);
-        let (_, lines) = crate::store::chat_lines(agent, self.text_size(), expanded);
+        let (_, lines) = if workflow { crate::workflow::device_lines(agent, self.text_size(), expanded) }
+            else { crate::store::chat_lines(agent, self.text_size(), expanded) };
         let Some(first) = lines.iter().position(|line| deck_wrap::tool_entry(line).is_some_and(|(i, _)| i == index)) else { return; };
         let aux = self.aux.entry(agent_id.clone()).or_default();
         if !aux.expanded_tools.remove(&key) { aux.expanded_tools.insert(key); }

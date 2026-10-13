@@ -361,12 +361,21 @@ silent while notifications still arrive. The `audio-open` firmware feature
 
 ## Rich conversation windows
 
-`doc` carries `agent`, `d` (`r` reply, `c` card, `t` transcript), `id`,
+`doc` carries `agent`, `d` (`r` reply, `w` workflow, `c` card, `t` transcript), `id`,
 `first`, `total`, `font`, and `lines`. There are at most 17 lines of 48 UTF-8
 bytes each; the host reduces the count until the encoded JSON fits 1000
 bytes. The deck retains at most 40 contiguous lines. `doclines` asks for the
 next window using the same agent, document kind, id and first line. A first
 line of 65535 requests the tail.
+
+Workflow is opt-in: `doclines` with `d:"w"` selects it for that agent;
+`d:"r"` returns to chat. Older firmware continues to receive chat. Both views
+share the device's reading buffer and the `reply.rev` envelope. The device
+accepts only its selected kind and current revision, including after reconnect.
+Workflow updates change revision because plan and activity rows can move.
+The host coalesces superseded windows, and sends the revision envelope before
+its window without allowing another revision to interleave. Missing windows
+are retried after five seconds.
 
 For chat, `richrow`, `richtext`, and `richtitle` select 25, 29, and 32 px
 reading faces. Every rich line begins with a block letter (`p` paragraph,
@@ -401,6 +410,14 @@ for its arrow. Tapping sends `{"m":"tool","agent":1,"id":7,"i":2}`;
 the host validates revision/index and returns a new revision anchored at
 the disclosure. Stale taps are ignored; expansion survives streaming and
 resync. Raw output stays out of the flat `reply` fallback.
+
+Workflow uses the same rich fonts and disclosures. Indices `40` and `41`
+(decimal 64 and 65) expand the full plan and older activity; they are valid
+only when present in the selected workflow document. A `w0DDTT` row draws
+plan progress, where `DD` and `TT` are two-digit hexadecimal completed and
+total counts (`0 <= DD <= TT <= 64`, `TT > 0`). Only valid counts render as
+progress. The compact plan shows three steps around the current one;
+activity shows the latest three tools plus running or expanded entries.
 
 The channel uses all space above the footer except visible card controls.
 It opens at the tail and follows the latest text while the operator is at

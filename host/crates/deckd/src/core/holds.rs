@@ -95,6 +95,23 @@ impl Holds {
         }
     }
 
+    /// A caller may cancel while the SetCardHeld reply is still in flight,
+    /// before CoreHandle can construct its HoldGuard. The receiver closing
+    /// is authoritative even in that gap. Only inspect the current park, so
+    /// a cancelled receiver from a replaced hold cannot release its successor.
+    pub fn take_abandoned(&mut self) -> Vec<(AgentId, CardId)> {
+        let mut abandoned = Vec::new();
+        self.parked.retain(|key, (_, sender)| {
+            if sender.is_closed() {
+                abandoned.push(key.clone());
+                false
+            } else {
+                true
+            }
+        });
+        abandoned
+    }
+
     pub fn len(&self) -> usize {
         self.parked.len()
     }
@@ -189,6 +206,23 @@ mod tests {
             second.blocking_recv().unwrap(),
             HoldResult::Answer(_)
         ));
+        assert!(holds.is_empty());
+    }
+
+    #[test]
+    fn abandoned_receivers_do_not_release_live_replacements() {
+        let mut holds = Holds::new();
+        let agent = AgentId("ag_a".into());
+        let (_, abandoned) = holds.park(agent.clone(), CardId(1));
+        let (_, replaced) = holds.park(agent.clone(), CardId(2));
+        let (_, live) = holds.park(agent.clone(), CardId(2));
+        drop(abandoned);
+        drop(replaced);
+        assert_eq!(holds.take_abandoned(), vec![(agent.clone(), CardId(1))]);
+        assert!(holds.contains(&agent, CardId(2)));
+        assert!(holds.take_abandoned().is_empty());
+        drop(live);
+        assert_eq!(holds.take_abandoned(), vec![(agent, CardId(2))]);
         assert!(holds.is_empty());
     }
 }

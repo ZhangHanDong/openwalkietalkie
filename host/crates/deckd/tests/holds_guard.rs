@@ -13,6 +13,61 @@ use core_support::{
 use deck_model::{Control, DeviceOp, EventKind, Request, Scope};
 use deckd::core::HoldResult;
 
+/// Cancellation can happen before the async caller receives its HoldGuard.
+/// Drop the reply on either side of the core's response, without ever making
+/// a guard, so this race is covered independently of task scheduling.
+#[tokio::test]
+async fn abandoned_hold_replies_degrade_without_a_guard() {
+    for before_reply in [true, false] {
+        let live = Running::start("abandoned-hold", 4096);
+        let handle = live.handle.clone();
+        let (open, _outbound) = live_session(&[Scope::Agent]);
+        let session = handle.open_session(open).await.unwrap();
+        let agent = agent_of(
+            &handle
+                .api(
+                    claude(),
+                    session,
+                    false,
+                    Request::AgentRegister(hold_register("abandoned-hook")),
+                )
+                .await,
+        );
+        live.parts.drain();
+        let (reply, receiver) = tokio::sync::oneshot::channel();
+        let receiver = if before_reply {
+            drop(receiver);
+            None
+        } else {
+            Some(receiver)
+        };
+        handle
+            .send(deckd::core::CoreMsg::SetCardHeld {
+                principal: claude(),
+                session,
+                cmd: permission_card(&agent),
+                reply,
+            })
+            .await
+            .unwrap();
+        if let Some(receiver) = receiver {
+            let (_, _, hold) = receiver.await.unwrap().unwrap();
+            drop(hold);
+        }
+        let first = live.op(|op| card_put(op).is_some()).await;
+        let (id, _, _) = card_put(&first).unwrap();
+        let degraded = live
+            .op(|op| card_put(op).is_some_and(|(_, text, _)| text.starts_with('⌨')))
+            .await;
+        let (again, _, choices) = card_put(&degraded).unwrap();
+        assert_eq!(again, id, "cancellation keeps the original card identity");
+        assert_eq!(choices, vec!["Focus terminal"]);
+        let json = agent_json(&handle, session, &agent).await;
+        assert_eq!(json["card"]["status"], "degraded");
+        assert_eq!(json["card"]["deliver"], "focus");
+    }
+}
+
 /// The agent object as `agent.get` answers it for an `admin` caller.
 async fn agent_json(
     handle: &deckd::core::CoreHandle,

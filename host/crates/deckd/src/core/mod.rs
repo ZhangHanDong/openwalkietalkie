@@ -2266,6 +2266,11 @@ impl Core {
     /// Housekeeping on every tick: timers, the overflow re-projection, the
     /// debounced `state.json` write.
     pub fn tick(&mut self, now: Instant) {
+        // Cancellation before the SetCardHeld reply is received has no
+        // HoldGuard to report HoldGone. Reap its closed receiver as well.
+        for (agent, card) in self.holds.take_abandoned() {
+            self.step(Command::HoldGone { agent, card }, now);
+        }
         if self.needs_resync && self.hid.ops.len() < crate::hid::OPS_CAPACITY / 2 {
             self.needs_resync = false;
             if self.replay_dropped() {

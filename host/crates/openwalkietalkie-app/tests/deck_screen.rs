@@ -55,6 +55,7 @@ fn agent(id: &str, slot: Option<u8>) -> Agent {
         card: None,
         reply: None,
         messages: Vec::new(),
+        workflow: None,
         chat_rev: 0,
         reply_rev: 0,
         voice: None,
@@ -445,4 +446,38 @@ fn a_rev_gap_stops_the_mirror_and_asks_the_screen_to_re_read_it() {
     assert!(state.handle_event(AppEvent::Api(event)).is_empty());
     assert!(!state.resyncing());
     assert_eq!(state.mirror().rev, 120);
+}
+
+#[test]
+fn workflow_mirror_updates_in_place_and_expansion_survives_streaming() {
+    use deck_model::workflow::{activity, ActivityStatus, Plan};
+    use openwalkietalkie_app::workflow::{visible_steps, ViewState};
+    let mut state = live();
+    let id = AgentId("ag_2".into());
+    let mut view = ViewState::default();
+    view.toggle_tool(&id, "t1");
+    let plan = Plan::codex(&json!({"plan":(0..9).map(|i| json!({"step":format!("Step {i}"),
+        "status":if i < 6 { "completed" } else if i == 6 { "inProgress" } else { "pending" }})).collect::<Vec<_>>()})).unwrap();
+    state.handle_event(event(11, EventKind::ReplySet, json!({"agent":id, "text":plan.text(),
+        "message":{"id":"p1","role":"tool","plan":plan}})));
+    state.handle_event(event(12, EventKind::ReplySet, json!({"agent":id, "text":"**Bash**\n\n```\ncargo test\n```",
+        "message":{"id":"t1","role":"tool","streaming":true,"activity":"running"}})));
+    assert_eq!(activity(&mirrored(&state, "ag_2"))[0].status, ActivityStatus::Running);
+    state.handle_event(event(13, EventKind::ReplySet, json!({"agent":id, "text":"**Bash · failed**\n\nTest failed",
+        "message":{"id":"t1","role":"tool","activity":"failed"}})));
+    let agent = mirrored(&state, "ag_2");
+    assert_eq!(agent.messages.len(), 2);
+    assert_eq!(activity(&agent)[0].status, ActivityStatus::Failed);
+    assert!(view.tool_open(&id, "t1"));
+    assert!(!view.tool_open(&AgentId("another".into()), "t1"));
+    let plan = agent.workflow.as_ref().unwrap();
+    assert_eq!(plan.completed(), 6);
+    assert_eq!(visible_steps(plan, false, 5), 4..9);
+    assert_eq!(visible_steps(plan, true, 5), 0..9);
+    assert_eq!(visible_steps(plan, false, 3), 5..8);
+    state.handle_event(event(14, EventKind::ReplySet, json!({"agent":id, "text":"Next request",
+        "message":{"id":"u2","role":"user"}})));
+    let agent = mirrored(&state, "ag_2");
+    assert!(agent.workflow.is_none());
+    assert!(activity(&agent).is_empty());
 }

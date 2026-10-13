@@ -11,6 +11,8 @@ fn send(sim: &mut Sim, agent: &AgentId, id: &str, role: ChatRole, streaming: boo
             agent: agent.clone(),
             text: text.into(),
             message: Some(MessageMeta {
+                activity: None,
+                plan: None,
                 id: id.into(),
                 role,
                 streaming,
@@ -197,4 +199,50 @@ fn related_reads_show_an_explored_summary_and_expand_as_one_group() {
     let expanded = std::collections::BTreeSet::from(["read-0".to_string()]);
     let (_, lines) = crate::store::chat_lines(a, 1, Some(&expanded));
     assert!(lines.join(" ").contains("private output 3"));
+}
+
+fn plan_message(sim: &mut Sim, agent: &AgentId, id: &str, status: &str) {
+    let plan = workflow::Plan::codex(&serde_json::json!({"plan":[{"step":"Inspect the input", "status":status}]})).unwrap();
+    sim.api(UID, SessionId(1), Request::Reply(ReplySet {
+        agent: agent.clone(), text: plan.text(),
+        message: Some(MessageMeta { id: id.into(), role: ChatRole::Tool, streaming: false, plan: Some(plan), activity: None }),
+        speak: false, announce: None, lane: None,
+    })).unwrap();
+}
+
+#[test]
+fn workflow_survives_tail_eviction_and_rejects_older_plan_results() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    plan_message(&mut sim, &agent, "p1", "pending");
+    plan_message(&mut sim, &agent, "p2", "inProgress");
+    plan_message(&mut sim, &agent, "p1", "completed");
+    assert_eq!(sim.store.snapshot().agents[&agent].workflow.as_ref().unwrap().completed(), 0);
+    plan_message(&mut sim, &agent, "p2", "completed");
+    assert_eq!(sim.store.snapshot().agents[&agent].workflow.as_ref().unwrap().completed(), 1);
+    for i in 0..70 {
+        send(&mut sim, &agent, &format!("a{i}"), ChatRole::Assistant, false, "Progress");
+    }
+    assert_eq!(sim.store.snapshot().agents[&agent].messages.len(), 64);
+    assert_eq!(sim.store.snapshot().agents[&agent].workflow.as_ref().unwrap().completed(), 1);
+    send(&mut sim, &agent, "next-user", ChatRole::User, false, "Next task");
+    assert!(sim.store.snapshot().agents[&agent].workflow.is_none());
+}
+
+#[test]
+fn workflow_content_obeys_snapshot_and_event_permissions() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    plan_message(&mut sim, &agent, "p1", "pending");
+    let snapshot = sim.store.snapshot();
+    assert!(redact(snapshot, &[Scope::Observe]).agents[&agent].workflow.is_none());
+    assert!(redact(snapshot, &[Scope::ObserveContent]).agents[&agent].workflow.is_some());
+    assert!(redact_for(snapshot, &[Scope::Observe], &std::collections::BTreeSet::from([agent.clone()])).agents[&agent].workflow.is_some());
+    let event = Event { rev: 1, ts: Ts::from_millis(1), kind: EventKind::ReplySet, principal: UID,
+        data: serde_json::json!({"agent":agent, "text":"private plan", "message":snapshot.agents[&agent].messages[0].message}) };
+    let filtered = redact_event(&event, &[Scope::Observe], false).unwrap();
+    assert!(filtered.data["message"]["plan"].is_null());
+    assert!(!serde_json::to_string(&filtered).unwrap().contains("Inspect the input"));
+    assert_eq!(redact_event(&event, &[Scope::Observe], true).unwrap(), event);
+    assert_eq!(redact_event(&event, &[Scope::ObserveContent], false).unwrap(), event);
 }

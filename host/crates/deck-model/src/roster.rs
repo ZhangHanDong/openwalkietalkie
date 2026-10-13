@@ -189,6 +189,7 @@ impl Store {
             card: None,
             reply: None,
             messages: Vec::new(),
+            workflow: None,
             chat_rev: 0,
             reply_rev: 0,
             voice,
@@ -633,11 +634,15 @@ impl Store {
         let Some(agent) = self.snapshot.agents.get_mut(&id) else {
             return Err(ApiError::not_found("agent"));
         };
-        let meta = r.message.clone().unwrap_or_else(|| crate::MessageMeta {
+        let mut meta = r.message.clone().unwrap_or_else(|| crate::MessageMeta {
+            activity: None,
+            plan: None,
             id: format!("reply-{}-{}", ts.0, agent.reply_rev),
             role: crate::ChatRole::Assistant,
             streaming: false,
         });
+        meta.plan = meta.plan.map(crate::workflow::Plan::bounded);
+        crate::workflow::observe(agent, &meta);
         let duplicate = r.message.is_none() && agent.messages.last().is_some_and(|m|
             m.message.role == crate::ChatRole::Assistant && m.text == r.text);
         if duplicate {
@@ -649,7 +654,7 @@ impl Store {
                 if let Some(old) = agent.messages.last_mut() { old.message = meta.clone(); }
             } else if let Some(old) = agent.messages.iter_mut().find(|m| m.message.id == meta.id) {
                 old.text = text;
-                old.message.streaming = meta.streaming;
+                old.message = meta.clone();
             } else {
                 agent.messages.push(crate::ChatMessage { message: meta.clone(), text, at: ts });
             }

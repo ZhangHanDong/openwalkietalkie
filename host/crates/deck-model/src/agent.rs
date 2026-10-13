@@ -332,6 +332,11 @@ pub struct MessageMeta {
     pub role: ChatRole,
     #[serde(default)]
     pub streaming: bool,
+    /// Explicit public plan updates; absent on ordinary chat/tool messages.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plan: Option<crate::workflow::Plan>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activity: Option<crate::workflow::ActivityStatus>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -364,6 +369,8 @@ pub struct Agent {
     /// Recent conversation, bounded to 64 messages / 512 KiB per agent.
     #[serde(default)]
     pub messages: Vec<ChatMessage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workflow: Option<crate::workflow::Plan>,
     /// Stable while messages grow; changes when retained history is pruned.
     #[serde(default)]
     pub chat_rev: u16,

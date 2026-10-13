@@ -779,6 +779,7 @@ impl HostState {
                 if let Some(agent) = agent_of(data).and_then(|id| self.mirror.agents.get_mut(&id)) {
                     let meta = data.get("message").and_then(|v| serde_json::from_value::<deck_model::MessageMeta>(v.clone()).ok());
                     if let (Some(message), Some(text)) = (&meta, string_of(data, "text")) {
+                        deck_model::workflow::observe(agent, message);
                         let entry = deck_model::ChatMessage { message: message.clone(), text: deck_model::sanitize::cut(&text, 64 * 1024), at: event.ts };
                         if let Some(old) = agent.messages.iter_mut().find(|m| m.message.id == message.id) { *old = entry; }
                         else { agent.messages.push(entry); }

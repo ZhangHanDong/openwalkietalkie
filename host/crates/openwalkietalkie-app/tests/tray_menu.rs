@@ -52,6 +52,7 @@ fn agent(id: &str, state: AgentState) -> Agent {
         card: None,
         reply: None,
         messages: Vec::new(),
+        workflow: None,
         chat_rev: 0,
         reply_rev: 0,
         voice: None,

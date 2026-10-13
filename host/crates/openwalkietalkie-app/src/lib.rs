@@ -40,6 +40,7 @@ pub mod updater;
 pub mod ui;
 pub mod voice;
 pub mod welcome;
+pub mod workflow;
 
 pub use app::run;
 

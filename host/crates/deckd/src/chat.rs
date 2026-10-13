@@ -72,6 +72,8 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
             upsert(
                 &mut messages,
                 MessageMeta {
+                    activity: None,
+                    plan: None,
                     id: uuid.into(),
                     role,
                     streaming,
@@ -90,6 +92,8 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                     upsert(
                         &mut messages,
                         MessageMeta {
+                            activity: Some(deck_model::workflow::ActivityStatus::Running),
+                            plan: (name == "TodoWrite").then(|| deck_model::workflow::Plan::claude(&block["input"])).flatten(),
                             id: format!("tool:{id}"),
                             role: ChatRole::Tool,
                             streaming: true,
@@ -108,12 +112,15 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                     };
                     let text = text_blocks(&block["content"]);
                     let key = format!("tool:{id}");
+                    let plan = messages.iter().find(|(m, _)| m.id == key).and_then(|(meta, _)| meta.plan.clone());
                     let previous = messages.iter().find(|(m, _)| m.id == key).map(|(_, text)| text.as_str());
                     let (name, input) = previous.and_then(|s| s.split_once("\n\n")).map_or(("Tool", ""), |(name, input)| (name.trim_matches('*'), input));
                     let body = format!("**{name} · {status}**\n\n{input}\n\n{}", deck_model::sanitize::cut(&text, 8192));
                     upsert(
                         &mut messages,
                         MessageMeta {
+                            activity: Some(deck_model::workflow::ActivityStatus::provider(Some(status), false)),
+                            plan,
                             id: key,
                             role: ChatRole::Tool,
                             streaming: false,
@@ -210,17 +217,17 @@ pub(crate) async fn observe(
             } else {
                 "completed"
             };
-            let details = payload
-                .get(if live { "tool_input" } else { "tool_response" })
-                .map(Value::to_string)
-                .unwrap_or_default();
+            let input = payload.get("tool_input").map(Value::to_string).unwrap_or_default();
+            let result = (!live).then(|| payload.get("tool_response").or_else(|| payload.get("error")))
+                .flatten().map(Value::to_string).unwrap_or_default();
+            let details = format!("{}\n```\n\n{}", deck_model::sanitize::cut(&input, 2048),
+                deck_model::sanitize::cut(&result, 8192));
             let req = ReplySet {
                 agent: agent.clone(),
-                text: format!(
-                    "**{name} · {status}**\n\n```\n{}\n```",
-                    deck_model::sanitize::cut(&details, 8192)
-                ),
+                text: format!("**{name} · {status}**\n\n```json\n{details}"),
                 message: Some(MessageMeta {
+                    activity: Some(deck_model::workflow::ActivityStatus::provider(Some(status), live)),
+                    plan: (name == "TodoWrite").then(|| deck_model::workflow::Plan::claude(&payload.0["tool_input"])).flatten(),
                     id: format!("tool:{id}"),
                     role: ChatRole::Tool,
                     streaming: live,
@@ -297,6 +304,9 @@ pub(crate) async fn observe(
             for (mut message, text) in transcript_messages(&bytes, &session_name) {
                 if done {
                     message.streaming = false;
+                    if message.activity == Some(deck_model::workflow::ActivityStatus::Running) {
+                        message.activity = Some(deck_model::workflow::ActivityStatus::Stopped);
+                    }
                 }
                 let value = (message.clone(), text.clone());
                 if previous.get(&message.id) == Some(&value) {
@@ -343,6 +353,28 @@ pub(crate) async fn observe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn workflow_todowrite_keeps_its_plan_when_the_result_arrives() {
+        let lines = [
+            serde_json::json!({"type":"assistant", "uuid":"a1", "sessionId":"s", "message":{"content":[
+                {"type":"thinking", "thinking":"private reasoning"},
+                {"type":"tool_use", "id":"p1", "name":"TodoWrite", "input":{"todos":[{"content":"Test the fix", "status":"in_progress"}]}}
+            ]}}),
+            serde_json::json!({"type":"user", "uuid":"u1", "sessionId":"s", "message":{"content":[
+                {"type":"tool_result", "tool_use_id":"p1", "content":"Updated todos"}
+            ]}}),
+            serde_json::json!({"type":"user", "uuid":"u2", "sessionId":"s", "message":{"content":[
+                {"type":"tool_result", "tool_use_id":"t2", "content":"Command failed", "is_error":true}
+            ]}}),
+        ].map(|v| v.to_string()).join("\n");
+        let messages = transcript_messages(lines.as_bytes(), "s");
+        assert_eq!(messages.len(), 2);
+        assert_eq!(messages[0].0.plan.as_ref().unwrap().steps[0].step, "Test the fix");
+        assert_eq!(messages[0].0.activity, Some(deck_model::workflow::ActivityStatus::Completed));
+        assert_eq!(messages[1].0.activity, Some(deck_model::workflow::ActivityStatus::Failed));
+        assert!(!messages.iter().any(|(_, text)| text.contains("private reasoning")));
+    }
+
     #[test]
     fn transcript_history_tracks_tools_and_excludes_private_blocks() {
         let lines = [

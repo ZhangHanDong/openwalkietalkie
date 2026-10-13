@@ -1,11 +1,9 @@
 //! The **Deck** screen (§8.2's Deck row): the roster mirror on the left, the
 //! detail pane on the right, and the order composer under it.
 //!
-//! It is the [`Shell`]'s first pane, and it keeps three things — all about
-//! the window and none about the deck: which row the operator selected, the
-//! order box, and what this GUI last answered so that **Retry** can re-send
-//! exactly that (§4.8). Everything else it draws comes out of the mirror
-//! through [`crate::present`], and every button is a [`UiAction`].
+//! It is the [`Shell`]'s first pane. Local window state holds the selected
+//! row, order box, workflow disclosures, and the last card answer so that
+//! **Retry** can re-send it (§4.8). Agent data comes from the mirror.
 use crate::present;
 use crate::shell::Shell;
 use crate::style::{palette, Palette};
@@ -47,6 +45,7 @@ pub struct DeckPane {
     pub(crate) order: Entity<InputState>,
     pub(crate) selected: Option<AgentId>,
     answered: Answered,
+    pub(crate) workflow: crate::workflow::ViewState,
 }
 
 impl DeckPane {
@@ -69,6 +68,7 @@ impl DeckPane {
                 order,
                 selected: None,
                 answered: Answered::new(),
+                workflow: Default::default(),
             },
             vec![enter],
         )
@@ -379,6 +379,7 @@ impl Shell {
                         .as_ref()
                         .map(|card| self.render_card(agent, card, now, dim, cx)),
                 )
+                .child(self.render_workflow(agent, dim, cx))
                 .children(agent.reply.as_ref().map(|reply| {
                     ui::section(
                         "Reply",
@@ -897,7 +898,7 @@ impl Shell {
 
     /// The detail column's width this frame: what is left of the content
     /// area once the roster and its rule are off it.
-    fn detail_room(&self) -> f32 {
+    pub(crate) fn detail_room(&self) -> f32 {
         (self.content_width - ROSTER_WIDTH - 1.).max(0.)
     }
 

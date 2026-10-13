@@ -1265,7 +1265,7 @@ pub(crate) fn chat_lines(agent: &crate::Agent, size: u8, expanded: Option<&std::
             let end = agent.messages[i..].iter().position(|m| m.message.role != crate::ChatRole::Tool).map_or(agent.messages.len(), |n| i + n);
             let group = &agent.messages[i..end];
             let open = expanded.is_some_and(|set| set.contains(&entry.message.id));
-            let summaries: Vec<_> = group.iter().map(|m| tool_activity(&m.text)).collect();
+            let summaries: Vec<_> = group.iter().map(|m| crate::workflow::tool_summary(&m.text)).collect();
             let exploring = summaries.iter().all(|(verb, _)| matches!(verb.as_str(), "Read" | "Search" | "List"));
             let running = group.iter().any(|m| m.message.streaming);
             let failed = group.iter().any(|m| m.text.lines().next().is_some_and(|s| s.contains("failed") || s.contains("error")));
@@ -1300,39 +1300,6 @@ pub(crate) fn chat_lines(agent: &crate::Agent, size: u8, expanded: Option<&std::
     (font, lines)
 }
 
-/// Only inputs and tool names become summaries; output stays behind disclosure.
-fn tool_activity(text: &str) -> (String, String) {
-    let heading = text.lines().next().unwrap_or("Tool").split('·').next().unwrap_or("Tool").trim_matches(|c: char| c == '*' || c == '#' || c.is_whitespace());
-    let lower = heading.to_ascii_lowercase();
-    let fence = text.split("```").nth(1).and_then(|s| s.split_once('\n')).map_or("", |(_, s)| s.trim());
-    let input = serde_json::from_str::<serde_json::Value>(fence).ok();
-    let value = |keys: &[&str]| keys.iter().find_map(|k| input.as_ref()?.get(*k)?.as_str()).unwrap_or("");
-    let path = value(&["file_path", "path", "file"]);
-    let basename = |p: &str| p.trim_matches(|c| c == '\'' || c == '"' || c == '`').rsplit('/').next().unwrap_or(p).to_string();
-    if lower.contains("read") { return ("Read".into(), if path.is_empty() { "file".into() } else { basename(path) }); }
-    if lower.contains("search") || lower.contains("grep") || lower.contains("glob") {
-        return ("Search".into(), value(&["pattern", "query"]).to_string());
-    }
-    if lower.contains("list") { return ("List".into(), if path.is_empty() { "files".into() } else { basename(path) }); }
-    if lower.contains("edit") || lower.contains("write") || lower.contains("file change") || lower.contains("patch") {
-        let path = if path.is_empty() { text.lines().find_map(|l| l.strip_prefix("- `")).unwrap_or("") } else { path };
-        return ("Edit".into(), if path.is_empty() { "files".into() } else { basename(path) });
-    }
-    if lower.contains("command") || lower.contains("bash") || lower.contains("exec") {
-        let cmd = value(&["command", "cmd"]);
-        let cmd = if cmd.is_empty() { fence } else { cmd };
-        let first = cmd.lines().next().unwrap_or("");
-        let program = first.split_whitespace().next().unwrap_or("");
-        if matches!(program, "cat" | "sed" | "head" | "tail") {
-            return ("Read".into(), basename(first.split_whitespace().last().unwrap_or("file")));
-        }
-        if matches!(program, "rg" | "grep" | "find" | "ls") {
-            return (if program == "ls" || first.contains("--files") { "List" } else { "Search" }.into(), first.chars().take(80).collect());
-        }
-        return ("Run".into(), if first.is_empty() { heading.into() } else { first.chars().take(80).collect() });
-    }
-    ("Use".into(), heading.into())
-}
 
 fn lines_window(slot: Slot, doc: DocKind, id: u16, first: u16, font: deck_proto::DocFont, lines: &[String]) -> Option<HostLine> {
     let caps = deck_proto::caps();

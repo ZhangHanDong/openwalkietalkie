@@ -37,6 +37,7 @@ pub fn redact_agent(agent: &mut Agent) {
     agent.session.terminal = None;
     agent.meta = Value::Null;
     agent.messages.clear();
+    agent.workflow = None;
     if let Some(card) = &mut agent.card {
         card.text = None;
         card.choices.clear();
@@ -114,6 +115,9 @@ pub fn redact_event(event: &Event, scopes: &[Scope], own_agent: bool) -> Option<
         EventKind::ReplySet => {
             null_field(data, "text");
             null_field(data, "announce");
+            if let Some(message) = data.get_mut("message").and_then(Value::as_object_mut) {
+                null_field(message, "plan");
+            }
         }
         EventKind::OpConfirmRequested => null_field(data, "order"),
         // `hook.raw` with `observe:raw` and the owner-only kinds returned above.

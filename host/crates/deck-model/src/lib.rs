@@ -29,6 +29,7 @@ mod time;
 /// The PTT session machine **and** §5.6's one spoken grammar (B13), which
 /// every adapter calls instead of keeping a word list of its own.
 pub mod voice;
+pub mod workflow;
 
 pub use api::{ApiError, ApiResult};
 pub use cards::{AnswerInput, MAX_CHOICES};

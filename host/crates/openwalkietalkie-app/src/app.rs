@@ -69,12 +69,16 @@ pub fn run() -> std::io::Result<()> {
     // The app-wide bus, so a `state.get` reply can be posted from wherever
     // the view awaited it without threading a sender through every closure.
     events::install(sender.clone());
-    let client = ApiClient::start(
-        &bridge,
-        sender,
-        api_client::config(api_client::default_socket()),
-    );
-    let state = HostState::new(client);
+    let state = if shots.as_ref().is_some_and(Shots::synthetic_only) {
+        HostState::detached()
+    } else {
+        let client = ApiClient::start(
+            &bridge,
+            sender,
+            api_client::config(api_client::default_socket()),
+        );
+        HostState::new(client)
+    };
     let application = Application::new().with_assets(Assets);
     // Clicking the dock icon of an app whose window was closed (and so
     // hidden, see `open`) has to bring it back, or hide-on-close is a

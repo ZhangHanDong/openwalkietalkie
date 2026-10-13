@@ -1,0 +1,380 @@
+//! Public plans and observed activity, shared by host views. Progress comes
+//! from provider events; finishing a tool never invents a completed plan step.
+use crate::{sanitize, Agent, AgentState, ChatMessage, ChatRole, MessageMeta};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+pub const MAX_STEPS: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum StepStatus {
+    Pending,
+    InProgress,
+    Completed,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct PlanStep {
+    pub step: String,
+    pub status: StepStatus,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct Plan {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub explanation: Option<String>,
+    pub steps: Vec<PlanStep>,
+}
+
+impl Plan {
+    pub fn codex(value: &Value) -> Option<Self> {
+        Self::parse(value, "plan", "step")
+    }
+
+    pub fn claude(value: &Value) -> Option<Self> {
+        Self::parse(value, "todos", "content")
+    }
+
+    fn parse(value: &Value, list: &str, label: &str) -> Option<Self> {
+        let mut steps = Vec::new();
+        for entry in value.get(list)?.as_array()?.iter().take(MAX_STEPS) {
+            let step = entry.get(label)?.as_str()?.to_owned();
+            let status = match entry.get("status")?.as_str()? {
+                "pending" => StepStatus::Pending,
+                "in_progress" | "inProgress" => StepStatus::InProgress,
+                "completed" => StepStatus::Completed,
+                _ => return None,
+            };
+            steps.push(PlanStep { step, status });
+        }
+        Some(
+            Self {
+                explanation: value
+                    .get("explanation")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
+                steps,
+            }
+            .bounded(),
+        )
+    }
+
+    pub fn bounded(mut self) -> Self {
+        self.steps.truncate(MAX_STEPS);
+        for step in &mut self.steps {
+            step.step = sanitize::cut(&sanitize::collapse(&step.step), 256);
+        }
+        self.steps.retain(|step| !step.step.is_empty());
+        self.explanation = self
+            .explanation
+            .map(|text| sanitize::cut(&sanitize::collapse(&text), 1024))
+            .filter(|text| !text.is_empty());
+        self
+    }
+
+    pub fn completed(&self) -> usize {
+        self.steps
+            .iter()
+            .filter(|step| step.status == StepStatus::Completed)
+            .count()
+    }
+
+    pub fn text(&self) -> String {
+        let mut text = String::from("**Plan**\n");
+        if let Some(explanation) = &self.explanation {
+            text.push_str(&format!("\n{explanation}\n"));
+        }
+        for step in &self.steps {
+            let mark = match step.status {
+                StepStatus::Pending => " ",
+                StepStatus::InProgress => ">",
+                StepStatus::Completed => "x",
+            };
+            text.push_str(&format!("\n- [{mark}] {}", step.step));
+        }
+        text
+    }
+}
+
+/// Called before the message is upserted, by both the store and GUI mirror.
+/// Retain the latest plan even after its chat item leaves the bounded tail.
+pub fn observe(agent: &mut Agent, message: &MessageMeta) {
+    let position = agent
+        .messages
+        .iter()
+        .position(|entry| entry.message.id == message.id);
+    if message.role == ChatRole::User && position.is_none() {
+        agent.workflow = None;
+    }
+    let Some(plan) = message
+        .plan
+        .as_ref()
+        .filter(|_| message.role == ChatRole::Tool)
+    else {
+        return;
+    };
+    // A late result for an older TodoWrite must not reclaim a newer plan or
+    // the next turn. The same plan id can still update in place.
+    if position.is_some_and(|index| {
+        agent.messages[index + 1..]
+            .iter()
+            .any(|entry| entry.message.role == ChatRole::User || entry.message.plan.is_some())
+    }) {
+        return;
+    }
+    let plan = plan.clone().bounded();
+    agent.workflow = (!plan.steps.is_empty()).then_some(plan);
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ActivityStatus {
+    Running,
+    Completed,
+    Failed,
+    Stopped,
+}
+
+impl ActivityStatus {
+    pub fn provider(status: Option<&str>, streaming: bool) -> Self {
+        match status {
+            Some("failed" | "error" | "errored") => Self::Failed,
+            Some("interrupted" | "cancelled" | "canceled" | "declined" | "aborted") => {
+                Self::Stopped
+            }
+            Some("completed" | "success") => Self::Completed,
+            _ if streaming => Self::Running,
+            _ => Self::Completed,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Running => "Running",
+            Self::Completed => "Completed",
+            Self::Failed => "Failed",
+            Self::Stopped => "Stopped",
+        }
+    }
+}
+
+pub struct Activity<'a> {
+    pub message: &'a ChatMessage,
+    pub title: String,
+    pub status: ActivityStatus,
+}
+
+/// Current turn only when its user message is retained; otherwise the recent
+/// bounded activity. Stale running flags must not animate an idle session.
+pub fn activity(agent: &Agent) -> Vec<Activity<'_>> {
+    let start = agent
+        .messages
+        .iter()
+        .rposition(|entry| entry.message.role == ChatRole::User)
+        .map_or(0, |index| index + 1);
+    agent.messages[start..]
+        .iter()
+        .filter(|entry| entry.message.role == ChatRole::Tool && entry.message.plan.is_none())
+        .map(|message| {
+            let heading = message
+                .text
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .to_ascii_lowercase();
+            let reported = heading
+                .split('·')
+                .nth(1)
+                .map(|s| s.trim().trim_matches('*').trim());
+            let mut status = message
+                .message
+                .activity
+                .unwrap_or_else(|| ActivityStatus::provider(reported, message.message.streaming));
+            if status == ActivityStatus::Running
+                && !matches!(agent.state, AgentState::Working | AgentState::Question)
+            {
+                status = ActivityStatus::Stopped;
+            }
+            let (verb, target) = tool_summary(&message.text);
+            Activity {
+                message,
+                title: format!("{verb} {target}").trim().to_owned(),
+                status,
+            }
+        })
+        .collect()
+}
+
+/// Only inputs and tool names become summaries; output stays behind disclosure.
+pub fn tool_summary(text: &str) -> (String, String) {
+    let heading = text
+        .lines()
+        .next()
+        .unwrap_or("Tool")
+        .split('·')
+        .next()
+        .unwrap_or("Tool")
+        .trim_matches(|c: char| c == '*' || c == '#' || c.is_whitespace());
+    let lower = heading.to_ascii_lowercase();
+    let fence = text
+        .split("```")
+        .nth(1)
+        .and_then(|s| s.split_once('\n'))
+        .map_or("", |(_, s)| s.trim());
+    let input = serde_json::from_str::<serde_json::Value>(fence).ok();
+    let value = |keys: &[&str]| {
+        keys.iter()
+            .find_map(|k| input.as_ref()?.get(*k)?.as_str())
+            .unwrap_or("")
+    };
+    let path = value(&["file_path", "path", "file"]);
+    let basename = |p: &str| {
+        p.trim_matches(|c| c == '\'' || c == '"' || c == '`')
+            .rsplit('/')
+            .next()
+            .unwrap_or(p)
+            .to_string()
+    };
+    if lower.contains("read") {
+        return (
+            "Read".into(),
+            if path.is_empty() {
+                "file".into()
+            } else {
+                basename(path)
+            },
+        );
+    }
+    if lower.contains("search") || lower.contains("grep") || lower.contains("glob") {
+        return ("Search".into(), value(&["pattern", "query"]).to_string());
+    }
+    if lower.contains("list") {
+        return (
+            "List".into(),
+            if path.is_empty() {
+                "files".into()
+            } else {
+                basename(path)
+            },
+        );
+    }
+    if lower.contains("edit")
+        || lower.contains("write")
+        || lower.contains("file change")
+        || lower.contains("patch")
+    {
+        let path = if path.is_empty() {
+            text.lines()
+                .find_map(|l| l.strip_prefix("- `"))
+                .unwrap_or("")
+        } else {
+            path
+        };
+        return (
+            "Edit".into(),
+            if path.is_empty() {
+                "files".into()
+            } else {
+                basename(path)
+            },
+        );
+    }
+    if lower.contains("command") || lower.contains("bash") || lower.contains("exec") {
+        let cmd = value(&["command", "cmd"]);
+        let cmd = if cmd.is_empty() { fence } else { cmd };
+        let first = cmd.lines().next().unwrap_or("");
+        let program = first.split_whitespace().next().unwrap_or("");
+        if matches!(program, "cat" | "sed" | "head" | "tail") {
+            return (
+                "Read".into(),
+                basename(first.split_whitespace().last().unwrap_or("file")),
+            );
+        }
+        if matches!(program, "rg" | "grep" | "find" | "ls") {
+            return (
+                if program == "ls" || first.contains("--files") {
+                    "List"
+                } else {
+                    "Search"
+                }
+                .into(),
+                first.chars().take(80).collect(),
+            );
+        }
+        return (
+            "Run".into(),
+            if first.is_empty() {
+                heading.into()
+            } else {
+                first.chars().take(80).collect()
+            },
+        );
+    }
+    ("Use".into(), heading.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn provider_plans_normalize_bound_and_validate_the_public_schema() {
+        let codex = Plan::codex(&json!({"explanation":"  Checking\n inputs ","plan":[
+            {"step":"Inspect\n code", "status":"completed"},
+            {"step":"Implement", "status":"inProgress"},
+            {"step":"Verify", "status":"pending"}
+        ]}))
+        .unwrap();
+        let claude = Plan::claude(&json!({"todos":[
+            {"content":"Inspect code", "status":"completed", "activeForm":"Inspecting code"},
+            {"content":"Implement", "status":"in_progress"},
+            {"content":"Verify", "status":"pending"}
+        ]}))
+        .unwrap();
+        assert_eq!(codex.steps, claude.steps);
+        assert_eq!(codex.explanation.as_deref(), Some("Checking inputs"));
+        assert_eq!(codex.completed(), 1);
+        assert!(Plan::codex(&json!({"plan":[{"step":"x", "status":"unknown"}]})).is_none());
+        assert!(Plan::codex(&json!({"plan":"not a list"})).is_none());
+        assert!(Plan::codex(&json!({"plan":[]})).unwrap().steps.is_empty());
+        let bounded = Plan::codex(
+            &json!({"plan":vec![json!({"step":"界".repeat(1000), "status":"pending"});100]}),
+        )
+        .unwrap();
+        assert_eq!(bounded.steps.len(), MAX_STEPS);
+        assert!(bounded.steps.iter().all(|s| s.step.len() <= 256));
+    }
+
+    #[test]
+    fn activity_is_current_turn_only_and_never_animates_an_idle_agent() {
+        let mut agent = crate::testkit::fixture_agent("ag_workflow", 1, AgentState::Working);
+        agent.state = AgentState::Working;
+        let message = |id: &str, role, activity| ChatMessage {
+            message: MessageMeta {
+                id: id.into(),
+                role,
+                streaming: activity == Some(ActivityStatus::Running),
+                activity,
+                plan: None,
+            },
+            text: "**Bash**\n\n```json\n{\"command\":\"cargo test\"}\n```".into(),
+            at: agent.since,
+        };
+        agent.messages = vec![
+            message("old", ChatRole::Tool, Some(ActivityStatus::Failed)),
+            message("u1", ChatRole::User, None),
+            message("t1", ChatRole::Tool, Some(ActivityStatus::Running)),
+        ];
+        let tools = activity(&agent);
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0].title, "Run cargo test");
+        assert_eq!(tools[0].status, ActivityStatus::Running);
+        agent.state = AgentState::Ready;
+        assert_eq!(activity(&agent)[0].status, ActivityStatus::Stopped);
+        agent.messages[2].message.activity = Some(ActivityStatus::Failed);
+        assert_eq!(activity(&agent)[0].status, ActivityStatus::Failed);
+    }
+}

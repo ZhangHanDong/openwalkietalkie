@@ -263,7 +263,21 @@ impl Model {
     }
 
     fn chat_notification(&mut self, thread: &str, method: &str, params: &Value) {
-        if matches!(method, "item/started" | "item/completed") {
+        if method == "turn/plan/updated" {
+            if let (Some(turn), Some(plan)) = (params["turnId"].as_str(), deck_model::workflow::Plan::codex(params)) {
+                if self.active_turn(thread).is_some_and(|active| active != turn) {
+                    return;
+                }
+                let text = plan.text();
+                self.record_message(thread, deck_model::MessageMeta {
+                    activity: None,
+                    id: format!("plan:{turn}"),
+                    role: deck_model::ChatRole::Tool,
+                    streaming: false,
+                    plan: Some(plan),
+                }, text);
+            }
+        } else if matches!(method, "item/started" | "item/completed") {
             if let Some((meta, text)) = chat_item(&params["item"], method == "item/started") {
                 self.record_message(thread, meta, text);
             }
@@ -272,6 +286,8 @@ impl Model {
             let Some(delta) = params["delta"].as_str() else { return; };
             let previous = self.threads.get(thread).and_then(|t| t.messages.iter().find(|(m, _)| m.id == id)).cloned();
             let (meta, mut text) = previous.unwrap_or_else(|| (deck_model::MessageMeta {
+                activity: None,
+                plan: None,
                 id: id.into(), role: if method == "item/agentMessage/delta" { deck_model::ChatRole::Assistant } else { deck_model::ChatRole::Tool }, streaming: true,
             }, String::new()));
             if text == "Working…" { text.clear(); }
@@ -282,6 +298,9 @@ impl Model {
                 for (meta, _) in &mut t.messages {
                     if meta.streaming {
                         meta.streaming = false;
+                        if meta.role == deck_model::ChatRole::Tool {
+                            meta.activity = Some(deck_model::workflow::ActivityStatus::Stopped);
+                        }
                         if !t.dirty_messages.contains(&meta.id) { t.dirty_messages.push(meta.id.clone()); }
                     }
                 }
@@ -380,7 +399,14 @@ impl Model {
                 vec![Effect::Usage(windows)]
             };
         }
-        let Some(thread) = thread_id(method, params) else {
+        let thread = thread_id(method, params).or_else(|| {
+            if method != "turn/plan/updated" { return None; }
+            let turn = params["turnId"].as_str()?;
+            let mut matches = self.threads.iter().filter(|(_, t)| t.active_turn.as_deref() == Some(turn));
+            let (id, _) = matches.next()?;
+            matches.next().is_none().then(|| id.clone())
+        });
+        let Some(thread) = thread else {
             return Vec::new();
         };
         self.chat_notification(&thread, method, params);
@@ -806,7 +832,8 @@ fn chat_item(item: &Value, streaming: bool) -> Option<(deck_model::MessageMeta, 
         "webSearch" => (ChatRole::Tool, format!("**Web search**\n\n{}", item["query"].as_str().unwrap_or("Searching the web"))),
         _ => return None,
     };
-    Some((deck_model::MessageMeta { id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
+    let activity = (role == ChatRole::Tool).then(|| deck_model::workflow::ActivityStatus::provider(item["status"].as_str(), streaming));
+    Some((deck_model::MessageMeta { activity, plan: None, id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
 }
 
 /// One row of the daemon's loaded-thread list, as [`Model::loaded`] takes it.
@@ -1852,6 +1879,30 @@ async fn apply(
 mod tests {
     use super::*;
     use deck_model::{AnswerSource, Principal};
+
+    #[test]
+    fn workflow_plans_coalesce_and_route_by_turn_without_accepting_a_stale_turn() {
+        let mut model = Model::default();
+        model.loaded(&[loaded("t1", None, false)]);
+        model.registered("t1", AgentId("ag_1".into()));
+        model.notification("turn/started", &json!({"threadId":"t1", "turn":{"id":"turn-1"}}));
+        for status in ["pending", "inProgress", "completed"] {
+            model.notification("turn/plan/updated", &json!({"turnId":"turn-1", "plan":[{"step":"Verify", "status":status}]}));
+        }
+        let messages = model.flush_messages();
+        assert_eq!(messages.len(), 1);
+        let Effect::Message { thread, message, .. } = &messages[0] else { panic!("plan message"); };
+        assert_eq!(thread, "t1");
+        assert_eq!(message.id, "plan:turn-1");
+        assert_eq!(message.plan.as_ref().unwrap().completed(), 1);
+        model.notification("turn/started", &json!({"threadId":"t1", "turn":{"id":"turn-2"}}));
+        model.notification("turn/plan/updated", &json!({"threadId":"t1", "turnId":"turn-1", "plan":[{"step":"Old plan", "status":"pending"}]}));
+        assert!(model.flush_messages().is_empty());
+        model.notification("turn/plan/updated", &json!({"threadId":"t1", "turnId":"turn-2", "plan":[]}));
+        let messages = model.flush_messages();
+        let Effect::Message { message, .. } = &messages[0] else { panic!("clear plan"); };
+        assert!(message.plan.as_ref().unwrap().steps.is_empty());
+    }
 
     #[test]
     fn an_account_change_discards_the_old_identity_and_requests_fresh_usage() {

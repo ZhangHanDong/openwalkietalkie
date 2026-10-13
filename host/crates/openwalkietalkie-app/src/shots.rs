@@ -31,6 +31,14 @@ pub struct Shots {
 impl Global for Shots {}
 
 impl Shots {
+    /// Workflow-only captures use synthetic data, with no service connection.
+    pub fn synthetic_only(&self) -> bool {
+        std::env::var("OPENWALKIETALKIE_SHOTS_ONLY").ok().is_some_and(|list| {
+            !list.is_empty() && list.split(',').all(|scene| matches!(scene.trim(),
+                "workflow" | "workflow-expanded" | "workflow-complete"))
+        })
+    }
+
     /// `--shots DIR` anywhere in the arguments.
     pub fn from_args(mut args: impl Iterator<Item = String>) -> Option<Shots> {
         while let Some(arg) = args.next() {
@@ -48,6 +56,9 @@ impl Shots {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scene {
     Deck,
+    Workflow,
+    WorkflowExpanded,
+    WorkflowComplete,
     Confirm,
     Integrations,
     Details,
@@ -64,8 +75,11 @@ pub enum Scene {
 }
 
 /// Every scene, with the name its file gets.
-pub const SCENES: [(Scene, &str); 15] = [
+pub const SCENES: [(Scene, &str); 18] = [
     (Scene::Deck, "deck"),
+    (Scene::Workflow, "workflow"),
+    (Scene::WorkflowExpanded, "workflow-expanded"),
+    (Scene::WorkflowComplete, "workflow-complete"),
     (Scene::Confirm, "confirm"),
     (Scene::Integrations, "integrations"),
     (Scene::Details, "integrations-details"),
@@ -88,6 +102,7 @@ const SETTLE: Duration = Duration::from_millis(1600);
 /// Walk the scenes, saving each, then quit.
 pub fn start(shell: Entity<Shell>, window: &mut Window, cx: &mut App) {
     let dir = cx.global::<Shots>().dir.clone();
+    let synthetic = cx.global::<Shots>().synthetic_only();
     if let Err(e) = std::fs::create_dir_all(&dir) {
         eprintln!(
             "openwalkietalkie-app: --shots cannot use {}: {e}",
@@ -112,7 +127,7 @@ pub fn start(shell: Entity<Shell>, window: &mut Window, cx: &mut App) {
         .spawn(cx, async move |cx| {
             // The socket, the first snapshot and the first frame: up to ten
             // seconds for a roster, so a slow start does not stage an empty one.
-            for _ in 0..20 {
+            for _ in 0..if synthetic { 0 } else { 20 } {
                 cx.background_executor()
                     .timer(Duration::from_millis(500))
                     .await;
@@ -177,6 +192,11 @@ impl Shell {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
             }
+            Scene::Workflow | Scene::WorkflowExpanded | Scene::WorkflowComplete => {
+                self.go(Screen::Deck, window, cx);
+                self.select_for_shots();
+                self.stage_workflow(scene);
+            }
             Scene::Confirm => {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
@@ -234,6 +254,60 @@ impl Shell {
             }
         }
         cx.notify();
+    }
+
+    /// Synthetic provider events for visual checks; only the window's mirror
+    /// changes. No request or content is sent to the connected daemon.
+    fn stage_workflow(&mut self, scene: Scene) {
+        use deck_gui_core::{ApiEvent, AppEvent};
+        use deck_model::workflow::{ActivityStatus, Plan, PlanStep, StepStatus};
+        use deck_model::{AgentState, ChatMessage, ChatRole, MessageMeta};
+        // Keep previews deterministic even when the service is disconnected
+        // or correctly refuses content access to an agent-launched process.
+        let mut snapshot = deck_model::Snapshot::default();
+        let id = deck_model::AgentId("ag_workflow_preview".into());
+        self.deck.selected = Some(id.clone());
+        let mut agent = deck_model::Agent {
+            id: id.clone(), slot: Some(deck_model::Slot(1)), kind: deck_model::Kind::Codex,
+            name: String::new(), state: AgentState::Working, title: None,
+            title_source: deck_model::TitleSource::Prompt, since: crate::present::now(),
+            source: deck_model::Source::Api,
+            owner: deck_model::Owner { principal: Principal::Uid(0), session: deck_model::SessionId(1), lease_expires: None },
+            session: deck_model::SessionInfo { key: None, cwd: Some("/demo/openwalkietalkie".into()), pid: None, pid_kind: None, terminal: None },
+            caps: deck_model::Caps::default(), card: None, reply: None, messages: Vec::new(), workflow: None,
+            chat_rev: 1, reply_rev: 0, voice: None, pinned: false, meta: serde_json::Value::Null, redacted: false,
+        };
+        let complete = scene == Scene::WorkflowComplete;
+        agent.name = "Workflow preview".into();
+        agent.state = if complete { AgentState::Ready } else { AgentState::Working };
+        agent.title = Some("Add a live workflow to the Deck".into());
+        agent.card = None;
+        agent.reply = None;
+        agent.redacted = false;
+        agent.workflow = Some(Plan { explanation: None, steps: [
+            "Inspect provider events and the Deck layout",
+            "Connect plans and tool activity",
+            "Build the compact workflow view",
+            "Verify live updates and small windows",
+            "Review the result",
+        ].into_iter().enumerate().map(|(i, step)| PlanStep { step: step.into(),
+            status: if complete || i < 3 { StepStatus::Completed } else if i == 3 { StepStatus::InProgress } else { StepStatus::Pending }
+        }).collect() });
+        agent.messages = [("Read", "{\"file_path\":\"src/deck.rs\"}", "Deck layout inspected."),
+            ("Edit", "{\"file_path\":\"src/workflow.rs\"}", "Workflow panel added."),
+            ("Bash", "{\"command\":\"cargo test workflow\"}", "Running workflow checks…")]
+            .into_iter().enumerate().map(|(i, (name, input, output))| {
+                let running = !complete && i == 2;
+                ChatMessage { message: MessageMeta { id: format!("preview-tool-{i}"), role: ChatRole::Tool, streaming: running,
+                    activity: Some(if running { ActivityStatus::Running } else { ActivityStatus::Completed }), plan: None },
+                    text: format!("**{name}**\n\n```json\n{input}\n```\n\n{output}"), at: crate::present::now() }
+            }).collect();
+        self.deck.workflow = Default::default();
+        if scene == Scene::WorkflowExpanded {
+            self.deck.workflow.toggle_tool(&agent.id, "preview-tool-2");
+        }
+        snapshot.agents.insert(id, agent);
+        self.state.handle_event(AppEvent::Api(ApiEvent::Connected { snapshot }));
     }
 
     /// The first agent with a card on it, or the first agent.

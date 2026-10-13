@@ -101,6 +101,7 @@ pub struct Pending {
 /// nothing the daemon emits folds any of them into a `Snapshot`.
 pub struct IntegrationsPane {
     reports: Vec<Report>,
+    claude_channels: Vec<(String, bool)>,
     warnings: Vec<String>,
     /// `perm.status`'s `automation.ghostty`: `granted`, `denied`, `unknown`.
     ghostty: Option<String>,
@@ -131,6 +132,7 @@ impl IntegrationsPane {
             .new(|cx| InputState::new(window, cx).placeholder("A name for the new token\u{2026}"));
         IntegrationsPane {
             reports: Vec::new(),
+            claude_channels: Vec::new(),
             warnings: Vec::new(),
             ghostty: None,
             tokens: Vec::new(),
@@ -220,6 +222,10 @@ impl Shell {
                 match result {
                     Ok(value) => {
                         let (reports, warnings) = Report::list(&value);
+                        this.integrations.claude_channels = value["claude_channels"].as_array()
+                            .into_iter().flatten().filter_map(|row| Some((
+                                row["session"].as_str()?.to_owned(), row["state"] == "ready"
+                            ))).collect();
                         this.integrations.reports = reports;
                         this.integrations.warnings = warnings;
                         // Only an answer counts as having asked, so opening
@@ -342,6 +348,7 @@ impl Shell {
                     ))
                 }))
                 .child(ui::section("Agent CLIs", ui::card(parties, &p), &p))
+                .child(self.render_claude_channels(dim, cx))
                 .child(ui::section(
                     "Grants",
                     ui::card(vec![self.render_automation(dim, cx)], &p),
@@ -349,6 +356,69 @@ impl Shell {
                 ))
                 .child(self.render_tokens(dim, cx))
                 .child(self.render_token_form(dim, cx)),
+        )
+    }
+
+    fn render_claude_channels(&self, dim: bool, cx: &Context<Self>) -> impl IntoElement {
+        let p = *palette(cx);
+        let ready = self
+            .integrations
+            .claude_channels
+            .iter()
+            .filter(|(_, ready)| *ready)
+            .count();
+        let status = if !self.integrations.asked {
+            "Connection status has not been read yet.".to_string()
+        } else if ready > 0 {
+            format!("Channels ready in {ready} session(s). Other sessions use the cross-session inbox.")
+        } else {
+            "Cross-session inbox active. No session has confirmed a Channels connection yet."
+                .to_string()
+        };
+        let steps = [
+            "1. Use an up-to-date Claude Code, then Install or Repair its integration above.",
+            "2. Run the command below in your project's terminal. To keep an existing conversation, exit it first and add --resume followed by its session ID.",
+            "3. Accept Claude's local development confirmation. Allow the OpenWalkieTalkie MCP server and its acknowledge connection check if prompted.",
+            "4. Press Re-read. Once your session shows Channels ready, select it on the deck and talk.",
+        ];
+        let mut body = v_flex().p(px(16.)).gap(px(10.)).ts(12.5, 19.)
+            .child(div().text_color(p.muted).child(status))
+            .children(steps.into_iter().map(|step| div().child(step)))
+            .child(div().mono().ts(11., 17.).child(present::CLAUDE_CHANNEL_COMMAND))
+            .child(h_flex().flex_wrap().gap(px(8.))
+                .child(Btn::new("claude-channel-copy", "Copy launch command").small().disabled(dim)
+                    .on_click(cx.listener(|_, _, _, cx| {
+                        cx.write_to_clipboard(ClipboardItem::new_string(present::CLAUDE_CHANNEL_COMMAND.to_string()));
+                    })))
+                .child(Btn::new("claude-channel-docs", "Channels documentation").small().quiet()
+                    .on_click(cx.listener(|_, _, _, cx| { cx.open_url(present::CLAUDE_CHANNEL_DOCS); })))
+                .child(Btn::new("claude-channel-refresh", "Re-read").small().quiet()
+                    .disabled(dim || self.integrations.busy)
+                    .on_click(cx.listener(|this, _, window, cx| { this.refresh_integrations(true, window, cx); }))))
+            .child(div().text_color(p.muted).child(
+                "Channels are a Claude research preview. The development flag enables this custom plugin for one interactive session; organization policy still applies. If the check stalls, use /mcp to verify the server, then ask Claude to run OpenWalkieTalkie's check_connection tool."
+            ))
+            .child(div().text_color(p.muted).child(
+                "Until connected, messages use the existing inbox and Claude may label them as coming from another session. To turn Channels off, restart Claude without the flag."
+            ));
+        for (session, ready) in &self.integrations.claude_channels {
+            body = body.child(
+                Row::new()
+                    .title(self.state.mirror().agents.values()
+                        .find(|agent| agent.session.key.as_deref() == Some(format!("claude:{session}").as_str()))
+                        .map(|agent| agent.name.clone())
+                        .unwrap_or_else(|| format!("Claude · {}", session.chars().take(12).collect::<String>())))
+                    .meta(if *ready {
+                        "Channels ready"
+                    } else {
+                        "Waiting for connection check · inbox fallback"
+                    }),
+            );
+        }
+        ui::section(
+            "Claude voice messages",
+            ui::card(vec![body.into_any_element()], &p),
+            &p,
         )
     }
 

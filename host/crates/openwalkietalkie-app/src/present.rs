@@ -34,6 +34,10 @@ use deck_model::{
 };
 use std::time::Duration;
 
+/// Custom Channels still require Claude's interactive preview opt-in.
+pub const CLAUDE_CHANNEL_COMMAND: &str = "claude --dangerously-load-development-channels plugin:openwalkietalkie@openwalkietalkie";
+pub const CLAUDE_CHANNEL_DOCS: &str = "https://code.claude.com/docs/en/channels-reference#test-during-the-research-preview";
+
 /// The slot badge of an agent the daemon has not put on the deck (§8.2).
 pub const NOT_ON_DECK: &str = "not on deck";
 

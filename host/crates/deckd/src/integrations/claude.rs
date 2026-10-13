@@ -7,6 +7,7 @@
 //!   .claude-plugin/marketplace.json
 //!   plugins/openwalkietalkie/.claude-plugin/plugin.json
 //!   plugins/openwalkietalkie/hooks/hooks.json
+//!   plugins/openwalkietalkie/.mcp.json
 //! ```
 //!
 //! — and asks Claude Code itself to register it: `claude plugin marketplace
@@ -165,12 +166,24 @@ pub fn hooks_json_path(env: &Env) -> PathBuf {
     plugin_dir(env).join("hooks").join("hooks.json")
 }
 
+pub fn mcp_json_path(env: &Env) -> PathBuf {
+    plugin_dir(env).join(".mcp.json")
+}
+
+pub fn mcp_json(env: &Env) -> serde_json::Value {
+    serde_json::json!({"mcpServers": {"openwalkietalkie": {
+        "command": env.exe,
+        "args": ["--data-dir", env.data.to_string_lossy(), "claude-channel"]
+    }}})
+}
+
 /// The files this target owns, plus the settings file it reads.
 pub fn files(env: &Env) -> Vec<PathBuf> {
     vec![
         marketplace_json_path(env),
         plugin_json_path(env),
         hooks_json_path(env),
+        mcp_json_path(env),
         settings_path(env),
     ]
 }
@@ -324,6 +337,7 @@ pub fn plan(env: &Env, verb: Verb, receipt: Option<&serde_json::Value>) -> Resul
         (marketplace_json_path(env), marketplace_json()),
         (plugin_json_path(env), plugin_json()),
         (hooks_json_path(env), hooks_json(env)),
+        (mcp_json_path(env), mcp_json(env)),
     ];
     if verb.is_uninstall() {
         let mut removed = 0usize;
@@ -364,6 +378,7 @@ pub fn plan(env: &Env, verb: Verb, receipt: Option<&serde_json::Value>) -> Resul
             "a session already open loads the plugin after `/reload-plugins`; new sessions load it \
              at start",
         );
+        plan.step("For voice messages through Claude Channels, follow Integrations → Claude voice messages in the app. Channels require per-session opt-in; cross-session inbox delivery remains the fallback.");
         plan.receipt = Some(serde_json::json!({
             "schema": RECEIPT_SCHEMA,
             "deckd": env.exe.display().to_string(),
@@ -531,6 +546,7 @@ pub fn status(env: &Env) -> Report {
         (marketplace_json_path(env), marketplace_json()),
         (plugin_json_path(env), plugin_json()),
         (hooks_path.clone(), hooks_json(env)),
+        (mcp_json_path(env), mcp_json(env)),
     ];
     let stale: Vec<String> = desired
         .iter()
@@ -611,6 +627,29 @@ mod tests {
 
     fn json_at(path: &Path) -> serde_json::Value {
         serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn channel_bridge_is_managed_without_enabling_channels_for_the_user() {
+        let dir = TestDir::new("plugin-channel");
+        let env = test_env(&dir);
+        install(&env);
+        let mcp = json_at(&mcp_json_path(&env));
+        assert_eq!(
+            mcp["mcpServers"]["openwalkietalkie"]["command"],
+            env.exe.to_string_lossy().as_ref()
+        );
+        assert_eq!(
+            mcp["mcpServers"]["openwalkietalkie"]["args"],
+            serde_json::json!(["--data-dir", env.data.to_string_lossy(), "claude-channel"])
+        );
+        assert!(!settings_path(&env).exists());
+        std::fs::remove_file(mcp_json_path(&env)).unwrap();
+        assert_eq!(status(&env).status, Status::Outdated);
+        crate::integrations::run(&env, Target::Claude, Verb::Repair { trust: false }).unwrap();
+        assert_eq!(status(&env).status, Status::Installed);
+        crate::integrations::run(&env, Target::Claude, Verb::Uninstall).unwrap();
+        assert!(!mcp_json_path(&env).exists());
     }
 
     /// Every hook is a command hook running `deckd hook claude` in exec form,

@@ -225,6 +225,8 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Cmd {
+    /// Stdio MCP bridge, launched by the Claude plugin.
+    ClaudeChannel,
     /// Run the service (the LaunchAgent entry point).
     Run {
         /// Log to stderr instead of the log file.
@@ -659,6 +661,7 @@ fn run(cli: Cli) -> Result<i32, String> {
     };
     let paths = paths(data_dir)?;
     match cmd {
+        Cmd::ClaudeChannel => crate::claude_channel::main(&paths.data),
         // Answered above, where a missing data directory is a missing
         // socket rather than an error exit; kept so the match is total.
         Cmd::Hook { cli, rest } => Ok(crate::hook::main(&cli, &rest, Some(paths.socket))),

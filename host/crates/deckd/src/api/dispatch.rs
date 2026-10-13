@@ -315,8 +315,14 @@ pub async fn dispatch(ctx: &ConnCtx, method: &str, params: serde_json::Value) ->
     // is answered on the tokio side (on a blocking pool), never as a
     // `CoreMsg`, so a slow disk or a wedged CLI cannot stop the core thread.
     if let Some(verb) = method.strip_prefix("integrations.") {
+        let mut result = crate::integrations::api_dispatch(verb, params).await;
+        if verb == "status" {
+            if let Ok(value) = &mut result {
+                value["claude_channels"] = ctx.core.adapters().claude_channels.status();
+            }
+        }
         return Reply {
-            result: crate::integrations::api_dispatch(verb, params).await,
+            result,
             after_write: None,
         };
     }

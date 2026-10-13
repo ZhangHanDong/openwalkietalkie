@@ -1927,7 +1927,19 @@ impl Core {
                     .map(|a| a.owner.principal.clone())
             })
             .unwrap_or(Principal::Uid(0));
-        // The inbox route first (§5.5, `crate::inbox`): a Claude session
+        // Channels are preferred only after a notification round trip proves
+        // this session opted in. The old inbox remains the safe fallback.
+        if let DesktopCmd::Inject { text, .. } = &cmd {
+            if let Some(target) = self.store.snapshot().agents.get(&agent) {
+                let dialog_open = target.card.as_ref().is_some_and(deck_model::Card::is_open_dialog);
+                if self.adapters.claude_channels.post(
+                    target, text, self.adapters.inbox(&agent), dialog_open, self.desktop.outcomes(),
+                ) {
+                    return;
+                }
+            }
+        }
+        // The inbox fallback (§5.5, `crate::inbox`): a Claude session
         // whose message socket a hook reported is **posted to**, never typed
         // at — no focus, no AppleScript, no TCC, and the only route a
         // Desktop-app session has. It needs no desktop engine, so it runs
@@ -2605,8 +2617,13 @@ pub fn run(opts: RunOptions) -> Result<i32, CoreError> {
         // rate-limit windows for the Usage face, polled; Codex's come
         // through the app-server client above.
         let usage_rx = stop_liveness.subscribe();
+        let channels = tokio::spawn(crate::claude_channel::serve(
+            api.paths.data.clone(),
+            api.core.adapters().claude_channels.clone(),
+            stop_liveness.subscribe(),
+        ));
         let usage = tokio::spawn(crate::usage::claude::run(api, usage_rx));
-        (served, stop_liveness, (liveness, codexd, usage))
+        (served, stop_liveness, (liveness, codexd, usage, channels))
     });
     // **B10.** §2.3 requires a CFRunLoop on the main thread, and V13 makes
     // it load-bearing rather than decorative: AVSpeech's `writeUtterance`
@@ -2633,10 +2650,11 @@ pub fn run(opts: RunOptions) -> Result<i32, CoreError> {
     }
     runtime.block_on(async {
         let _ = stop_liveness.send(true);
-        let (liveness, codexd, usage) = liveness;
+        let (liveness, codexd, usage, channels) = liveness;
         let _ = tokio::time::timeout(Duration::from_secs(2), liveness).await;
         let _ = tokio::time::timeout(Duration::from_secs(2), codexd).await;
         let _ = tokio::time::timeout(Duration::from_secs(2), usage).await;
+        let _ = tokio::time::timeout(Duration::from_secs(2), channels).await;
         served.shutdown().await;
     });
     runtime.shutdown_timeout(Duration::from_secs(2));
@@ -2902,12 +2920,15 @@ mod tests {
         use std::io::Read;
         use std::os::unix::net::UnixListener;
 
-        for (label, program) in [
-            ("desktop", None),
-            ("iterm", Some("iTerm.app")),
-            ("wezterm", Some("WezTerm")),
+        for (label, program, channel) in [
+            ("desktop", None, false),
+            ("desktop-channel", None, true),
+            ("iterm", Some("iTerm.app"), false),
+            ("iterm-channel", Some("iTerm.app"), true),
+            ("wezterm", Some("WezTerm"), false),
+            ("wezterm-channel", Some("WezTerm"), true),
         ] {
-            let dir = temp(&format!("inbox-independent-{label}"));
+            let dir = temp(&format!("route-{label}"));
             let socket = dir.join("peer.sock");
             let listener = UnixListener::bind(&socket).unwrap();
             listener.set_nonblocking(true).unwrap();
@@ -2920,6 +2941,8 @@ mod tests {
                 .open_internal(session, adapter.clone(), "claude-adapter", now);
             let mut reg = testkit::register(label, Some("claude:voice-target"));
             reg.kind = Kind::Claude;
+            reg.pid = Some(42);
+            reg.pid_kind = Some(deck_model::PidKind::Cli);
             reg.caps.order = OrderCap::Inject;
             reg.terminal = program.map(|program| Terminal {
                 program: Some(program.into()),
@@ -2936,6 +2959,7 @@ mod tests {
                     token: Some("test-token".into()),
                 },
             );
+            let received = channel.then(|| c.adapters.claude_channels.test_channel(42, "voice-target"));
             let text = "Please continue. 请继续。";
             c.api_call(
                 Principal::Device,
@@ -2960,17 +2984,25 @@ mod tests {
                 matches!(&result, FromDesktop::Order { agent: to, text: sent, result: Ok(()) } if to == &agent && sent == text),
                 "{result:?}"
             );
-            let (mut stream, _) = listener.accept().unwrap();
-            // The completion arrives after the sender closed its stream.
-            stream.set_nonblocking(true).unwrap();
-            let mut payload = String::new();
-            stream.read_to_string(&mut payload).unwrap();
-            let frames: Vec<serde_json::Value> = payload
-                .lines()
-                .map(|line| serde_json::from_str(line).unwrap())
-                .collect();
-            assert_eq!(frames.len(), 2);
-            assert_eq!(frames[1]["message"]["content"], text);
+            if let Some(received) = received {
+                assert_eq!(received.recv_timeout(Duration::from_secs(2)).unwrap(), text);
+                assert!(
+                    listener.accept().is_err(),
+                    "channel delivery must not also reach inbox"
+                );
+            } else {
+                let (mut stream, _) = listener.accept().unwrap();
+                // The completion arrives after the sender closed its stream.
+                stream.set_nonblocking(true).unwrap();
+                let mut payload = String::new();
+                stream.read_to_string(&mut payload).unwrap();
+                let frames: Vec<serde_json::Value> = payload
+                    .lines()
+                    .map(|line| serde_json::from_str(line).unwrap())
+                    .collect();
+                assert_eq!(frames.len(), 2);
+                assert_eq!(frames[1]["message"]["content"], text);
+            }
             c.on_from_desktop(result, now);
             c.publish();
             assert!(!c

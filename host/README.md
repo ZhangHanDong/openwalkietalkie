@@ -243,17 +243,51 @@ under the 130 s the installed hook allows, and `[api] max_held_hooks` (64)
 bounds how many can be parked at once; past that a hook fails open rather
 than queueing.
 
-Because every Claude hook is a command hook, every event carries the
-helper's environment: the terminal identity of a session, and the session's
-**message inbox** — the Unix socket Claude Code binds for cross-session
-messaging, with the per-session token that makes a post from deckd count as
-the session's own. A spoken order for a Claude session is **posted into that
-socket** (`deckd::inbox`): Claude reads it between tool calls during a turn
-and starts a new turn with it when idle, with no focus change, no AppleScript
-and no TCC grant, in any terminal and in the Desktop app's Code tab alike.
-The Ghostty injector of §5.5 remains the fallback for a session with no
-inbox. The token never leaves the daemon: it is held in memory beside the
-agent and is in no snapshot, event or log line.
+**Claude voice messages can use Channels in any terminal.** In the Mac app,
+open **Integrations → Claude voice messages**. Install or Repair the Claude
+plugin, then copy the launch command into your project's terminal:
+
+```sh
+claude --dangerously-load-development-channels plugin:openwalkietalkie@openwalkietalkie
+```
+
+To keep an existing conversation, exit it first and append `--resume` followed
+by its session ID. Accept Claude's local development confirmation, enable the
+MCP server if prompted, and allow its `acknowledge` connection check. Press
+**Re-read** in Integrations to see the session become **Channels ready**.
+The bridge runs inside the existing `deckd` binary; no Node or Bun install is
+needed. This applies to both dictation and messages typed in the deck app.
+
+[Claude Channels](https://code.claude.com/docs/en/channels-reference#test-during-the-research-preview)
+are a research preview. Our custom plugin requires this per-session flag and
+interactive confirmation; the flag does not override organization policy or
+Claude's tool permissions, and does not work in `-p`/SDK mode. Team/Enterprise
+administrators must enable Channels. Restart without the flag to turn it off.
+If the connection check stalls, inspect `/mcp`, then ask Claude to run
+OpenWalkieTalkie's `check_connection` tool to retry it.
+
+The plugin declares a stdio MCP channel in `.mcp.json`. The helper connects to
+`<data>/claude-channel.sock`, a local socket restricted to the same user and
+`deckd` executable. The daemon derives the Claude PID from the helper's actual
+process ancestry. Both ends validate the current conversation against Claude's
+session registry; `/clear` and resume invalidate the old connection proof.
+Only the core's authorized operator orders can enter this route. There is no
+new public message-ingress API and no channel permission relay.
+
+**The cross-session inbox remains the fallback.** Every Claude hook captures
+its session's inbox socket and authentication token. Until a channel event
+has been acknowledged, or if the bridge becomes unavailable before writing,
+orders use that inbox without focusing a terminal or requiring Automation
+permission. Claude may label fallback messages as coming from another Claude
+session. An uncertain channel write reports `channel_delivery_uncertain`
+instead of retrying through the inbox, to avoid duplicate commands; a changed
+conversation reports `channel_session_changed`. The existing guarded Ghostty
+injector remains the last resort for sessions with neither route. Inbox tokens
+remain inside the daemon, absent from snapshots, events and logs.
+
+`integrations.status` includes `claude_channels: [{session, state}]`, where
+`state` is `checking` or `ready`. It is a connection check at the time of the
+read, not an acknowledgement that Claude has acted on a particular message.
 
 **Codex has a second, better source than hooks.** From codex-cli 0.161 the
 TUI runs through a shared local app-server daemon, and `deckd::codexd`

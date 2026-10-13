@@ -1,0 +1,8 @@
+import os
+from building import *
+cwd = GetCurrentDir()
+root = os.path.abspath(os.path.join(cwd, '../..'))
+group = DefineGroup('OpenWalkieTalkie', Glob('*.c'), depend=[], CPPPATH=[cwd],
+    LIBPATH=[os.path.join(root, 'target/native-core/thumbv8m.main-none-eabihf/release')],
+    LIBS=['openwalkietalkie_native_core'])
+Return('group')

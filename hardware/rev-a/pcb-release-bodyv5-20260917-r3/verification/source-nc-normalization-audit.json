@@ -1,0 +1,70 @@
+{
+  "source": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/source/main/out/openmicrodial-rev-a.kicad_pcb",
+  "source_sha256": "b8f325624d79612ad5841fca924fc8886959b15d500e0c245106377c83c3dd7a",
+  "output": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/native-source-finalized-for-audit.kicad_pcb",
+  "output_sha256": "c768ef027dd4950189f33408a98f578f873c6ca52588d2e5b105203be2be0832",
+  "operation": "Only documented ML/MR custom NPTH union conversion; all placement shifts disabled",
+  "zero_shift_records": [
+    {
+      "ref": "SW1",
+      "before_mm": [
+        3.76,
+        18.5
+      ],
+      "after_mm": [
+        3.76,
+        18.5
+      ],
+      "delta_mm": [
+        0,
+        0
+      ]
+    },
+    {
+      "ref": "SW2",
+      "before_mm": [
+        3.76,
+        30.5
+      ],
+      "after_mm": [
+        3.76,
+        30.5
+      ],
+      "delta_mm": [
+        0,
+        0
+      ]
+    },
+    {
+      "ref": "SW5",
+      "before_mm": [
+        52.24,
+        30.742641
+      ],
+      "after_mm": [
+        52.24,
+        30.742641
+      ],
+      "delta_mm": [
+        0,
+        0
+      ]
+    },
+    {
+      "ref": "SW6",
+      "before_mm": [
+        3.76,
+        42.5
+      ],
+      "after_mm": [
+        3.76,
+        42.5
+      ],
+      "delta_mm": [
+        0,
+        0
+      ]
+    }
+  ],
+  "scope": "Parity intermediate only; no routing or manufacturing output"
+}

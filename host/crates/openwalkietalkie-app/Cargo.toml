@@ -1,0 +1,42 @@
+[package]
+name = "openwalkietalkie-app"
+description = "The OpenWalkieTalkie GUI: the Deck screen over deck-gui-core's mirror (gpui)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "openwalkietalkie-app"
+path = "src/main.rs"
+
+[lib]
+name = "openwalkietalkie_app"
+path = "src/lib.rs"
+
+[dependencies]
+deck-gui-core = { workspace = true }
+async-channel = { workspace = true }
+deck-client = { workspace = true }
+deck-model = { workspace = true }
+serde_json = { workspace = true }
+libc = { workspace = true }
+tokio = { workspace = true }
+# Week 5 (HOST-CONTRACT-W5 §1 M1/M2): the pin, features and all. Do not
+# "upgrade" either half -- see the note in `[workspace.dependencies]`.
+gpui = { workspace = true }
+gpui-component = { workspace = true }
+# Week 6 (HOST-CONTRACT-W6 §1 M1/M2): the tray and the login item. Both are
+# macOS frameworks, and the pins carry their reasons in `[workspace.dependencies]`.
+tray-icon = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-service-management = { workspace = true }
+# `snapshot`: the window's own NSView (gpui hands it out through
+# raw-window-handle) and two getters on it. Both already in the lockfile.
+objc2 = { workspace = true }
+objc2-foundation = { workspace = true }
+raw-window-handle = "0.6"
+
+[build-dependencies]
+cc = "=1.4.7"

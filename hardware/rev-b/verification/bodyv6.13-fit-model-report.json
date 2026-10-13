@@ -1,0 +1,2285 @@
+{
+ "case_frame": "X=u-28, Z=47.5-v, Y normal; F seat 8.24, B seat 9.31",
+ "results": [
+  {
+   "ref": "R15",
+   "model": "RC0402FR-07100KL",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.6388,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.84,
+    3.175
+   ],
+   "p_obst": [
+    -20.375,
+    7.84,
+    3.5
+   ],
+   "p_part_uv": [
+    7.075,
+    44.325,
+    7.84
+   ]
+  },
+  {
+   "ref": "AE1",
+   "model": "2450AT18B100E",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0352,
+   "common_mm3": 0,
+   "p_part": [
+    23.3,
+    8.24,
+    21.2
+   ],
+   "p_obst": [
+    23.3,
+    9.275,
+    21.2
+   ],
+   "p_part_uv": [
+    51.3,
+    26.3,
+    8.24
+   ]
+  },
+  {
+   "ref": "AE1",
+   "model": "2450AT18B100E",
+   "side": "F",
+   "obstacle": "SideButton_R",
+   "dist": 0.7,
+   "common_mm3": 0,
+   "p_part": [
+    25.1,
+    8.24,
+    21.2
+   ],
+   "p_obst": [
+    25.8,
+    8.24,
+    21.2
+   ],
+   "p_part_uv": [
+    53.1,
+    26.3,
+    8.24
+   ]
+  },
+  {
+   "ref": "C15",
+   "model": "CC0402KRX5R6BB474",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.575,
+   "common_mm3": 0,
+   "p_part": [
+    15.375,
+    7.69,
+    24.075
+   ],
+   "p_obst": [
+    15.375,
+    7.69,
+    23.5
+   ],
+   "p_part_uv": [
+    43.375,
+    23.425,
+    7.69
+   ]
+  },
+  {
+   "ref": "SW6",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 0.706,
+   "common_mm3": 0,
+   "p_part": [
+    -24.14,
+    8.69,
+    6.75
+   ],
+   "p_obst": [
+    -23.745,
+    9.275,
+    6.75
+   ],
+   "p_part_uv": [
+    3.86,
+    40.75,
+    8.69
+   ]
+  },
+  {
+   "ref": "SW6",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "SideButton_L3",
+   "dist": 0.06,
+   "common_mm3": 0,
+   "p_part": [
+    -25.74,
+    7.137,
+    4.459
+   ],
+   "p_obst": [
+    -25.8,
+    7.137,
+    4.459
+   ],
+   "p_part_uv": [
+    2.26,
+    43.041,
+    7.137
+   ]
+  },
+  {
+   "ref": "R47",
+   "model": "RC0402JR-070RL",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0507,
+   "common_mm3": 0,
+   "p_part": [
+    23.925,
+    8.24,
+    17.375
+   ],
+   "p_obst": [
+    23.745,
+    9.275,
+    17.375
+   ],
+   "p_part_uv": [
+    51.925,
+    30.125,
+    8.24
+   ]
+  },
+  {
+   "ref": "R47",
+   "model": "RC0402JR-070RL",
+   "side": "F",
+   "obstacle": "SideButton_R",
+   "dist": 1.325,
+   "common_mm3": 0,
+   "p_part": [
+    24.475,
+    8.24,
+    17.375
+   ],
+   "p_obst": [
+    25.8,
+    8.24,
+    17.375
+   ],
+   "p_part_uv": [
+    52.475,
+    30.125,
+    8.24
+   ]
+  },
+  {
+   "ref": "R23",
+   "model": "RC0402FR-071KL",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.55,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.84,
+    4.025
+   ],
+   "p_obst": [
+    -20.375,
+    7.84,
+    4.025
+   ],
+   "p_part_uv": [
+    7.075,
+    43.475,
+    7.84
+   ]
+  },
+  {
+   "ref": "C39",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 1.475,
+   "common_mm3": 0,
+   "p_part": [
+    2.125,
+    7.69,
+    24.975
+   ],
+   "p_obst": [
+    2.125,
+    7.69,
+    23.5
+   ],
+   "p_part_uv": [
+    30.125,
+    22.525,
+    7.69
+   ]
+  },
+  {
+   "ref": "R14",
+   "model": "RC0402FR-07100KL",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.55,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.84,
+    14.125
+   ],
+   "p_obst": [
+    -20.375,
+    7.84,
+    14.125
+   ],
+   "p_part_uv": [
+    7.075,
+    33.375,
+    7.84
+   ]
+  },
+  {
+   "ref": "C58",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0352,
+   "common_mm3": 0,
+   "p_part": [
+    23.275,
+    8.24,
+    18.425
+   ],
+   "p_obst": [
+    23.275,
+    9.275,
+    18.425
+   ],
+   "p_part_uv": [
+    51.275,
+    29.075,
+    8.24
+   ]
+  },
+  {
+   "ref": "U1",
+   "model": "NS4150B",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.405,
+   "common_mm3": 0,
+   "p_part": [
+    15.05,
+    8.24,
+    -23.001
+   ],
+   "p_obst": [
+    16.0,
+    9.275,
+    -23.001
+   ],
+   "p_part_uv": [
+    43.05,
+    70.501,
+    8.24
+   ]
+  },
+  {
+   "ref": "R20",
+   "model": "RC0402FR-071KL",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.6,
+   "common_mm3": 0,
+   "p_part": [
+    21.225,
+    7.84,
+    8.375
+   ],
+   "p_obst": [
+    20.625,
+    7.84,
+    8.375
+   ],
+   "p_part_uv": [
+    49.225,
+    39.125,
+    7.84
+   ]
+  },
+  {
+   "ref": "SW2",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 0.706,
+   "common_mm3": 0,
+   "p_part": [
+    -24.14,
+    8.69,
+    18.75
+   ],
+   "p_obst": [
+    -23.745,
+    9.275,
+    18.75
+   ],
+   "p_part_uv": [
+    3.86,
+    28.75,
+    8.69
+   ]
+  },
+  {
+   "ref": "SW2",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "SideButton_L2",
+   "dist": 0.06,
+   "common_mm3": 0,
+   "p_part": [
+    -25.74,
+    7.137,
+    16.459
+   ],
+   "p_obst": [
+    -25.8,
+    7.137,
+    16.459
+   ],
+   "p_part_uv": [
+    2.26,
+    31.041,
+    7.137
+   ]
+  },
+  {
+   "ref": "SW5",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 0.706,
+   "common_mm3": 0,
+   "p_part": [
+    24.14,
+    8.69,
+    10.007
+   ],
+   "p_obst": [
+    23.745,
+    9.275,
+    10.007
+   ],
+   "p_part_uv": [
+    52.14,
+    37.493,
+    8.69
+   ]
+  },
+  {
+   "ref": "SW5",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "SideButton_R",
+   "dist": 0.06,
+   "common_mm3": 0,
+   "p_part": [
+    25.74,
+    7.137,
+    12.298
+   ],
+   "p_obst": [
+    25.8,
+    7.137,
+    12.298
+   ],
+   "p_part_uv": [
+    53.74,
+    35.202,
+    7.137
+   ]
+  },
+  {
+   "ref": "C32",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.6,
+   "common_mm3": 0,
+   "p_part": [
+    21.225,
+    7.69,
+    6.275
+   ],
+   "p_obst": [
+    20.625,
+    7.69,
+    6.275
+   ],
+   "p_part_uv": [
+    49.225,
+    41.225,
+    7.69
+   ]
+  },
+  {
+   "ref": "C35",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.55,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.69,
+    5.925
+   ],
+   "p_obst": [
+    -20.375,
+    7.69,
+    5.925
+   ],
+   "p_part_uv": [
+    7.075,
+    41.575,
+    7.69
+   ]
+  },
+  {
+   "ref": "R12",
+   "model": "RC0402FR-07100KL",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0583,
+   "common_mm3": 0,
+   "p_part": [
+    23.025,
+    8.24,
+    7.325
+   ],
+   "p_obst": [
+    23.245,
+    9.275,
+    7.325
+   ],
+   "p_part_uv": [
+    51.025,
+    40.175,
+    8.24
+   ]
+  },
+  {
+   "ref": "J5",
+   "model": "TYPE-C-31-M-12",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 0.0,
+   "common_mm3": 0.1607,
+   "p_part": [
+    4.545,
+    8.24,
+    47.225
+   ],
+   "p_obst": [
+    4.545,
+    8.24,
+    47.225
+   ],
+   "p_part_uv": [
+    32.545,
+    0.275,
+    8.24
+   ]
+  },
+  {
+   "ref": "L6",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0352,
+   "common_mm3": 0,
+   "p_part": [
+    23.275,
+    8.24,
+    17.175
+   ],
+   "p_obst": [
+    23.275,
+    9.275,
+    17.175
+   ],
+   "p_part_uv": [
+    51.275,
+    30.325,
+    8.24
+   ]
+  },
+  {
+   "ref": "R40",
+   "model": "RC0402JR-070RL",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0507,
+   "common_mm3": 0,
+   "p_part": [
+    23.925,
+    8.24,
+    15.325
+   ],
+   "p_obst": [
+    23.745,
+    9.275,
+    15.325
+   ],
+   "p_part_uv": [
+    51.925,
+    32.175,
+    8.24
+   ]
+  },
+  {
+   "ref": "R40",
+   "model": "RC0402JR-070RL",
+   "side": "F",
+   "obstacle": "SideButton_R",
+   "dist": 1.325,
+   "common_mm3": 0,
+   "p_part": [
+    24.475,
+    8.24,
+    15.325
+   ],
+   "p_obst": [
+    25.8,
+    8.24,
+    15.325
+   ],
+   "p_part_uv": [
+    52.475,
+    32.175,
+    8.24
+   ]
+  },
+  {
+   "ref": "C34",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.55,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.69,
+    17.925
+   ],
+   "p_obst": [
+    -20.375,
+    7.69,
+    17.925
+   ],
+   "p_part_uv": [
+    7.075,
+    29.575,
+    7.69
+   ]
+  },
+  {
+   "ref": "C38",
+   "model": "CC0402JRNPO9BN102",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 1.475,
+   "common_mm3": 0,
+   "p_part": [
+    -1.675,
+    7.69,
+    24.975
+   ],
+   "p_obst": [
+    -1.675,
+    7.69,
+    23.5
+   ],
+   "p_part_uv": [
+    26.325,
+    22.525,
+    7.69
+   ]
+  },
+  {
+   "ref": "J1",
+   "model": "53261-0271",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.1965,
+   "common_mm3": 0,
+   "p_part": [
+    6.229,
+    8.24,
+    -41.225
+   ],
+   "p_obst": [
+    6.229,
+    9.275,
+    -41.825
+   ],
+   "p_part_uv": [
+    34.229,
+    88.725,
+    8.24
+   ]
+  },
+  {
+   "ref": "R22",
+   "model": "RC0402FR-071KL",
+   "side": "F",
+   "obstacle": "Battery_box",
+   "dist": 0.55,
+   "common_mm3": 0,
+   "p_part": [
+    -20.925,
+    7.84,
+    16.025
+   ],
+   "p_obst": [
+    -20.375,
+    7.84,
+    16.025
+   ],
+   "p_part_uv": [
+    7.075,
+    31.475,
+    7.84
+   ]
+  },
+  {
+   "ref": "R3",
+   "model": "RC0402FR-07100KL",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0352,
+   "common_mm3": 0,
+   "p_part": [
+    16.225,
+    8.24,
+    -22.375
+   ],
+   "p_obst": [
+    16.225,
+    9.275,
+    -22.375
+   ],
+   "p_part_uv": [
+    44.225,
+    69.875,
+    8.24
+   ]
+  },
+  {
+   "ref": "SW1",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 0.706,
+   "common_mm3": 0,
+   "p_part": [
+    -24.14,
+    8.69,
+    30.75
+   ],
+   "p_obst": [
+    -23.745,
+    9.275,
+    30.75
+   ],
+   "p_part_uv": [
+    3.86,
+    16.75,
+    8.69
+   ]
+  },
+  {
+   "ref": "SW1",
+   "model": "SKTDLDE010",
+   "side": "F",
+   "obstacle": "SideButton_L1",
+   "dist": 0.06,
+   "common_mm3": 0,
+   "p_part": [
+    -25.74,
+    7.137,
+    28.459
+   ],
+   "p_obst": [
+    -25.8,
+    7.137,
+    28.459
+   ],
+   "p_part_uv": [
+    2.26,
+    19.041,
+    7.137
+   ]
+  },
+  {
+   "ref": "C1",
+   "model": "CC0603KRX5R6BB105",
+   "side": "F",
+   "obstacle": "Case",
+   "dist": 1.0352,
+   "common_mm3": 0,
+   "p_part": [
+    16.35,
+    8.24,
+    -21.55
+   ],
+   "p_obst": [
+    16.35,
+    9.275,
+    -21.55
+   ],
+   "p_part_uv": [
+    44.35,
+    69.05,
+    8.24
+   ]
+  },
+  {
+   "ref": "MK1",
+   "model": "MP34DT05TR-A",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 0.4293,
+   "common_mm3": 0,
+   "p_part": [
+    18.45,
+    9.31,
+    -20.95
+   ],
+   "p_obst": [
+    18.191,
+    9.31,
+    -20.608
+   ],
+   "p_part_uv": [
+    46.45,
+    68.45,
+    9.31
+   ]
+  },
+  {
+   "ref": "C46",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -2.15,
+    9.31,
+    10.3
+   ],
+   "p_obst": [
+    -2.15,
+    7.945,
+    10.3
+   ],
+   "p_part_uv": [
+    25.85,
+    37.2,
+    9.31
+   ]
+  },
+  {
+   "ref": "C46",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "DispFlex_component_zone",
+   "dist": 1.2572,
+   "common_mm3": 0,
+   "p_part": [
+    -2.15,
+    11.11,
+    13.7
+   ],
+   "p_obst": [
+    -2.15,
+    11.57,
+    14.87
+   ],
+   "p_part_uv": [
+    25.85,
+    33.8,
+    11.11
+   ]
+  },
+  {
+   "ref": "R8",
+   "model": "RC0402FR-071KL",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 0.6688,
+   "common_mm3": 0,
+   "p_part": [
+    23.225,
+    9.31,
+    -19.625
+   ],
+   "p_obst": [
+    22.763,
+    9.31,
+    -20.109
+   ],
+   "p_part_uv": [
+    51.225,
+    67.125,
+    9.31
+   ]
+  },
+  {
+   "ref": "C20",
+   "model": "CC0402KRX7R7BB104",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    4.175,
+    9.31,
+    13.625
+   ],
+   "p_obst": [
+    4.175,
+    7.945,
+    13.625
+   ],
+   "p_part_uv": [
+    32.175,
+    33.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C13",
+   "model": "CC0402KRX5R6BB474",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    7.025,
+    9.31,
+    18.325
+   ],
+   "p_obst": [
+    7.025,
+    7.945,
+    18.325
+   ],
+   "p_part_uv": [
+    35.025,
+    29.175,
+    9.31
+   ]
+  },
+  {
+   "ref": "C52",
+   "model": "CC0402JRNPO9BN102",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    16.425,
+    9.31,
+    18.725
+   ],
+   "p_obst": [
+    16.425,
+    7.945,
+    18.725
+   ],
+   "p_part_uv": [
+    44.425,
+    28.775,
+    9.31
+   ]
+  },
+  {
+   "ref": "R6",
+   "model": "RC0402FR-0722RL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    4.725,
+    9.31,
+    20.625
+   ],
+   "p_obst": [
+    4.725,
+    7.945,
+    20.625
+   ],
+   "p_part_uv": [
+    32.725,
+    26.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "U3",
+   "model": "8_03A5_031250",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    3.15,
+    9.31,
+    8.85
+   ],
+   "p_obst": [
+    3.15,
+    7.945,
+    8.85
+   ],
+   "p_part_uv": [
+    31.15,
+    38.65,
+    9.31
+   ]
+  },
+  {
+   "ref": "Y1",
+   "model": "E1SB48E001G00E",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    12.5,
+    9.31,
+    15.65
+   ],
+   "p_obst": [
+    12.5,
+    7.945,
+    15.65
+   ],
+   "p_part_uv": [
+    40.5,
+    31.85,
+    9.31
+   ]
+  },
+  {
+   "ref": "R29",
+   "model": "RC0402FR-0710KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    1.425,
+    9.31,
+    11.325
+   ],
+   "p_obst": [
+    1.425,
+    7.945,
+    11.325
+   ],
+   "p_part_uv": [
+    29.425,
+    36.175,
+    9.31
+   ]
+  },
+  {
+   "ref": "U8",
+   "model": "RT6150BGQW",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -4.7,
+    9.31,
+    11.7
+   ],
+   "p_obst": [
+    -4.7,
+    7.945,
+    11.7
+   ],
+   "p_part_uv": [
+    23.3,
+    35.8,
+    9.31
+   ]
+  },
+  {
+   "ref": "C45",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -8.05,
+    9.31,
+    10.3
+   ],
+   "p_obst": [
+    -8.05,
+    7.945,
+    10.3
+   ],
+   "p_part_uv": [
+    19.95,
+    37.2,
+    9.31
+   ]
+  },
+  {
+   "ref": "U4",
+   "model": "W25Q128JVSIQ",
+   "side": "B",
+   "obstacle": "DispFlex_folded_tail",
+   "dist": 1.2,
+   "common_mm3": 0,
+   "p_part": [
+    0.55,
+    11.47,
+    30.61
+   ],
+   "p_obst": [
+    0.55,
+    12.67,
+    30.61
+   ],
+   "p_part_uv": [
+    28.55,
+    16.89,
+    11.47
+   ]
+  },
+  {
+   "ref": "U4",
+   "model": "W25Q128JVSIQ",
+   "side": "B",
+   "obstacle": "DispFlex_neck",
+   "dist": 1.2,
+   "common_mm3": 0,
+   "p_part": [
+    0.55,
+    11.47,
+    35.99
+   ],
+   "p_obst": [
+    0.55,
+    12.67,
+    35.99
+   ],
+   "p_part_uv": [
+    28.55,
+    11.51,
+    11.47
+   ]
+  },
+  {
+   "ref": "U4",
+   "model": "W25Q128JVSIQ",
+   "side": "B",
+   "obstacle": "DispFlex_driverIC",
+   "dist": 0.83,
+   "common_mm3": 0,
+   "p_part": [
+    0.55,
+    11.47,
+    35.99
+   ],
+   "p_obst": [
+    0.55,
+    12.3,
+    35.99
+   ],
+   "p_part_uv": [
+    28.55,
+    11.51,
+    11.47
+   ]
+  },
+  {
+   "ref": "R34",
+   "model": "RC0402FR-071ML",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -6.875,
+    9.31,
+    15.625
+   ],
+   "p_obst": [
+    -6.875,
+    7.945,
+    15.625
+   ],
+   "p_part_uv": [
+    21.125,
+    31.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "SW3",
+   "model": "PTS636SM25SMTRLFS",
+   "side": "B",
+   "obstacle": "FrontButton_2",
+   "dist": 0.94,
+   "common_mm3": 0,
+   "p_part": [
+    10.472,
+    11.86,
+    -10.14
+   ],
+   "p_obst": [
+    10.472,
+    12.8,
+    -10.14
+   ],
+   "p_part_uv": [
+    38.472,
+    57.64,
+    11.86
+   ]
+  },
+  {
+   "ref": "R32",
+   "model": "RC0402FR-07604KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -2.075,
+    9.31,
+    15.625
+   ],
+   "p_obst": [
+    -2.075,
+    7.945,
+    15.625
+   ],
+   "p_part_uv": [
+    25.925,
+    31.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C50",
+   "model": "CC0402JRNPO9BN102",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -3.025,
+    9.31,
+    6.875
+   ],
+   "p_obst": [
+    -3.025,
+    7.945,
+    6.875
+   ],
+   "p_part_uv": [
+    24.975,
+    40.625,
+    9.31
+   ]
+  },
+  {
+   "ref": "R31",
+   "model": "RC0402FR-0786K6L",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -4.025,
+    9.31,
+    15.625
+   ],
+   "p_obst": [
+    -4.025,
+    7.945,
+    15.625
+   ],
+   "p_part_uv": [
+    23.975,
+    31.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C19",
+   "model": "CC0402KRX7R7BB104",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    6.475,
+    9.31,
+    13.625
+   ],
+   "p_obst": [
+    6.475,
+    7.945,
+    13.625
+   ],
+   "p_part_uv": [
+    34.475,
+    33.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "R7",
+   "model": "RC0402FR-07100KL",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 0.6259,
+   "common_mm3": 0,
+   "p_part": [
+    20.0,
+    9.31,
+    -18.375
+   ],
+   "p_obst": [
+    20.0,
+    9.31,
+    -19.001
+   ],
+   "p_part_uv": [
+    48.0,
+    65.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C26",
+   "model": "CC0402KRX5R6BB474",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    4.725,
+    9.31,
+    22.625
+   ],
+   "p_obst": [
+    4.725,
+    7.945,
+    22.625
+   ],
+   "p_part_uv": [
+    32.725,
+    24.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C7",
+   "model": "CC1206JRNPO8BN104",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 0.8991,
+   "common_mm3": 0,
+   "p_part": [
+    20.0,
+    9.31,
+    -27.9
+   ],
+   "p_obst": [
+    20.0,
+    9.31,
+    -27.001
+   ],
+   "p_part_uv": [
+    48.0,
+    75.4,
+    9.31
+   ]
+  },
+  {
+   "ref": "R36",
+   "model": "RC0402FR-071ML",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.3652,
+   "common_mm3": 0,
+   "p_part": [
+    -4.025,
+    9.31,
+    3.475
+   ],
+   "p_obst": [
+    -4.025,
+    7.945,
+    3.5
+   ],
+   "p_part_uv": [
+    23.975,
+    44.025,
+    9.31
+   ]
+  },
+  {
+   "ref": "R43",
+   "model": "RC0402FR-07180KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -11.025,
+    9.31,
+    7.625
+   ],
+   "p_obst": [
+    -11.025,
+    7.945,
+    7.625
+   ],
+   "p_part_uv": [
+    16.975,
+    39.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C43",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -9.15,
+    9.31,
+    5.7
+   ],
+   "p_obst": [
+    -9.15,
+    7.945,
+    5.7
+   ],
+   "p_part_uv": [
+    18.85,
+    41.8,
+    9.31
+   ]
+  },
+  {
+   "ref": "R41",
+   "model": "RC0402FR-07100KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    1.425,
+    9.31,
+    13.425
+   ],
+   "p_obst": [
+    1.425,
+    7.945,
+    13.425
+   ],
+   "p_part_uv": [
+    29.425,
+    34.075,
+    9.31
+   ]
+  },
+  {
+   "ref": "C57",
+   "model": "CC0402JRNPO9BN102",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    15.675,
+    9.31,
+    18.475
+   ],
+   "p_obst": [
+    15.675,
+    7.945,
+    18.475
+   ],
+   "p_part_uv": [
+    43.675,
+    29.025,
+    9.31
+   ]
+  },
+  {
+   "ref": "L3",
+   "model": "WPN201610U4R7MT",
+   "side": "B",
+   "obstacle": "DispFlex_component_zone",
+   "dist": 1.2625,
+   "common_mm3": 0,
+   "p_part": [
+    7.1,
+    10.31,
+    27.9
+   ],
+   "p_obst": [
+    7.1,
+    11.57,
+    27.82
+   ],
+   "p_part_uv": [
+    35.1,
+    19.6,
+    10.31
+   ]
+  },
+  {
+   "ref": "R28",
+   "model": "RC0402FR-0710KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    1.425,
+    9.31,
+    12.375
+   ],
+   "p_obst": [
+    1.425,
+    7.945,
+    12.375
+   ],
+   "p_part_uv": [
+    29.425,
+    35.125,
+    9.31
+   ]
+  },
+  {
+   "ref": "R30",
+   "model": "RC0402FR-07100KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.4625,
+   "common_mm3": 0,
+   "p_part": [
+    17.025,
+    9.31,
+    24.025
+   ],
+   "p_obst": [
+    17.025,
+    7.945,
+    23.5
+   ],
+   "p_part_uv": [
+    45.025,
+    23.475,
+    9.31
+   ]
+  },
+  {
+   "ref": "C6",
+   "model": "CC0402JRNPO9BN102",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 1.125,
+   "common_mm3": 0,
+   "p_part": [
+    25.875,
+    9.31,
+    -16.875
+   ],
+   "p_obst": [
+    27.0,
+    9.31,
+    -16.875
+   ],
+   "p_part_uv": [
+    53.875,
+    64.375,
+    9.31
+   ]
+  },
+  {
+   "ref": "R42",
+   "model": "RC0402FR-071ML",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -9.075,
+    9.31,
+    7.625
+   ],
+   "p_obst": [
+    -9.075,
+    7.945,
+    7.625
+   ],
+   "p_part_uv": [
+    18.925,
+    39.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "C47",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    0.3,
+    9.31,
+    10.3
+   ],
+   "p_obst": [
+    0.3,
+    7.945,
+    10.3
+   ],
+   "p_part_uv": [
+    28.3,
+    37.2,
+    9.31
+   ]
+  },
+  {
+   "ref": "C47",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "DispFlex_component_zone",
+   "dist": 1.2572,
+   "common_mm3": 0,
+   "p_part": [
+    -1.5,
+    11.11,
+    13.7
+   ],
+   "p_obst": [
+    -1.5,
+    11.57,
+    14.87
+   ],
+   "p_part_uv": [
+    26.5,
+    33.8,
+    11.11
+   ]
+  },
+  {
+   "ref": "R48",
+   "model": "RC0402JR-070RL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    5.775,
+    9.31,
+    14.675
+   ],
+   "p_obst": [
+    5.775,
+    7.945,
+    14.675
+   ],
+   "p_part_uv": [
+    33.775,
+    32.825,
+    9.31
+   ]
+  },
+  {
+   "ref": "U10",
+   "model": "TPS22918DBVR",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -0.48,
+    9.31,
+    6.02
+   ],
+   "p_obst": [
+    -0.48,
+    7.945,
+    6.02
+   ],
+   "p_part_uv": [
+    27.52,
+    41.48,
+    9.31
+   ]
+  },
+  {
+   "ref": "C42",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -15.05,
+    9.31,
+    5.7
+   ],
+   "p_obst": [
+    -15.05,
+    7.945,
+    5.7
+   ],
+   "p_part_uv": [
+    12.95,
+    41.8,
+    9.31
+   ]
+  },
+  {
+   "ref": "L5",
+   "model": "DFE201612E-2R2M_P2",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -7.1,
+    9.31,
+    9.1
+   ],
+   "p_obst": [
+    -7.1,
+    7.945,
+    9.1
+   ],
+   "p_part_uv": [
+    20.9,
+    38.4,
+    9.31
+   ]
+  },
+  {
+   "ref": "R39",
+   "model": "RC0402FR-071ML",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    7.025,
+    9.31,
+    17.225
+   ],
+   "p_obst": [
+    7.025,
+    7.945,
+    17.225
+   ],
+   "p_part_uv": [
+    35.025,
+    30.275,
+    9.31
+   ]
+  },
+  {
+   "ref": "R35",
+   "model": "RC0402FR-071KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -0.975,
+    9.31,
+    6.875
+   ],
+   "p_obst": [
+    -0.975,
+    7.945,
+    6.875
+   ],
+   "p_part_uv": [
+    27.025,
+    40.625,
+    9.31
+   ]
+  },
+  {
+   "ref": "U5",
+   "model": "SF32LB525UC6",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    7.45,
+    9.31,
+    19.45
+   ],
+   "p_obst": [
+    7.45,
+    7.945,
+    19.45
+   ],
+   "p_part_uv": [
+    35.45,
+    28.05,
+    9.31
+   ]
+  },
+  {
+   "ref": "U5",
+   "model": "SF32LB525UC6",
+   "side": "B",
+   "obstacle": "DispFlex_component_zone",
+   "dist": 1.36,
+   "common_mm3": 0,
+   "p_part": [
+    7.45,
+    10.21,
+    26.55
+   ],
+   "p_obst": [
+    7.45,
+    11.57,
+    26.55
+   ],
+   "p_part_uv": [
+    35.45,
+    20.95,
+    10.21
+   ]
+  },
+  {
+   "ref": "C18",
+   "model": "CC0603KRX5R6BB475",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    7.9,
+    9.31,
+    13.5
+   ],
+   "p_obst": [
+    7.9,
+    7.945,
+    13.5
+   ],
+   "p_part_uv": [
+    35.9,
+    34.0,
+    9.31
+   ]
+  },
+  {
+   "ref": "C18",
+   "model": "CC0603KRX5R6BB475",
+   "side": "B",
+   "obstacle": "DispFlex_component_zone",
+   "dist": 1.4389,
+   "common_mm3": 0,
+   "p_part": [
+    7.9,
+    10.21,
+    14.4
+   ],
+   "p_obst": [
+    7.9,
+    11.57,
+    14.87
+   ],
+   "p_part_uv": [
+    35.9,
+    33.1,
+    10.21
+   ]
+  },
+  {
+   "ref": "C25",
+   "model": "CC0402KRX5R6BB474",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.3707,
+   "common_mm3": 0,
+   "p_part": [
+    4.725,
+    9.31,
+    23.625
+   ],
+   "p_obst": [
+    4.725,
+    7.945,
+    23.5
+   ],
+   "p_part_uv": [
+    32.725,
+    23.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "SW4",
+   "model": "PTS636SM25SMTRLFS",
+   "side": "B",
+   "obstacle": "FrontButton_1",
+   "dist": 0.94,
+   "common_mm3": 0,
+   "p_part": [
+    -12.973,
+    11.86,
+    -10.14
+   ],
+   "p_obst": [
+    -12.973,
+    12.8,
+    -10.14
+   ],
+   "p_part_uv": [
+    15.027,
+    57.64,
+    11.86
+   ]
+  },
+  {
+   "ref": "R46",
+   "model": "RC0402FR-07100KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    4.775,
+    9.31,
+    18.425
+   ],
+   "p_obst": [
+    4.775,
+    7.945,
+    18.425
+   ],
+   "p_part_uv": [
+    32.775,
+    29.075,
+    9.31
+   ]
+  },
+  {
+   "ref": "C44",
+   "model": "C3216X7R1C106K160AC",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -6.7,
+    9.31,
+    5.7
+   ],
+   "p_obst": [
+    -6.7,
+    7.945,
+    5.7
+   ],
+   "p_part_uv": [
+    21.3,
+    41.8,
+    9.31
+   ]
+  },
+  {
+   "ref": "C16",
+   "model": "CC0402KRX5R6BB474",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    16.075,
+    9.31,
+    19.725
+   ],
+   "p_obst": [
+    16.075,
+    7.945,
+    19.725
+   ],
+   "p_part_uv": [
+    44.075,
+    27.775,
+    9.31
+   ]
+  },
+  {
+   "ref": "L4",
+   "model": "DFE201612E-2R2M_P2",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.491,
+   "common_mm3": 0,
+   "p_part": [
+    -14.1,
+    9.31,
+    2.9
+   ],
+   "p_obst": [
+    -14.1,
+    7.945,
+    3.5
+   ],
+   "p_part_uv": [
+    13.9,
+    44.6,
+    9.31
+   ]
+  },
+  {
+   "ref": "C21",
+   "model": "CC0603KRX5R6BB105",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    2.25,
+    9.31,
+    9.25
+   ],
+   "p_obst": [
+    2.25,
+    7.945,
+    9.25
+   ],
+   "p_part_uv": [
+    30.25,
+    38.25,
+    9.31
+   ]
+  },
+  {
+   "ref": "R9",
+   "model": "RC0402FR-071ML",
+   "side": "B",
+   "obstacle": "Case",
+   "dist": 1.125,
+   "common_mm3": 0,
+   "p_part": [
+    25.875,
+    9.31,
+    -14.375
+   ],
+   "p_obst": [
+    27.0,
+    9.31,
+    -14.375
+   ],
+   "p_part_uv": [
+    53.875,
+    61.875,
+    9.31
+   ]
+  },
+  {
+   "ref": "R45",
+   "model": "RC0402FR-07100KL",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    2.475,
+    9.31,
+    9.725
+   ],
+   "p_obst": [
+    2.475,
+    7.945,
+    9.725
+   ],
+   "p_part_uv": [
+    30.475,
+    37.775,
+    9.31
+   ]
+  },
+  {
+   "ref": "C53",
+   "model": "CC0402JRNPO9BN102",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    15.675,
+    9.31,
+    16.575
+   ],
+   "p_obst": [
+    15.675,
+    7.945,
+    16.575
+   ],
+   "p_part_uv": [
+    43.675,
+    30.925,
+    9.31
+   ]
+  },
+  {
+   "ref": "U7",
+   "model": "RT6150BGQW",
+   "side": "B",
+   "obstacle": "Battery_box",
+   "dist": 1.365,
+   "common_mm3": 0,
+   "p_part": [
+    -11.7,
+    9.31,
+    3.7
+   ],
+   "p_obst": [
+    -11.7,
+    7.945,
+    3.7
+   ],
+   "p_part_uv": [
+    16.3,
+    43.8,
+    9.31
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "Case",
+   "dist": 0.0,
+   "common_mm3": 0,
+   "p_part": [
+    -21.302,
+    9.275,
+    46.117
+   ],
+   "p_obst": [
+    -21.302,
+    9.275,
+    46.117
+   ],
+   "p_part_uv": [
+    6.698,
+    1.383,
+    9.275
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "Wheel",
+   "dist": 0.32,
+   "common_mm3": 0,
+   "p_part": [
+    14.223,
+    8.275,
+    31.932
+   ],
+   "p_obst": [
+    14.415,
+    8.275,
+    32.189
+   ],
+   "p_part_uv": [
+    42.223,
+    15.568,
+    8.275
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "SideButton_R",
+   "dist": 0.31,
+   "common_mm3": 0,
+   "p_part": [
+    25.49,
+    9.275,
+    -0.917
+   ],
+   "p_obst": [
+    25.8,
+    9.275,
+    -0.917
+   ],
+   "p_part_uv": [
+    53.49,
+    48.417,
+    9.275
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "SideButton_L1",
+   "dist": 0.242,
+   "common_mm3": 0,
+   "p_part": [
+    -25.745,
+    8.5,
+    34.135
+   ],
+   "p_obst": [
+    -25.8,
+    8.5,
+    33.899
+   ],
+   "p_part_uv": [
+    2.255,
+    13.365,
+    8.5
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "SideButton_L2",
+   "dist": 0.2386,
+   "common_mm3": 0,
+   "p_part": [
+    -25.798,
+    8.5,
+    22.138
+   ],
+   "p_obst": [
+    -25.8,
+    8.5,
+    21.899
+   ],
+   "p_part_uv": [
+    2.202,
+    25.362,
+    8.5
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "SideButton_L3",
+   "dist": 0.2386,
+   "common_mm3": 0,
+   "p_part": [
+    -25.798,
+    8.5,
+    10.138
+   ],
+   "p_obst": [
+    -25.8,
+    8.5,
+    9.899
+   ],
+   "p_part_uv": [
+    2.202,
+    37.362,
+    8.5
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "WheelSwept_r8.5",
+   "dist": 0.32,
+   "common_mm3": 0,
+   "p_part": [
+    14.696,
+    9.275,
+    31.603
+   ],
+   "p_obst": [
+    14.87,
+    9.275,
+    31.871
+   ],
+   "p_part_uv": [
+    42.696,
+    15.897,
+    9.275
+   ]
+  },
+  {
+   "ref": "PCB_main_1.0",
+   "model": "board",
+   "side": "-",
+   "obstacle": "Battery_box",
+   "dist": 0.33,
+   "common_mm3": 0,
+   "p_part": [
+    -20.375,
+    8.275,
+    23.5
+   ],
+   "p_obst": [
+    -20.375,
+    7.945,
+    23.5
+   ],
+   "p_part_uv": [
+    7.625,
+    24.0,
+    8.275
+   ]
+  }
+ ],
+ "comp_comp": [],
+ "comp_board": [],
+ "missing_models": []
+}

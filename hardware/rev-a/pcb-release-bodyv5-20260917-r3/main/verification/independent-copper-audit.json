@@ -1,0 +1,553 @@
+{
+  "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/main-45deg.kicad_pcb",
+  "sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "copper_layers": 4,
+  "track_count": 3168,
+  "via_count": 384,
+  "headings_deg": [
+    0.0,
+    45.0,
+    90.0,
+    135.0,
+    180.0,
+    225.0,
+    270.0,
+    315.0
+  ],
+  "minimum_track_mm": 0.104,
+  "via_sizes_mm": [
+    [
+      0.45,
+      0.2
+    ],
+    [
+      0.6,
+      0.3
+    ]
+  ],
+  "duplicate_tracks": 0,
+  "nets_checked": 100,
+  "connectivity": [
+    {
+      "net": "ADC_REF",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "AMP_ENABLE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "AUDIO_REF",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "BT_RF",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "BUCK_FB",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "BUCK_LX",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "CAL",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "CC1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "CC2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "CELL",
+      "connected_components": 1,
+      "native_filled_copper_islands": 19
+    },
+    {
+      "net": "DAC_N",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "DAC_P",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "DEBUG_RX_SWDIO",
+      "connected_components": 1,
+      "native_filled_copper_islands": 13
+    },
+    {
+      "net": "DEBUG_TX_SWCLK",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "ENC_A",
+      "connected_components": 1,
+      "native_filled_copper_islands": 34
+    },
+    {
+      "net": "ENC_B",
+      "connected_components": 1,
+      "native_filled_copper_islands": 22
+    },
+    {
+      "net": "ENTER",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "ESC",
+      "connected_components": 1,
+      "native_filled_copper_islands": 19
+    },
+    {
+      "net": "FLASH_CLK",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "FLASH_CS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "FLASH_IO0",
+      "connected_components": 1,
+      "native_filled_copper_islands": 13
+    },
+    {
+      "net": "FLASH_IO1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "FLASH_IO2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 13
+    },
+    {
+      "net": "FLASH_IO3",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "GND",
+      "connected_components": 1,
+      "native_filled_copper_islands": 276
+    },
+    {
+      "net": "I2C_SCL",
+      "connected_components": 1,
+      "native_filled_copper_islands": 31
+    },
+    {
+      "net": "I2C_SDA",
+      "connected_components": 1,
+      "native_filled_copper_islands": 28
+    },
+    {
+      "net": "IO_3V3",
+      "connected_components": 1,
+      "native_filled_copper_islands": 25
+    },
+    {
+      "net": "MACRO_LEFT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 34
+    },
+    {
+      "net": "MACRO_RIGHT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "MCU_LDO1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "MCU_LDO2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "MCU_VSYS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 13
+    },
+    {
+      "net": "MIC_PDM_CLK",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "MIC_PDM_DATA",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "MIC_POWER_ENABLE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "PANEL_4V",
+      "connected_components": 1,
+      "native_filled_copper_islands": 13
+    },
+    {
+      "net": "PANEL_CLK",
+      "connected_components": 1,
+      "native_filled_copper_islands": 25
+    },
+    {
+      "net": "PANEL_CS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 22
+    },
+    {
+      "net": "PANEL_D0",
+      "connected_components": 1,
+      "native_filled_copper_islands": 22
+    },
+    {
+      "net": "PANEL_D1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "PANEL_D2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "PANEL_D3",
+      "connected_components": 1,
+      "native_filled_copper_islands": 34
+    },
+    {
+      "net": "PANEL_ENABLE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "PANEL_LOGIC",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "PANEL_RESET",
+      "connected_components": 1,
+      "native_filled_copper_islands": 25
+    },
+    {
+      "net": "PANEL_TE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 25
+    },
+    {
+      "net": "PANEL_VCI_ENABLE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "PTT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "RESET_ACTIVE_HIGH",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "RETENTION",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "RTC",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "SHIFT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 37
+    },
+    {
+      "net": "SIP_1V8",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "SYSTEM_SUPPLY",
+      "connected_components": 1,
+      "native_filled_copper_islands": 35
+    },
+    {
+      "net": "TOUCH_IRQ",
+      "connected_components": 1,
+      "native_filled_copper_islands": 25
+    },
+    {
+      "net": "TOUCH_RESET",
+      "connected_components": 1,
+      "native_filled_copper_islands": 19
+    },
+    {
+      "net": "USB_C_N",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "USB_C_P",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "USB_MCU_N",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "USB_MCU_P",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "USB_VBUS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "VOUT1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "VOUT2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "XTAL48_XI",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "XTAL48_XO",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::AC_N",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "audio::AC_P",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::AMP_BYPASS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::AMP_INN",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "audio::AMP_INP",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::AMP_VON",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "audio::AMP_VOP",
+      "connected_components": 1,
+      "native_filled_copper_islands": 16
+    },
+    {
+      "net": "audio::DAC_FILTER_N",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::DAC_FILTER_P",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::MIC_CLOCK",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "audio::MIC_DISCHARGE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::MIC_SLEW",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "audio::MIC_SUPPLY",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "audio::SPEAKER_MINUS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "audio::SPEAKER_PLUS",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "controls::ENC_A_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "controls::ENC_B_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "controls::ENTER_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "controls::ESC_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "controls::MACRO_LEFT_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "controls::MACRO_RIGHT_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "controls::PTT_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "controls::SHIFT_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::CELL_TEMPERATURE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 4
+    },
+    {
+      "net": "power::CHG_NINT_BAT_DOMAIN",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "power::CHG_VDD",
+      "connected_components": 1,
+      "native_filled_copper_islands": 10
+    },
+    {
+      "net": "power::IO_LX1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::IO_LX2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::PANEL_FB",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::PANEL_LX1",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::PANEL_LX2",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "power::VCI_DISCHARGE",
+      "connected_components": 1,
+      "native_filled_copper_islands": 7
+    },
+    {
+      "net": "power::VCI_SLEW",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "rf::BT_ANT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    }
+  ],
+  "normalized_ground_polygons": [
+    {
+      "layer": 2,
+      "area_mm2": 34.17790578548155,
+      "components_after_erosion_mm": {
+        "0": 7,
+        "0.05": 7,
+        "0.1": 11
+      }
+    },
+    {
+      "layer": 4,
+      "area_mm2": 3329.7042572175737,
+      "components_after_erosion_mm": {
+        "0": 1,
+        "0.05": 1,
+        "0.1": 1
+      }
+    }
+  ],
+  "passed": true
+}

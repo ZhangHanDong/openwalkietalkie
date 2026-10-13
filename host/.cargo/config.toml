@@ -1,0 +1,7 @@
+# Deliberately no [build] target: the repo root's .cargo/config.toml targets the
+# firmware's thumb triple, and cargo reads the config of the *cwd*, so the host
+# scripts always pass --target "$(rustc -vV | sed -n 's/^host: //p')" and
+# --target-dir target/host explicitly (tools/host-test.sh, tools/build-host.sh).
+# This file only exists so a `cargo` run from inside host/ never inherits the
+# thumb target.
+[build]

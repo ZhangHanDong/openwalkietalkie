@@ -1,0 +1,60 @@
+{
+  "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/encoder-45deg.kicad_pcb",
+  "sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+  "copper_layers": 2,
+  "track_count": 9,
+  "via_count": 3,
+  "headings_deg": [
+    0.0,
+    45.0,
+    90.0,
+    180.0
+  ],
+  "minimum_track_mm": 0.2,
+  "via_sizes_mm": [
+    [
+      0.45,
+      0.2
+    ]
+  ],
+  "duplicate_tracks": 0,
+  "nets_checked": 3,
+  "connectivity": [
+    {
+      "net": "ENC_A_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "ENC_B_CONTACT",
+      "connected_components": 1,
+      "native_filled_copper_islands": 1
+    },
+    {
+      "net": "GND",
+      "connected_components": 1,
+      "native_filled_copper_islands": 2
+    }
+  ],
+  "normalized_ground_polygons": [
+    {
+      "layer": 0,
+      "area_mm2": 250.65399817132644,
+      "components_after_erosion_mm": {
+        "0": 1,
+        "0.05": 1,
+        "0.1": 2
+      }
+    },
+    {
+      "layer": 2,
+      "area_mm2": 272.52685591741346,
+      "components_after_erosion_mm": {
+        "0": 1,
+        "0.05": 1,
+        "0.1": 1
+      }
+    }
+  ],
+  "passed": true
+}

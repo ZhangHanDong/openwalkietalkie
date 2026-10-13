@@ -1,0 +1,18 @@
+[package]
+name = "deck-model"
+description = "OpenWalkieTalkie host domain model: Snapshot, Store reducer, device projection, redaction (pure, no I/O, no clocks)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+deck-proto = { workspace = true }
+deck-wrap = { path = "../deck-wrap" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+schemars = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

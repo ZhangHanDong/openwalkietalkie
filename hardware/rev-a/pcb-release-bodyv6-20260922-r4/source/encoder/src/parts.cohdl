@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+pub trait Encoder {
+    designator_prefix: "ENC"
+}
+
+// Exact Alps part; local land pattern transcribed from Drawing No.3.
+#[doc("docs/alps-ec05e.pdf")]
+pub device EC05E1220401 {
+    pins {
+        required A: A [passive]
+        required C: C [passive]
+        required B: B [passive]
+        optional MP: MP [passive]
+    }
+}
+impl Encoder for EC05E1220401 {}
+
+#[doc("docs/alps-ec05e.pdf")]
+pub part ENC_ALPS_EC05E1220401: EC05E1220401 {
+    primary { mfr: "Alps Alpine", mpn: "EC05E1220401", footprint: FP_ALPS_EC05E1220401 }
+}
+
+pub pad P_EC05E_SIGNAL {
+    shape: rect
+    size: (1.5mm, 1.3mm)
+    layer: top_copper
+    plating: smd
+}
+pub pad P_EC05E_HOLD_DOWN {
+    shape: rect
+    size: (1.7mm, 2.6mm)
+    layer: top_copper
+    plating: smd
+}
+
+// Rotor axis is the footprint origin. Coordinates are the catalog's
+// mounting-side land view: A left, C centre, B right; terminals at local +y.
+// 5.9 is the distance between INNER edges of the two 1.7mm hold-down lands.
+// Locator holes belong to this footprint. The keyed rotor aperture comes
+// from encoder-mechanical.dxf in the reproducible final-board postprocess.
+pub footprint FP_ALPS_EC05E1220401 {
+    pad A: P_EC05E_SIGNAL at (-2mm, 4.15mm)
+    pad C: P_EC05E_SIGNAL at (0mm, 4.15mm)
+    pad B: P_EC05E_SIGNAL at (2mm, 4.15mm)
+    pad MP: P_EC05E_HOLD_DOWN at (-3.8mm, 0mm)
+    pad MP: P_EC05E_HOLD_DOWN at (3.8mm, 0mm)
+    mount_hole 1: non_plated at (-1.2mm, 2.7mm) diameter 0.62mm
+    mount_hole 2: non_plated at (1.2mm, 2.7mm) diameter 0.62mm
+    courtyard { shape: rect, at: (0mm, 1.1mm), size: (9.8mm, 7.9mm) }
+    silkscreen_ref { at: (0mm, -3.3mm) }
+}

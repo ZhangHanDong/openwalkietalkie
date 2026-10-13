@@ -1,0 +1,211 @@
+{
+  "source": "lucide-static icon font vendored by openmicrokbd/app/resources/lucide.ttf",
+  "source_sha256": "aa246948035b53e046edbd28caf6d4ad3fec071b357b52b99a14ed64e6c55828",
+  "license": "ISC (Feather-derived glyphs MIT; see LICENSE)",
+  "glyphs": [
+    {
+      "id": 0,
+      "name": "blank",
+      "codepoint": null,
+      "rotation": 0
+    },
+    {
+      "id": 1,
+      "name": "zap",
+      "codepoint": 57780,
+      "rotation": 0
+    },
+    {
+      "id": 2,
+      "name": "circle-check",
+      "codepoint": 57894,
+      "rotation": 0
+    },
+    {
+      "id": 3,
+      "name": "circle-x",
+      "codepoint": 57476,
+      "rotation": 0
+    },
+    {
+      "id": 4,
+      "name": "split",
+      "codepoint": 58432,
+      "rotation": -90
+    },
+    {
+      "id": 5,
+      "name": "mic",
+      "codepoint": 57624,
+      "rotation": 0
+    },
+    {
+      "id": 6,
+      "name": "brush-cleaning",
+      "codepoint": 58982,
+      "rotation": -45
+    },
+    {
+      "id": 7,
+      "name": "bot",
+      "codepoint": 57787,
+      "rotation": 0
+    },
+    {
+      "id": 8,
+      "name": "chevron-up",
+      "codepoint": 57456,
+      "rotation": 0
+    },
+    {
+      "id": 9,
+      "name": "bug",
+      "codepoint": 57868,
+      "rotation": 0
+    },
+    {
+      "id": 10,
+      "name": "terminal",
+      "codepoint": 57729,
+      "rotation": 0
+    },
+    {
+      "id": 11,
+      "name": "download",
+      "codepoint": 57522,
+      "rotation": 0
+    },
+    {
+      "id": 12,
+      "name": "trash-2",
+      "codepoint": 57742,
+      "rotation": 0
+    },
+    {
+      "id": 13,
+      "name": "square-pen",
+      "codepoint": 57714,
+      "rotation": 0
+    },
+    {
+      "id": 14,
+      "name": "mouse-pointer-2",
+      "codepoint": 57795,
+      "rotation": 0
+    },
+    {
+      "id": 15,
+      "name": "star",
+      "codepoint": 57718,
+      "rotation": 0
+    },
+    {
+      "id": 16,
+      "name": "file-diff",
+      "codepoint": 58135,
+      "rotation": 0
+    },
+    {
+      "id": 17,
+      "name": "play",
+      "codepoint": 57660,
+      "rotation": 0
+    },
+    {
+      "id": 18,
+      "name": "git-branch",
+      "codepoint": 57570,
+      "rotation": 0
+    },
+    {
+      "id": 19,
+      "name": "git-merge",
+      "codepoint": 57572,
+      "rotation": 0
+    },
+    {
+      "id": 20,
+      "name": "git-pull-request",
+      "codepoint": 57573,
+      "rotation": 0
+    },
+    {
+      "id": 21,
+      "name": "git-pull-request-draft",
+      "codepoint": 58203,
+      "rotation": 0
+    },
+    {
+      "id": 22,
+      "name": "flask-conical",
+      "codepoint": 57557,
+      "rotation": 0
+    },
+    {
+      "id": 23,
+      "name": "party-popper",
+      "codepoint": 58179,
+      "rotation": 0
+    },
+    {
+      "id": 24,
+      "name": "clock",
+      "codepoint": 57479,
+      "rotation": 0
+    },
+    {
+      "id": 25,
+      "name": "brain",
+      "codepoint": 58310,
+      "rotation": 0
+    },
+    {
+      "id": 26,
+      "name": "settings",
+      "codepoint": 57684,
+      "rotation": 0
+    },
+    {
+      "id": 27,
+      "name": "folder-plus",
+      "codepoint": 57561,
+      "rotation": 0
+    },
+    {
+      "id": 28,
+      "name": "cloud-upload",
+      "codepoint": 57489,
+      "rotation": 0
+    },
+    {
+      "id": 29,
+      "name": "layout-grid",
+      "codepoint": 57599,
+      "rotation": 0
+    },
+    {
+      "id": 30,
+      "name": "sparkles",
+      "codepoint": 58386,
+      "rotation": 0
+    },
+    {
+      "id": 31,
+      "name": "circle-help",
+      "codepoint": 57474,
+      "rotation": 0
+    },
+    {
+      "id": 32,
+      "name": "rocket",
+      "codepoint": 57990,
+      "rotation": 0
+    },
+    {
+      "id": 33,
+      "name": "send",
+      "codepoint": 57682,
+      "rotation": 0
+    }
+  ]
+}

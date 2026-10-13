@@ -1,0 +1,13 @@
+[target.thumbv8m.main-none-eabihf]
+# probe-rs can only `attach` on the SF32LB52 -- it cannot flash it. Flashing is
+# sftool's job, so `cargo run` goes through our own script, which flashes and
+# then tails the same UART the firmware logs on.
+runner = "tools/flash.sh"
+
+[build]
+target = "thumbv8m.main-none-eabihf"
+
+[env]
+DEFMT_LOG = "info"
+# Leave unset to let tools/flash.sh auto-detect the CH343 bridge.
+# SIFLI_SFTOOL_PORT = "/dev/cu.wchusbserial5B910815801"

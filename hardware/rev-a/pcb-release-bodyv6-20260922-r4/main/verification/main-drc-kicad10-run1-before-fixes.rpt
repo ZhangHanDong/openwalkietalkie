@@ -1,0 +1,47 @@
+** Drc report for main-45deg.kicad_pcb **
+** Created on 2026-09-22T15:14:45 **
+** Report includes: Errors, Warnings **
+
+** Found 9 DRC violations **
+[courtyards_overlap]: Courtyards overlap
+    Rule: board setup constraints courtyard; error
+    @(35.7000 mm, 83.0000 mm): Footprint TP8
+    @(34.6000 mm, 83.0000 mm): Footprint TP10
+[courtyards_overlap]: Courtyards overlap
+    Rule: board setup constraints courtyard; error
+    @(34.6000 mm, 85.0000 mm): Footprint TP3
+    @(35.7000 mm, 85.0000 mm): Footprint TP5
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(32.5450 mm, 67.1750 mm): Track [SHIFT] on F.Cu, length 0.3050 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(41.2250 mm, 75.9500 mm): Track [FLASH_CLK] on In2.Cu, length 2.8991 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(33.8250 mm, 67.5000 mm): Track [TOUCH_IRQ] on B.Cu, length 0.7778 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(38.7250 mm, 67.3250 mm): Track [MACRO_LEFT] on F.Cu, length 1.3789 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(31.1000 mm, 67.0250 mm): Track [ENC_A] on B.Cu, length 0.1061 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(34.8188 mm, 81.2035 mm): Track [PANEL_CLK] on B.Cu, length 2.9688 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(48.9350 mm, 85.4850 mm): Track [MACRO_RIGHT] on F.Cu, length 0.1150 mm
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

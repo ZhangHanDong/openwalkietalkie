@@ -1,0 +1,33 @@
+# Keep the factory bootloader and the Embassy firmware's bond journal intact.
+version: 3
+chip: SF32LB525UC6
+memory:
+  - mpi: mpi2
+    type: nor
+    size: 16MB
+partitions:
+  - name: hcpu_flash_code
+    type: app
+    subtype: factory
+    region: mpi2
+    offset: 0x20000
+    size: 0x6E0000
+    core: HCPU
+  - name: ble
+    type: data
+    subtype: flashdb_kv
+    region: mpi2
+    offset: 0x700000
+    size: 64KB
+  - name: embassy_bonds
+    type: data
+    subtype: raw
+    region: mpi2
+    offset: 0x710000
+    size: 64KB
+  - name: psram_data
+    type: data
+    subtype: ram
+    region: mpi1
+    offset: 0
+    size: 8MB

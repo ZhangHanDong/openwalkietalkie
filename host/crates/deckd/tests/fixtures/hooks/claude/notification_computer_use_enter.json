@@ -1,0 +1,9 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/w/project/.deck-fixture/transcript.jsonl",
+  "cwd": "/w/project",
+  "hook_event_name": "Notification",
+  "message": "SCRUBBED-NOTIFICATION",
+  "title": "SCRUBBED-TITLE",
+  "notification_type": "computer_use_enter"
+}

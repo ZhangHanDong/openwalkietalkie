@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The hardened-runtime entitlements for BOTH Mach-Os in the bundle
+  (docs/host-service.md §10.1). `tools/package-macos.sh` applies this one file
+  to Contents/MacOS/deckd and to Contents/MacOS/OpenWalkieTalkie, with the same
+  `-i ai.cohdl.openwalkietalkie`, because TCC keys a grant to the code's
+  identifier: sign them differently and the daemon's Microphone grant is not
+  the GUI's, and hardened-runtime capture from `deckd` fails even with a grant.
+
+  No App Sandbox: the UDS lives in Application Support, the deck is reached
+  through hidapi, and the terminal is driven with AppleScript (§10.1).
+-->
+<plist version="1.0">
+<dict>
+    <!-- PTT capture from the HFP input (§7.1). Without it the hardened
+         runtime kills the capture before TCC is ever consulted. -->
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <!-- Focus and `input text` into Ghostty (§5.5): NSAppleScript is
+         Apple-events traffic, which the hardened runtime blocks by default. -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+</dict>
+</plist>

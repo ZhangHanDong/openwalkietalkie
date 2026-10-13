@@ -1,0 +1,48 @@
+{
+  "case_source": "/private/tmp/bodyv5-front-battery.mniHyk/BodyV5-USB-face-battery-fit.step",
+  "board_hashes": {
+    "main": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+    "encoder": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be"
+  },
+  "model_manifest_sha256": "9ce9ade20efa6d52890aa610d235ec2a9f803c103b74b8f171ff6374fe6283ab",
+  "output_sha256": "995999239e77c6e0bb6fa2794f3d87e6d619ceaef5395becfafa7940c8db06d5",
+  "case_component_intersections": [
+    {
+      "component": "main:J5",
+      "case_part": "MainCase",
+      "volume_mm3": 0.16070471936126368
+    },
+    {
+      "component": "encoder:ENC1",
+      "case_part": "Wheel",
+      "volume_mm3": 0.6213152755850715
+    }
+  ],
+  "case_PCB_intersections": [],
+  "cross_board_component_intersections": [],
+  "interboard_cable_intersections": [],
+  "expected_cable_mating_intersections": [
+    {
+      "item": "main:J2",
+      "volume_mm3": 1.0140000000001468,
+      "interpretation": "Expected seated cable inside simplified closed connector envelope; not a detailed contact simulation"
+    },
+    {
+      "item": "encoder:J1",
+      "volume_mm3": 1.0139999999999998,
+      "interpretation": "Expected seated cable inside simplified closed connector envelope; not a detailed contact simulation"
+    }
+  ],
+  "battery_envelope_intersections": [],
+  "assembly_valid": true,
+  "assembly_solids": 144,
+  "output": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/populated-fit/bodyv5-fit-assembly.step",
+  "limitations": [
+    "Static nominal assembly; full button travel, separate cover, display body/fold heights, fasteners and mating USB plug are not certified.",
+    "Conservative USB shell envelope has square corners; interpret intersection against the actual rounded shell before changing a PCB.",
+    "Encoder shaft press-fit overlap is intentional and retained; physical tolerance qualification remains necessary.",
+    "Interboard ribbon length and bend specification require supplier confirmation."
+  ],
+  "cable_sha256": "5abc1e20b06b35d0a233f985a3442fdf42b4eb9db551b2d9bcb817827c6ff1cb",
+  "case_sha256": "05dd4badb9b4f9a79a874e8cc2da15fa8edda5b2a5b7ed87b4ee7e74062a10de"
+}

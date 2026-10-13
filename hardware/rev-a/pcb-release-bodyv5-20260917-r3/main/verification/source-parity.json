@@ -1,0 +1,14 @@
+{
+  "emitted": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/native-source-finalized-for-audit.kicad_pcb",
+  "routed": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/main-45deg.kicad_pcb",
+  "emitted_sha256": "c768ef027dd4950189f33408a98f578f873c6ca52588d2e5b105203be2be0832",
+  "routed_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "checked_source_refs": 133,
+  "board_only_refs": [
+    "MH2",
+    "MH3",
+    "MH4"
+  ],
+  "errors": [],
+  "passed": true
+}

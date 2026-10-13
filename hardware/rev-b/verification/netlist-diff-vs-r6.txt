@@ -1,0 +1,26 @@
+# Pad-net differences, r6 (main-45deg.kicad_pcb) -> Rev B (main-revb.kicad_pcb); pads without a number ignored
+removed parts: ['J4']
+added parts: ['C57', 'C58', 'L6', 'R44', 'R45', 'R46', 'R47', 'R48']
+  + C57 ('15pF', False) {'1': 'BT_RF', '2': 'rf::BT_RF_LINE'}
+  + C58 ('NF', True) {'1': 'rf::BT_ANT', '2': 'GND'}
+  + L6 ('NF', True) {'1': 'rf::ANT_MATCH', '2': 'GND'}
+  + R44 ('10kohm', True) {'1': 'power::CELL_TEMPERATURE', '2': 'GND'}
+  + R45 ('100kohm', False) {'1': 'TOUCH_RESET', '2': 'GND'}
+  + R46 ('100kohm', False) {'1': 'power::CHG_STATUS', '2': 'IO_3V3'}
+  + R47 ('0ohm', False) {'1': 'rf::ANT_MATCH', '2': 'rf::BT_ANT'}
+  + R48 ('0ohm', False) {'1': 'IO_3V3', '2': 'TP_VCC'}
+changed pad nets on common parts:
+   ('C53', '1') 'rf::BT_ANT' -> 'rf::BT_RF_LINE'
+   ('J3', '2') 'GND' -> 'power::CELL_TEMPERATURE'
+   ('R40', '1') 'BT_RF' -> 'rf::BT_RF_LINE'
+   ('R40', '2') 'rf::BT_ANT' -> 'rf::ANT_MATCH'
+   ('U3', '6') '' -> 'TP_VCC'
+   ('U5', '25') 'AMP_ENABLE' -> ''
+   ('U5', '50') 'CAL' -> 'AMP_ENABLE'
+   ('U5', '51') '' -> 'CAL'
+   ('U5', '67') '' -> 'power::CHG_STATUS'
+pads only in Rev B (common parts): [('J3', '3')]
+value / DNP changes:
+   C52 ('3.9pF', False) -> ('NF', True)
+   C53 ('3.9pF', False) -> ('NF', True)
+   J3 ('PicoBlade2Pin', False) -> ('53261-0371', False)

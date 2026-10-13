@@ -1,0 +1,46 @@
+{
+ "revision": "BodyV6.13 r6, encoder-wheel variant (ENC1 on the wheel side, inside the scroll wheel) - populated fit check",
+ "date": "2026-09-24",
+ "inputs": {
+  "case": "mechanical-source/case/BodyV6.13.step",
+  "case_sha256": "9d3eaedd4cdc180b925e87b9718fe30b96340b8cba7b0dc08486a5419848e649",
+  "encoder_wheel_board": "encoder-wheel/encoder-wheel-45deg.kicad_pcb",
+  "encoder_wheel_board_sha256": "e1437f77b45c96671553143a165570bd858ae428033db24080336929b2dba001",
+  "wheel": "encoder-wheel/mechanical/wheel-with-encoder-cavity-bodyv6.13.step (proposal: the V6.13 wheel with its lower hex shaft and collar removed, a dia 10.6 cavity from its underside Y 4.0 to Y 6.8, and a 1.68 AF hex stub from the cavity roof down to Y 4.1)",
+  "wheel_sha256": "61a521411ac93241a00c5d4a1939c29bd19fd7b0cb8b6a0f923fb7fdf0c4045c",
+  "component_models": "3d/encoder-wheel-populated-native.step (KiCad 10.0.4 native export), aligned to 3d/encoder-wheel-populated-bodyv6.13.step with the board B face at Y 3.5 (as the r6 encoder board)",
+  "main_board": "3d/main-populated-bodyv6.13.step (r6 main, unchanged)"
+ },
+ "frame": "BodyV6.13.step coordinates: X = u - 28, Z = 47.5 - v, Y = board normal; wheel axis at X 19.5, Z 39.0 (u 47.5, v 8.5)",
+ "results_per_part": {
+  "PCB_encoder_wheel_1.0mm_nominal": {
+   "case_common": 0.0,
+   "case_dist": 0.0,
+   "new_wheel_common": 0.0,
+   "new_wheel_dist": 0.5,
+   "old_wheel_common": 0.0
+  },
+  "J1 (FH34SRJ-4S-0.5SH_99_)": {
+   "case_common": 0.0,
+   "case_dist": 1.124,
+   "new_wheel_common": 0.0,
+   "new_wheel_dist": 1.485,
+   "old_wheel_common": 0.0
+  },
+  "ENC1 (EC05E1220401)": {
+   "case_common": 0.0,
+   "case_dist": 3.678,
+   "new_wheel_common": 0.0,
+   "new_wheel_dist": 0.02,
+   "old_wheel_common": 49.2387
+  }
+ },
+ "summary": [
+  "No interference with the modified wheel, the case or the main board. ENC1 (as KiCad seats it on the B side, Y 3.28-6.45) is 0.355 mm below the wheel's cavity roof and radially inside the dia 10.6 cavity; the only near contact is the 1.68 AF hex stub in the 1.72 AF bore (0.02 mm per side).",
+  "The unmodified V6.13 wheel would collide with the flipped ENC1 (49.2 mm3): this board needs the modified wheel.",
+  "Wheel underside to encoder board 0.5 mm; wheel to case 0.2 mm and to the main board 0.32 mm (unchanged). Encoder board touches the case seat block and spigot shoulder (0 mm, zero common volume), as in r6.",
+  "Below the encoder board only J1 remains (bottom Y 1.42; was ENC1 at Y -0.34 on the r6 encoder board), so the back cover no longer needs a pocket for the encoder.",
+  "KiCad seats B-side models about 0.1 mm further from the board than a mirror of the F-side export; the cavity roof was raised from Y 6.7 to 6.8 to keep >= 0.35 mm."
+ ],
+ "assembly": "3d/bodyv6.13-encoder-wheel-fit-assembly.step (case with the modified wheel + r6 main board + encoder-wheel board)"
+}

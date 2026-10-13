@@ -1,0 +1,113 @@
+[package]
+name = "openwalkietalkie-fw"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "OpenWalkieTalkie firmware (SiFli SF32LB52x, embassy)"
+
+[dependencies]
+# Pinned to a git revision, not the crates.io release: sifli-hal 0.1.1 on
+# crates.io predates the I2C driver, and I2C is the entire input path here.
+# Re-pin deliberately -- the HAL is explicitly pre-1.0 and "working in progress".
+#
+# `unstable-pac` covers the ADC slot-routing workaround, factory reference
+# trim and SF32LB52 DAC clock correction, which the pinned HAL doesn't expose.
+#
+# Default features off for one reason: the HAL's `set-msplim` defines
+# cortex-m-rt's `__pre_init`, which src/xip.rs has to own (it sets MSPLIM
+# itself). The rest of the HAL's defaults are listed back.
+sifli-hal = { git = "https://github.com/OpenSiFli/sifli-rs", rev = "aa4c19c5cf014f07d275ebaf233480807cdb8685", default-features = false, features = [
+    "rt",
+    "time",
+    "sf32lb52x",
+    "defmt",
+    "time-driver-gptim2",
+    "unstable-pac",
+] }
+sifli-radio = { git = "https://github.com/OpenSiFli/sifli-rs", rev = "aa4c19c5cf014f07d275ebaf233480807cdb8685", default-features = false, features = ["sf32lb52x-lcpu", "log"] }
+# The queue sizes are for the voice link: speaker frames arrive as write
+# commands, 50 a second, and wait in the per-connection RX queue whenever the
+# GATT task is held up by channel-5 back-pressure (8 slots = 160 ms, then
+# trouble-host drops them); 32 slots ride out 640 ms. The pool backs both
+# directions.
+trouble-host = { version = "=0.6.0", default-features = false, features = [
+    "peripheral", "gatt", "derive", "security", "default-packet-pool", "log",
+    "default-packet-pool-size-64", "l2cap-rx-queue-size-32", "connection-event-queue-size-8",
+] }
+log = "0.4"
+
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
+cortex-m-rt = { version = "0.7.3", features = ["set-sp", "set-vtor"] }
+
+embassy-executor = { version = "0.9", features = [
+    "arch-cortex-m",
+    "executor-thread",
+    "defmt",
+] }
+embassy-time = { version = "0.5.0", features = [
+    "defmt",
+    "defmt-timestamp-uptime",
+    "tick-hz-32_768",
+] }
+embassy-sync = { version = "0.7.2", features = ["defmt"] }
+embassy-futures = "0.1.2"
+embassy-embedded-hal = "0.5"
+# USB device stack for the Rev A USB-C port (SF32 USB block on PA35/PA36); the
+# HID class lives in the crate itself, the `usbd-hid` default feature is only
+# descriptor macros we do not use. 0.5 is the series that pairs with the pinned
+# HAL's embassy-usb-driver 0.2.
+embassy-usb = { version = "0.5", default-features = false }
+
+# Variable-length GATT values (the voice frames); trouble-host implements its
+# value traits for this major version.
+heapless = "0.9"
+
+embedded-hal = "1.0"
+embedded-io = "0.7"
+
+# The board has no debug probe wired, so defmt/RTT output goes nowhere unless
+# someone attaches probe-rs. It stays linked because it costs nothing and
+# `probe-rs attach` is the one way to see a panic message; day-to-day logging
+# goes out of UART1 instead (see `src/logger.rs`).
+defmt = "1"
+defmt-rtt = "1"
+panic-probe = { version = "1", features = ["print-defmt"] }
+embedded-graphics = "0.8"
+static_cell = "2.1"
+profont = "0.7"
+
+[features]
+# Custom Rev A hardware: the panel is mounted upside down, so display and touch
+# turn 180 degrees. The default build is the upright LilyGo T-Display SF32.
+hw-a = []
+# The Rev B main board (hardware/rev-b). It implies `hw-a`, which is the
+# OpenWalkieTalkie main board as such (PSRAM link, USB, voice, the GPIO
+# inputs); `hw-b` only overlays the three pins that moved: the speaker
+# amplifier's enable on PA1 instead of PA20, the charger's CHG output on PA33
+# (a charge state at last) and the CAL test pad on PA0. Build Rev B with
+# `--features hw-b`, never with `hw-a` alone (its speaker would stay silent).
+hw-b = ["hw-a"]
+# Diagnostic: print every USB control request the host sends (the stack's
+# trace lines) on the log UART. For bring-up only; the lines are chatty.
+usb-trace = ["embassy-usb/log"]
+# Bench only: the BLE voice characteristics without encryption, so a host
+# that has not paired this firmware can stream. Anyone in range could then
+# open the microphone; never ship it.
+audio-open = []
+# Bench only: `dbg.peek` / `dbg.poke` on the host request channel, for
+# reading and writing the audio blocks' registers while a stream plays
+# (src/link/debug.rs). Never ship it.
+audio-debug = []
+# Bench only, Rev A: `boot.*` on the host request channel rewrites the USB
+# recovery bootloader from the running app (src/link/boot_update.rs), for
+# developing that bootloader without the UART pads. Never ship it.
+bootloader-update = []
+
+[profile.release]
+debug = true
+lto = true
+opt-level = "s"
+codegen-units = 1
+
+[profile.dev]
+opt-level = "s"

@@ -1,0 +1,5975 @@
+{
+  "board": "main",
+  "source_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "copper_layers": 4,
+  "thickness_mm": 1.0,
+  "footprints": [
+    {
+      "reference": "R15",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 44850000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C46",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 45500000,
+      "y_nm": 61000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "MH2",
+      "value": "Mounting hole",
+      "footprint": "",
+      "x_nm": 3800000,
+      "y_nm": 51000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 0,
+      "pad_types": {
+        "3": 1
+      }
+    },
+    {
+      "reference": "C52",
+      "value": "3.9pF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 45040000,
+      "y_nm": 86500000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C33",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 17050000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "AE1",
+      "value": "CeramicAntenna2450",
+      "footprint": "antenna-FP_ANT_2450AT18B100E",
+      "x_nm": 40750000,
+      "y_nm": 91000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R27",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 32900000,
+      "y_nm": 13400000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R21",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 18950000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R6",
+      "value": "22ohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 48000000,
+      "y_nm": 67750000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U6",
+      "value": "SGM41562SA",
+      "footprint": "openmicrodial_rev_a-FP_SGM41562SA_TQFN10DL",
+      "x_nm": 15000000,
+      "y_nm": 10000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 10
+      }
+    },
+    {
+      "reference": "SW6",
+      "value": "SKTDLDE010",
+      "footprint": "openmicrodial_rev_a-FP_ALPS_SKTDLDE010",
+      "x_nm": 3760000,
+      "y_nm": 42500000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "3": 2,
+        "1": 3
+      }
+    },
+    {
+      "reference": "Y1",
+      "value": "Crystal_4pad",
+      "footprint": "osc-FP_Crystal_SMD_2016_4Pin_E1SB",
+      "x_nm": 47800000,
+      "y_nm": 88800000,
+      "rotation": 135.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 4
+      }
+    },
+    {
+      "reference": "R29",
+      "value": "10kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 29500000,
+      "y_nm": 51200000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U8",
+      "value": "RT6150B",
+      "footprint": "qfn-QFN10N50P250X250_1EP120X200",
+      "x_nm": 48000000,
+      "y_nm": 64500000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 11
+      }
+    },
+    {
+      "reference": "MH4",
+      "value": "Mounting hole",
+      "footprint": "",
+      "x_nm": 35200000,
+      "y_nm": 91200000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 0,
+      "pad_types": {
+        "3": 1
+      }
+    },
+    {
+      "reference": "R13",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 20850000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R23",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 42950000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C45",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 43300000,
+      "y_nm": 67300000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U4",
+      "value": "W25Q128JV",
+      "footprint": "soic-SOIC8P127X790X216N",
+      "x_nm": 34300000,
+      "y_nm": 76000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 8
+      }
+    },
+    {
+      "reference": "TP2",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 28200000,
+      "y_nm": 15000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C39",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 34800000,
+      "y_nm": 13400000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R34",
+      "value": "1Mohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 52500000,
+      "y_nm": 66800000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R32",
+      "value": "604kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 51400000,
+      "y_nm": 63200000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R14",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 32850000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R31",
+      "value": "86.6kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 51400000,
+      "y_nm": 65200000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C19",
+      "value": "100nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 33745000,
+      "y_nm": 45400000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R20",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 49440000,
+      "y_nm": 26000000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C7",
+      "value": "100nF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 42250000,
+      "y_nm": 74550000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U20",
+      "value": "USBLC6",
+      "footprint": "esd-FP_SOT_23_6",
+      "x_nm": 27500000,
+      "y_nm": 11500000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 6
+      }
+    },
+    {
+      "reference": "R16",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 44000000,
+      "y_nm": 59000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C43",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 33000000,
+      "y_nm": 61000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP7",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 25600000,
+      "y_nm": 15000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "R41",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 31500000,
+      "y_nm": 51200000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "SW2",
+      "value": "SKTDLDE010",
+      "footprint": "openmicrodial_rev_a-FP_ALPS_SKTDLDE010",
+      "x_nm": 3760000,
+      "y_nm": 30500000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "3": 2,
+        "1": 3
+      }
+    },
+    {
+      "reference": "L3",
+      "value": "4.7uH",
+      "footprint": "passive-FP_L_WPN201610U_2016Metric",
+      "x_nm": 51800000,
+      "y_nm": 76300000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "SW5",
+      "value": "SKTDLDE010",
+      "footprint": "openmicrodial_rev_a-FP_ALPS_SKTDLDE010",
+      "x_nm": 52240000,
+      "y_nm": 30742641,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "3": 2,
+        "1": 3
+      }
+    },
+    {
+      "reference": "MH3",
+      "value": "Mounting hole",
+      "footprint": "",
+      "x_nm": 52200000,
+      "y_nm": 52000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 0,
+      "pad_types": {
+        "3": 1
+      }
+    },
+    {
+      "reference": "C32",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 49440000,
+      "y_nm": 28000000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R28",
+      "value": "10kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 27500000,
+      "y_nm": 51200000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R30",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 19345000,
+      "y_nm": 51200000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP1",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 20500000,
+      "y_nm": 12000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C35",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 41050000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R12",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 49440000,
+      "y_nm": 24000000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "J5",
+      "value": "USB_C_Receptacle_2_0",
+      "footprint": "usb-connectors-type_c-FP_USB_C_Receptacle_HRO_TYPE_C_31_M_12",
+      "x_nm": 28000000,
+      "y_nm": 4000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 1,
+      "pad_types": {
+        "3": 2,
+        "1": 16,
+        "0": 4
+      }
+    },
+    {
+      "reference": "TP9",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 23000000,
+      "y_nm": 14000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C41",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 12250000,
+      "y_nm": 7800000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R40",
+      "value": "0ohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 45550000,
+      "y_nm": 88000000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C47",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 50500000,
+      "y_nm": 61000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R18",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 32000000,
+      "y_nm": 11450000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C42",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 31800000,
+      "y_nm": 68000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C23",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 41750000,
+      "y_nm": 77250000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "J3",
+      "value": "PicoBlade2Pin",
+      "footprint": "openmicrodial_rev_a-FP_MOLEX_53261_0271",
+      "x_nm": 17000000,
+      "y_nm": 16500000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 4
+      }
+    },
+    {
+      "reference": "C34",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 29050000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C51",
+      "value": "100nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 17800000,
+      "y_nm": 10800000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R37",
+      "value": "91kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 12300000,
+      "y_nm": 10600000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C14",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 43300000,
+      "y_nm": 78000000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R38",
+      "value": "442kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 12300000,
+      "y_nm": 11800000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C15",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 41850000,
+      "y_nm": 81100000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "L5",
+      "value": "2.2uH",
+      "footprint": "passive-FP_L_0806_2016Metric",
+      "x_nm": 45000000,
+      "y_nm": 64500000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C36",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 40900000,
+      "y_nm": 58000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R26",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 33900000,
+      "y_nm": 11450000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U5",
+      "value": "SF32LB525UC6",
+      "footprint": "openmicrodial_rev_a-FP_SF32LB52X_QFN68L_BacksideBypass",
+      "x_nm": 48000000,
+      "y_nm": 81500000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 78,
+        "0": 16
+      }
+    },
+    {
+      "reference": "MK1",
+      "value": "SPM1423HM4H_B",
+      "footprint": "openmicrodial_rev_a-FP_KNOWLES_SPM1423HM4H_B",
+      "x_nm": 48000000,
+      "y_nm": 72000680,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 7
+      }
+    },
+    {
+      "reference": "C38",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 35800000,
+      "y_nm": 11450000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C31",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 51900000,
+      "y_nm": 73400000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R33",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 18700000,
+      "y_nm": 12000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C18",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 33845000,
+      "y_nm": 48200000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R19",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 31000000,
+      "y_nm": 13400000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C44",
+      "value": "10uF",
+      "footprint": "passive-CHIP_1206",
+      "x_nm": 38000000,
+      "y_nm": 61000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "J2",
+      "value": "FH34SRJ_4S_0P5SH_99",
+      "footprint": "openmicrodial_rev_a-FP_HIROSE_FH34SRJ_4S",
+      "x_nm": 32500000,
+      "y_nm": 16800000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 10
+      }
+    },
+    {
+      "reference": "R22",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 6810000,
+      "y_nm": 30950000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C48",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 15000000,
+      "y_nm": 6600000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C22",
+      "value": "100nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 40100000,
+      "y_nm": 72750000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "SW1",
+      "value": "SKTDLDE010",
+      "footprint": "openmicrodial_rev_a-FP_ALPS_SKTDLDE010",
+      "x_nm": 3760000,
+      "y_nm": 18500000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "3": 2,
+        "1": 3
+      }
+    },
+    {
+      "reference": "R24",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 43100000,
+      "y_nm": 58000000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "L4",
+      "value": "2.2uH",
+      "footprint": "passive-FP_L_0806_2016Metric",
+      "x_nm": 32500000,
+      "y_nm": 64500000,
+      "rotation": 90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C21",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 35150000,
+      "y_nm": 51400000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C53",
+      "value": "3.9pF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 45040000,
+      "y_nm": 89500000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "J4",
+      "value": "CellNtcWireInterface",
+      "footprint": "openmicrodial_rev_a-FP_CELL_NTC_WIRE_INTERFACE",
+      "x_nm": 9000000,
+      "y_nm": 8000000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 1,
+      "pad_types": {
+        "0": 2
+      }
+    },
+    {
+      "reference": "C40",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 18400000,
+      "y_nm": 8100000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C16",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 42650000,
+      "y_nm": 85050000,
+      "rotation": 180.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U7",
+      "value": "RT6150B",
+      "footprint": "qfn-QFN10N50P250X250_1EP120X200",
+      "x_nm": 35500000,
+      "y_nm": 64500000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 11
+      }
+    },
+    {
+      "reference": "C5",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 49300000,
+      "y_nm": 63000000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R8",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 53000000,
+      "y_nm": 66900000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C20",
+      "value": "100nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 34710000,
+      "y_nm": 44850000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R2",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 35000000,
+      "y_nm": 80000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C26",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 53700000,
+      "y_nm": 81000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C37",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 3350000,
+      "y_nm": 58000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP8",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 35700000,
+      "y_nm": 83000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C25",
+      "value": "470nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 51150000,
+      "y_nm": 82331667,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C27",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 44000000,
+      "y_nm": 76500000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U3",
+      "value": "H0216F002AM",
+      "footprint": "openmicrodial_rev_a-FP_OCN_OK_F302_31115_PROVISIONAL",
+      "x_nm": 36600000,
+      "y_nm": 48200000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 31
+      }
+    },
+    {
+      "reference": "C13",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 53000000,
+      "y_nm": 85000000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R4",
+      "value": "22kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 40000000,
+      "y_nm": 75500000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C12",
+      "value": "10uF",
+      "footprint": "passive-CHIP_0805",
+      "x_nm": 44900000,
+      "y_nm": 66430000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "J1",
+      "value": "PicoBlade2Pin",
+      "footprint": "openmicrodial_rev_a-FP_MOLEX_53261_0271",
+      "x_nm": 33200000,
+      "y_nm": 69000000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 4
+      }
+    },
+    {
+      "reference": "R25",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 3900000,
+      "y_nm": 56800000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C2",
+      "value": "1.5nF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 36800000,
+      "y_nm": 77800000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "L1",
+      "value": "SpeakerFerrite600R",
+      "footprint": "openmicrodial_rev_a-FP_MURATA_BLM31PG_1P5A_REFLOW",
+      "x_nm": 39400000,
+      "y_nm": 64300000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "SW3",
+      "value": "TactileSwitchSPST",
+      "footprint": "switches-FP_CK_PTS636SM25",
+      "x_nm": 46245000,
+      "y_nm": 57090000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP3",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 33500000,
+      "y_nm": 85000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "TP4",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 31300000,
+      "y_nm": 83000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C50",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 32400000,
+      "y_nm": 60000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C11",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 44500000,
+      "y_nm": 68500000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R7",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 47100000,
+      "y_nm": 67500000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U1",
+      "value": "NS4150B",
+      "footprint": "contrib_audio_amp-SOP8P65X490X110N",
+      "x_nm": 41000000,
+      "y_nm": 71300000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 8
+      }
+    },
+    {
+      "reference": "R11",
+      "value": "5.1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 21900000,
+      "y_nm": 12200000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R36",
+      "value": "1Mohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 38500000,
+      "y_nm": 62000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R17",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 3900000,
+      "y_nm": 55500000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "L2",
+      "value": "SpeakerFerrite600R",
+      "footprint": "openmicrodial_rev_a-FP_MURATA_BLM31PG_1P5A_REFLOW",
+      "x_nm": 44600000,
+      "y_nm": 64300000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U2",
+      "value": "TPS22918",
+      "footprint": "load_switch-FP_TI_DBV0006A",
+      "x_nm": 52250000,
+      "y_nm": 64250000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 6
+      }
+    },
+    {
+      "reference": "R10",
+      "value": "5.1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 21900000,
+      "y_nm": 10800000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C49",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 38500000,
+      "y_nm": 60000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP6",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 31300000,
+      "y_nm": 85000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "R5",
+      "value": "22kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 42000000,
+      "y_nm": 75500000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C3",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 40000000,
+      "y_nm": 78000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C6",
+      "value": "1nF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 53000000,
+      "y_nm": 62250000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C4",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 42000000,
+      "y_nm": 78000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "U10",
+      "value": "TPS22918",
+      "footprint": "load_switch-FP_TI_DBV0006A",
+      "x_nm": 35500000,
+      "y_nm": 60000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 6
+      }
+    },
+    {
+      "reference": "C28",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 47400000,
+      "y_nm": 77250000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C30",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 49000000,
+      "y_nm": 79836667,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R39",
+      "value": "1Mohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 52700000,
+      "y_nm": 87000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R35",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 32400000,
+      "y_nm": 62000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R1",
+      "value": "1kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 35000000,
+      "y_nm": 78500000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP10",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 33500000,
+      "y_nm": 83000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C29",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 51500000,
+      "y_nm": 77100000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "SW4",
+      "value": "TactileSwitchSPST",
+      "footprint": "switches-FP_CK_PTS636SM25",
+      "x_nm": 9755000,
+      "y_nm": 57090000,
+      "rotation": 0.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R3",
+      "value": "100kohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 37700000,
+      "y_nm": 74500000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C17",
+      "value": "4.7uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 53000000,
+      "y_nm": 75700000,
+      "rotation": 90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C10",
+      "value": "330pF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 42000000,
+      "y_nm": 66700000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C9",
+      "value": "330pF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 39000000,
+      "y_nm": 66700000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C1",
+      "value": "1uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 38000000,
+      "y_nm": 72000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "C24",
+      "value": "2.2uF",
+      "footprint": "passive-CHIP_0603",
+      "x_nm": 49000000,
+      "y_nm": 81500000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "R9",
+      "value": "1Mohm",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 53000000,
+      "y_nm": 69000000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    },
+    {
+      "reference": "TP5",
+      "value": "TestPoint",
+      "footprint": "misc-FP_TEST_POINT_ROUND_1MM",
+      "x_nm": 35700000,
+      "y_nm": 85000000,
+      "rotation": 180.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 1
+      }
+    },
+    {
+      "reference": "C8",
+      "value": "330pF",
+      "footprint": "passive-CHIP_0402",
+      "x_nm": 37700000,
+      "y_nm": 66700000,
+      "rotation": -90.0,
+      "side": "bottom",
+      "attributes": 2,
+      "pad_types": {
+        "1": 2
+      }
+    }
+  ],
+  "holes": [
+    {
+      "reference": "MH2",
+      "pad": "",
+      "x_nm": 3800000,
+      "y_nm": 51000000,
+      "dx_nm": 2000000,
+      "dy_nm": 2000000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "SW6",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 40650000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "SW6",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 44350000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "MH4",
+      "pad": "",
+      "x_nm": 35200000,
+      "y_nm": 91200000,
+      "dx_nm": 2000000,
+      "dy_nm": 2000000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "SW2",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 28650000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "SW2",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 32350000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "SW5",
+      "pad": "",
+      "x_nm": 52240000,
+      "y_nm": 32592641,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 90.0,
+      "plated": false
+    },
+    {
+      "reference": "SW5",
+      "pad": "",
+      "x_nm": 52240000,
+      "y_nm": 28892641,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 90.0,
+      "plated": false
+    },
+    {
+      "reference": "MH3",
+      "pad": "",
+      "x_nm": 52200000,
+      "y_nm": 52000000,
+      "dx_nm": 2000000,
+      "dy_nm": 2000000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "J5",
+      "pad": "",
+      "x_nm": 30890000,
+      "y_nm": 6600000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 180.0,
+      "plated": false
+    },
+    {
+      "reference": "J5",
+      "pad": "",
+      "x_nm": 25110000,
+      "y_nm": 6600000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 180.0,
+      "plated": false
+    },
+    {
+      "reference": "J5",
+      "pad": "SH1",
+      "x_nm": 32320000,
+      "y_nm": 7130000,
+      "dx_nm": 600000,
+      "dy_nm": 1700000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "J5",
+      "pad": "SH2",
+      "x_nm": 23680000,
+      "y_nm": 7130000,
+      "dx_nm": 600000,
+      "dy_nm": 1700000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "J5",
+      "pad": "SH3",
+      "x_nm": 32320000,
+      "y_nm": 2950000,
+      "dx_nm": 600000,
+      "dy_nm": 1400000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "J5",
+      "pad": "SH4",
+      "x_nm": 23680000,
+      "y_nm": 2950000,
+      "dx_nm": 600000,
+      "dy_nm": 1400000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 50495000,
+      "y_nm": 83995000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 50495000,
+      "y_nm": 82331667,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 50495000,
+      "y_nm": 80668333,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 50495000,
+      "y_nm": 79005000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 48831667,
+      "y_nm": 83995000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 48831667,
+      "y_nm": 82331667,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 48831667,
+      "y_nm": 80668333,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 48831667,
+      "y_nm": 79005000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 47168333,
+      "y_nm": 83995000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 47168333,
+      "y_nm": 82331667,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 47168333,
+      "y_nm": 80668333,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 47168333,
+      "y_nm": 79005000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 45505000,
+      "y_nm": 83995000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 45505000,
+      "y_nm": 82331667,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 45505000,
+      "y_nm": 80668333,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "U5",
+      "pad": "69",
+      "x_nm": 45505000,
+      "y_nm": 79005000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 180.0,
+      "plated": true
+    },
+    {
+      "reference": "SW1",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 16650000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "SW1",
+      "pad": "",
+      "x_nm": 3760000,
+      "y_nm": 20350000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 270.0,
+      "plated": false
+    },
+    {
+      "reference": "J4",
+      "pad": "1",
+      "x_nm": 8000000,
+      "y_nm": 8000000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 0.0,
+      "plated": true
+    },
+    {
+      "reference": "J4",
+      "pad": "2",
+      "x_nm": 10000000,
+      "y_nm": 8000000,
+      "dx_nm": 600000,
+      "dy_nm": 600000,
+      "rotation": 0.0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37700000,
+      "y_nm": 58900000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34300000,
+      "y_nm": 46325000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36200000,
+      "y_nm": 61800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44149200,
+      "y_nm": 51247800,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45900000,
+      "y_nm": 60800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44800000,
+      "y_nm": 59200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31240200,
+      "y_nm": 68553100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 8155800,
+      "y_nm": 49469500,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32451000,
+      "y_nm": 45462300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33845000,
+      "y_nm": 50425000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35025000,
+      "y_nm": 46300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43209600,
+      "y_nm": 52749300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 21490000,
+      "y_nm": 12800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 5110000,
+      "y_nm": 28400000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 18760000,
+      "y_nm": 11400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41525000,
+      "y_nm": 49625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45030000,
+      "y_nm": 69950680,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37700000,
+      "y_nm": 67810000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44800000,
+      "y_nm": 75500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35500000,
+      "y_nm": 64000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 53000000,
+      "y_nm": 85000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52450000,
+      "y_nm": 62725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46330000,
+      "y_nm": 73150680,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37650000,
+      "y_nm": 60000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51800000,
+      "y_nm": 76300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48000000,
+      "y_nm": 65000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40700000,
+      "y_nm": 74600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43137500,
+      "y_nm": 61000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47750000,
+      "y_nm": 90550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30337500,
+      "y_nm": 69350000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48000000,
+      "y_nm": 64000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31245000,
+      "y_nm": 49625000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39300000,
+      "y_nm": 60825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31800000,
+      "y_nm": 8345000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44530000,
+      "y_nm": 90150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 5110000,
+      "y_nm": 40400000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48840000,
+      "y_nm": 28510000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36910000,
+      "y_nm": 11450000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 53000000,
+      "y_nm": 74400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40600000,
+      "y_nm": 72500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49450000,
+      "y_nm": 62750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40200000,
+      "y_nm": 46175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43300000,
+      "y_nm": 76550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34300000,
+      "y_nm": 15550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34650000,
+      "y_nm": 48575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34300000,
+      "y_nm": 17550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 24000000,
+      "y_nm": 8345000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 14700000,
+      "y_nm": 12300000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30500000,
+      "y_nm": 61000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51700000,
+      "y_nm": 71900000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 19855000,
+      "y_nm": 51800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35500000,
+      "y_nm": 65000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40362500,
+      "y_nm": 61000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 2520000,
+      "y_nm": 57690000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41825000,
+      "y_nm": 85500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36590000,
+      "y_nm": 74600000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31300000,
+      "y_nm": 82200000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44530000,
+      "y_nm": 87150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38000000,
+      "y_nm": 72125000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31650000,
+      "y_nm": 60510000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41437500,
+      "y_nm": 68000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44175000,
+      "y_nm": 69800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46330000,
+      "y_nm": 72500680,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44887500,
+      "y_nm": 70500000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 11790000,
+      "y_nm": 12550000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 5110000,
+      "y_nm": 16400000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35800000,
+      "y_nm": 52725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6210000,
+      "y_nm": 16540000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47400000,
+      "y_nm": 66490000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 13630000,
+      "y_nm": 57890000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30712500,
+      "y_nm": 78505000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 19000000,
+      "y_nm": 14800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6810000,
+      "y_nm": 27940000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39010000,
+      "y_nm": 56490000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33690000,
+      "y_nm": 46090000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52700000,
+      "y_nm": 88110000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 53700000,
+      "y_nm": 66800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6210000,
+      "y_nm": 40540000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41625000,
+      "y_nm": 81050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50890000,
+      "y_nm": 32842641,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 15900000,
+      "y_nm": 5775000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39600000,
+      "y_nm": 67210000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46750000,
+      "y_nm": 87400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51400000,
+      "y_nm": 66300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39150000,
+      "y_nm": 50350000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52862500,
+      "y_nm": 61000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38400000,
+      "y_nm": 46175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 19000000,
+      "y_nm": 14100000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37990000,
+      "y_nm": 62500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35310000,
+      "y_nm": 12800000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52400000,
+      "y_nm": 69510000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50120000,
+      "y_nm": 57890000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34855000,
+      "y_nm": 45400000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 21390000,
+      "y_nm": 11400000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27500000,
+      "y_nm": 11500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52750000,
+      "y_nm": 82050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 7350000,
+      "y_nm": 18750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50700000,
+      "y_nm": 67700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50500000,
+      "y_nm": 71500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50850000,
+      "y_nm": 74900000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31950000,
+      "y_nm": 13400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34750000,
+      "y_nm": 16550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30250000,
+      "y_nm": 71375000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30475000,
+      "y_nm": 79100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44925000,
+      "y_nm": 88125000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31750000,
+      "y_nm": 68025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30325000,
+      "y_nm": 42625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48150000,
+      "y_nm": 85800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33850000,
+      "y_nm": 13600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52850000,
+      "y_nm": 77875000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48800000,
+      "y_nm": 69600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48500000,
+      "y_nm": 66550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47545200,
+      "y_nm": 71050300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50146500,
+      "y_nm": 73650700,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48000000,
+      "y_nm": 66310000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 23625200,
+      "y_nm": 14625200,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27500000,
+      "y_nm": 13645000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30400000,
+      "y_nm": 10453800,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 20600000,
+      "y_nm": 10800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 14650000,
+      "y_nm": 10200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 14550000,
+      "y_nm": 11550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 11631800,
+      "y_nm": 9870400,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 17290000,
+      "y_nm": 9941800,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29650000,
+      "y_nm": 53550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 16000000,
+      "y_nm": 11800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29849700,
+      "y_nm": 48843600,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31225000,
+      "y_nm": 48850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37425000,
+      "y_nm": 84975000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47350000,
+      "y_nm": 85800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31687500,
+      "y_nm": 79175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28950000,
+      "y_nm": 55475000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29225000,
+      "y_nm": 60525000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33525000,
+      "y_nm": 78237500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47350000,
+      "y_nm": 90125000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 15222700,
+      "y_nm": 10237900,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29400000,
+      "y_nm": 44775000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31225000,
+      "y_nm": 44775000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29950000,
+      "y_nm": 70125000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28545600,
+      "y_nm": 52882200,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49675000,
+      "y_nm": 87625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47750000,
+      "y_nm": 86400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29207000,
+      "y_nm": 47753900,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 17953800,
+      "y_nm": 15537300,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46000000,
+      "y_nm": 73700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49025000,
+      "y_nm": 74475000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 15967700,
+      "y_nm": 8646100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30043700,
+      "y_nm": 17894200,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47600000,
+      "y_nm": 71850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30800600,
+      "y_nm": 34827800,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 22230900,
+      "y_nm": 15725200,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41350000,
+      "y_nm": 72600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48740000,
+      "y_nm": 77550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45262500,
+      "y_nm": 67200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45800000,
+      "y_nm": 67700000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39200000,
+      "y_nm": 68000000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33262500,
+      "y_nm": 68000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 15000000,
+      "y_nm": 6676800,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41495000,
+      "y_nm": 61780000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39000000,
+      "y_nm": 63500000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50000000,
+      "y_nm": 64500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51990000,
+      "y_nm": 66800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44800000,
+      "y_nm": 76900000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32424999,
+      "y_nm": 74275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27575000,
+      "y_nm": 54175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 25500000,
+      "y_nm": 58250000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6350000,
+      "y_nm": 42000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28725000,
+      "y_nm": 60250000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31275000,
+      "y_nm": 63825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32700000,
+      "y_nm": 76300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52750000,
+      "y_nm": 82850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36250000,
+      "y_nm": 79550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28525000,
+      "y_nm": 55100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33250000,
+      "y_nm": 61925000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29825000,
+      "y_nm": 56525000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34100000,
+      "y_nm": 74075000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41975000,
+      "y_nm": 71150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40700000,
+      "y_nm": 71575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30350000,
+      "y_nm": 74750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32424999,
+      "y_nm": 70775000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45200000,
+      "y_nm": 75100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46700000,
+      "y_nm": 74600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30350000,
+      "y_nm": 73425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46030000,
+      "y_nm": 76450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34825000,
+      "y_nm": 74075000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40275000,
+      "y_nm": 72025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44825000,
+      "y_nm": 72725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46575000,
+      "y_nm": 76275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46300000,
+      "y_nm": 75625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39150000,
+      "y_nm": 76725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42450000,
+      "y_nm": 71625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42975000,
+      "y_nm": 71825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39175000,
+      "y_nm": 78000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38340900,
+      "y_nm": 67623700,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36574600,
+      "y_nm": 71063600,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42122200,
+      "y_nm": 64304400,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43400000,
+      "y_nm": 78200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49500000,
+      "y_nm": 77200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50000000,
+      "y_nm": 29000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52150000,
+      "y_nm": 81650000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45000000,
+      "y_nm": 74550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50840900,
+      "y_nm": 73569100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48400000,
+      "y_nm": 70000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28250000,
+      "y_nm": 8950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29400000,
+      "y_nm": 10100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27250000,
+      "y_nm": 8950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28750000,
+      "y_nm": 9200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 25600000,
+      "y_nm": 10100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27750000,
+      "y_nm": 9200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 26550000,
+      "y_nm": 13750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28200000,
+      "y_nm": 16400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27200000,
+      "y_nm": 15800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27200000,
+      "y_nm": 14800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41930000,
+      "y_nm": 59014100,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34850000,
+      "y_nm": 74625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31875000,
+      "y_nm": 46375000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35350000,
+      "y_nm": 52275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46950000,
+      "y_nm": 86400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37025000,
+      "y_nm": 85375000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32000000,
+      "y_nm": 49025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48025000,
+      "y_nm": 87275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32450000,
+      "y_nm": 77150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52300000,
+      "y_nm": 77750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52150000,
+      "y_nm": 75000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31225000,
+      "y_nm": 47025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 26945000,
+      "y_nm": 45994200,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34700000,
+      "y_nm": 72500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37075000,
+      "y_nm": 80800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 18232200,
+      "y_nm": 50227200,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36125000,
+      "y_nm": 70650000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44050000,
+      "y_nm": 80950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37169600,
+      "y_nm": 57624600,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 22573300,
+      "y_nm": 9843900,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29250000,
+      "y_nm": 6475400,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 23663500,
+      "y_nm": 9627300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 26250000,
+      "y_nm": 6713700,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32100000,
+      "y_nm": 78350000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52150000,
+      "y_nm": 82450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36650000,
+      "y_nm": 81600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31600000,
+      "y_nm": 69825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6350000,
+      "y_nm": 30000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29500000,
+      "y_nm": 61375000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36975000,
+      "y_nm": 70575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52050000,
+      "y_nm": 63825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34525000,
+      "y_nm": 77825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42650000,
+      "y_nm": 59500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44750000,
+      "y_nm": 64599999,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35650000,
+      "y_nm": 81625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40900000,
+      "y_nm": 57300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51275000,
+      "y_nm": 67200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39700000,
+      "y_nm": 65700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46025000,
+      "y_nm": 57175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48525000,
+      "y_nm": 65849999,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48550000,
+      "y_nm": 86400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50025000,
+      "y_nm": 87200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34600000,
+      "y_nm": 71025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30725000,
+      "y_nm": 35925000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30825000,
+      "y_nm": 62175000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30725000,
+      "y_nm": 43025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 30550000,
+      "y_nm": 59850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38675000,
+      "y_nm": 83750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36650000,
+      "y_nm": 85800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37775000,
+      "y_nm": 84050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34000000,
+      "y_nm": 14525000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 53000000,
+      "y_nm": 68025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50200000,
+      "y_nm": 61575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52550000,
+      "y_nm": 73300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52150000,
+      "y_nm": 83250000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51050000,
+      "y_nm": 60625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52750000,
+      "y_nm": 81250000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47545700,
+      "y_nm": 72875800,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52750000,
+      "y_nm": 80450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52150000,
+      "y_nm": 80050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52750000,
+      "y_nm": 79650000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52800000,
+      "y_nm": 78950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52200000,
+      "y_nm": 78850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50000000,
+      "y_nm": 75600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49100000,
+      "y_nm": 76300000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51900000,
+      "y_nm": 73400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44650000,
+      "y_nm": 85100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48980000,
+      "y_nm": 77000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39757200,
+      "y_nm": 71042900,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38032400,
+      "y_nm": 69126200,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 49429200,
+      "y_nm": 69597900,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34050000,
+      "y_nm": 81825000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46375000,
+      "y_nm": 57600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33100000,
+      "y_nm": 77025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47950000,
+      "y_nm": 76150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51025000,
+      "y_nm": 61725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51113300,
+      "y_nm": 88055000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52804800,
+      "y_nm": 84287500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31300000,
+      "y_nm": 84165800,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48203200,
+      "y_nm": 74511200,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44925000,
+      "y_nm": 76325000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39700000,
+      "y_nm": 63000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43000000,
+      "y_nm": 69800000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37323200,
+      "y_nm": 72144200,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35462600,
+      "y_nm": 75801100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35510000,
+      "y_nm": 80656500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40075000,
+      "y_nm": 80575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43945000,
+      "y_nm": 76490000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44700000,
+      "y_nm": 58025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45675000,
+      "y_nm": 58400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37600000,
+      "y_nm": 50750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44750000,
+      "y_nm": 91425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38550000,
+      "y_nm": 82425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52525000,
+      "y_nm": 65700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40450000,
+      "y_nm": 84725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38450000,
+      "y_nm": 84575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46380000,
+      "y_nm": 56750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50725000,
+      "y_nm": 87200000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43500000,
+      "y_nm": 81100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44900000,
+      "y_nm": 87575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 53700000,
+      "y_nm": 66224999,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 52900000,
+      "y_nm": 60425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 45200000,
+      "y_nm": 62712500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40700000,
+      "y_nm": 54400000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42900000,
+      "y_nm": 82162500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35450000,
+      "y_nm": 84075000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28450000,
+      "y_nm": 58225000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31325000,
+      "y_nm": 52450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37200000,
+      "y_nm": 84000000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36350000,
+      "y_nm": 84475000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40725000,
+      "y_nm": 83687500,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28925000,
+      "y_nm": 54700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36625000,
+      "y_nm": 82150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43450000,
+      "y_nm": 82950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35500000,
+      "y_nm": 61750000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34275000,
+      "y_nm": 73550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33700000,
+      "y_nm": 63025000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37400000,
+      "y_nm": 62425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36300000,
+      "y_nm": 62450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40800000,
+      "y_nm": 85500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 41275000,
+      "y_nm": 83875000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42575000,
+      "y_nm": 68700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43600000,
+      "y_nm": 83500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36100000,
+      "y_nm": 57850000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42000000,
+      "y_nm": 79975000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34500000,
+      "y_nm": 56725000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39900000,
+      "y_nm": 84700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34100000,
+      "y_nm": 70775000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35650000,
+      "y_nm": 50375000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31500000,
+      "y_nm": 69050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33049999,
+      "y_nm": 62625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 37225000,
+      "y_nm": 82600000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31725000,
+      "y_nm": 54500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43550000,
+      "y_nm": 84100000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 38000000,
+      "y_nm": 50075000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33500000,
+      "y_nm": 84167100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 44100000,
+      "y_nm": 84150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34525000,
+      "y_nm": 83150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33600000,
+      "y_nm": 77500000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46550000,
+      "y_nm": 85550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31225000,
+      "y_nm": 50325000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 27575000,
+      "y_nm": 51875000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 28500000,
+      "y_nm": 57150000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 32424999,
+      "y_nm": 73575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31975000,
+      "y_nm": 86275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46950000,
+      "y_nm": 90950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 6225000,
+      "y_nm": 57925000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 29950000,
+      "y_nm": 66775000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31175000,
+      "y_nm": 78950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 50500000,
+      "y_nm": 85450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51575000,
+      "y_nm": 87625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 51500000,
+      "y_nm": 85450000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35100000,
+      "y_nm": 50350000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34000000,
+      "y_nm": 52650000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 34298300,
+      "y_nm": 69563700,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40724200,
+      "y_nm": 66190000,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42604800,
+      "y_nm": 63018300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39140000,
+      "y_nm": 64913800,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36843100,
+      "y_nm": 67641300,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 36500000,
+      "y_nm": 73625000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39050000,
+      "y_nm": 64275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35650000,
+      "y_nm": 67425000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39875000,
+      "y_nm": 74275000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 35425000,
+      "y_nm": 70575000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42045200,
+      "y_nm": 70500500,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 39760600,
+      "y_nm": 80027700,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 42232600,
+      "y_nm": 72518200,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 46175000,
+      "y_nm": 62785100,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 40754200,
+      "y_nm": 80139900,
+      "dx_nm": 300000,
+      "dy_nm": 300000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 43375000,
+      "y_nm": 73325000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 33600000,
+      "y_nm": 59950000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 31650000,
+      "y_nm": 62510000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    }
+  ]
+}

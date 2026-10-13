@@ -1,0 +1,50 @@
+OpenWalkieTalkie.app bundles the following third-party assets.
+
+Fonts (assets/fonts)
+--------------------
+Geist and Geist Mono
+Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+Licensed under the SIL Open Font License, Version 1.1; the full licence is in
+assets/fonts/OFL.txt.
+
+Icons (assets/icons)
+--------------------
+Most glyphs are from Solar Icons (Linear weight) by 480 Design, licensed
+under the Creative Commons Attribution 4.0 International licence
+(https://creativecommons.org/licenses/by/4.0/). Attribution: "Solar Icons by
+480 Design". Where a file was adjusted (mirrored, re-drawn on a 24 px grid, or
+its colour set to `currentColor` so it can be tinted), that is a modification
+under the licence.
+
+The Solar files, and a few glyphs drawn in the same style (`check`, `close`,
+`plus`, `return`, `terminal`, `arrow-up`, `alt-arrow-up`, `arrow-up-right`),
+were taken from Zeron (https://github.com/zeronsh/zeron):
+
+    MIT License
+    Copyright (c) 2026 Wing
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit
+    persons to whom the Software is furnished to do so, subject to the
+    following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+    USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Drawn for this app in the same style: `bluetooth`, `check-circle`, `dial`,
+`gemini-mark` (a generic four-point sparkle), `plug`, `server` and `stop`.
+
+The product marks `claude-mark` (Anthropic's Claude) and `openai-mark`
+(OpenAI) are ports of Zeron's and are trademarks of their owners. They are
+shown only to identify which agent CLI a row is about.

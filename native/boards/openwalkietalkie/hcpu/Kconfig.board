@@ -1,0 +1,8 @@
+config BSP_USING_BOARD_OPENWALKIETALKIE
+    bool
+    select SOC_SF32LB52X
+    select BF0_HCPU
+    default y
+config ASIC
+    bool
+    default y

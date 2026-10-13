@@ -1,0 +1,558 @@
+{
+ "revision": "BodyV6.13 ECO r6",
+ "date": "2026-09-23",
+ "inputs": {
+  "r5_main_sha256": "9557372946eb6312b47ea35e3d8bae7c8ed6b97967e3743cc4c340db4f393af6",
+  "encoder_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+  "bodyv6_13_step": "mechanical-source/case/BodyV6.13.step",
+  "bodyv6_13_step_sha256": "9d3eaedd4cdc180b925e87b9718fe30b96340b8cba7b0dc08486a5419848e649"
+ },
+ "boards": {
+  "main": {
+   "file": "main/main-45deg.kicad_pcb",
+   "sha256": "54822c39eeab34cf7167fa3b20b75db822559016ee9f5c149b93631f5727c2d2",
+   "bytes": 1161777,
+   "footprints": 135,
+   "tracks": 2728,
+   "vias": 364,
+   "drc_lite_issues": 0,
+   "split_signal_nets": [],
+   "non_45_degree_segments": 0,
+   "changes_vs_r5": "Edge.Cuts only: footprints, tracks and vias identical to r5 (compared after the KiCad save); zones refilled by KiCad. r6 update (same day): Edge.Cuts only again (right screw U-slot, top-left corner tips removed) plus one F.Cu/B.Cu keepout rule area; footprints, tracks and vias still identical to r5 and to the first r6 file. Later the same day (MK1 microphone swap): MK1 replaced and copper re-routed locally, see mk1_mic_swap_2026_09_23; outline unchanged. Later again (charger swap): U6 SGM41562SA replaced by TI BQ24073RGTR with local re-routing, see u6_charger_swap_2026_09_23; outline unchanged. On 2026-09-24: U7 RT6150B-33GQW replaced by the adjustable RT6150BGQW with an FB divider R42/R43 on B.Cu, see u7_regulator_swap_2026_09_24. Later on 2026-09-24: filled silkscreen pin-1 dots added to U1, U2, U3, U4, U5, U7, U8, U10, U20 and Y1 (silkscreen only), see pin1_silk_dots_2026_09_24.",
+   "r6_original_sha256": "3037f1a33d65434dd8a5cc296b5b24819c2339069dd9eb93f9d027fbef4adb6d",
+   "outline_area_mm2": 3609.132,
+   "before_mic_swap_sha256": "5e41c696ef3a4365d2cc623dea599d64c86c299bc0db25dad1d49aaf835549cf",
+   "before_charger_swap_sha256": "ac26663faccfbd864902ca9fb6abe55bb61176480cb611fe7c7b93c33db4bb1f",
+   "before_u7_swap_sha256": "e90b5dd17cb4680a82755fa266c475cdd0d6ecdeeaee3f970825cfd4e5423db9",
+   "before_pin1_dots_sha256": "986d95fcf15204208a645b1b76a13ddfc9928d8509d5a43fe27e9462c486b47e"
+  },
+  "encoder": {
+   "file": "encoder/encoder-45deg.kicad_pcb",
+   "sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+   "note": "unchanged since r4"
+  },
+  "encoder_r6_update": {
+   "file": "encoder/encoder-45deg.kicad_pcb",
+   "sha256": "384a992f8278b6db990709a5e2a7003ad69f99e386da7045039f8e7b0667ad2f",
+   "r4_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+   "change": "MH2 NPTH \u00d82.6 -> \u00d82.8 (pad size and drill); nothing else",
+   "drc_lite_issues": 0,
+   "native_kicad_drc": "encoder/verification/encoder-drc-kicad10.rpt: 0 violations, 0 unconnected, 0 footprint errors (zones refilled)",
+   "exports_regenerated": [
+    "encoder/gerber/* (7 layers + job)",
+    "encoder/stencil/* (2 paste layers + job)",
+    "encoder/drill/*",
+    "encoder/encoder-gerber-drill.zip",
+    "encoder/verification/drill-report.txt",
+    "encoder/verification/encoder-drc-kicad10.rpt (r4 report kept as encoder-drc-kicad10-r4.rpt)",
+    "3d/encoder-populated-native.step",
+    "3d/encoder-populated-bodyv6.13.step",
+    "3d/bodyv6.13-fit-assembly.step"
+   ],
+   "gerber_diff_vs_r4": "Edge_Cuts, silkscreens and PTH drill identical apart from dates; F/B mask differ only at MH2 (larger opening); F/B Cu differ only in the GND pour pulled back around MH2 (to r 1.6); NPTH drill: MH2 T 2.6 -> 2.8"
+  },
+  "encoder_wheel": {
+   "file": "encoder-wheel/encoder-wheel-45deg.kicad_pcb",
+   "sha256": "e1437f77b45c96671553143a165570bd858ae428033db24080336929b2dba001",
+   "bytes": 89954,
+   "note": "alternative to encoder/ (2026-09-24): same outline, holes and J1; ENC1 flipped to B.Cu inside the wheel, terminals A/B swapped onto ENC_B/ENC_A; see encoder_wheel_variant_2026_09_24",
+   "derived_from_sha256": "384a992f8278b6db990709a5e2a7003ad69f99e386da7045039f8e7b0667ad2f",
+   "tracks": 10,
+   "vias": 5,
+   "drc_lite_issues": 0
+  }
+ },
+ "native_kicad_drc": {
+  "main": "main/verification/main-drc-kicad10.rpt (0 violations, 0 unconnected, 0 footprint errors, zones refilled; run after the pin-1 silkscreen dots)",
+  "encoder": "encoder/verification/encoder-drc-kicad10.rpt (r4 run, board unchanged)",
+  "encoder_wheel": "encoder-wheel/verification/encoder-wheel-drc-kicad10.rpt (0 violations, 0 unconnected, 0 footprint errors, zones refilled)"
+ },
+ "outline_changes_vs_r5": [
+  "right edge: the side-button recess (edge u=53.49, previously v 22.66-48.70) now continues straight down to v 54.675 with an r0.5 inner fillet, clearing the new V6.13 wall boss u 54.0-55.0 / v 49.625-54.375 (0.51 mm to its face, 0.30 mm below it); the r3/r4 step out to u=54.69 at v 48.99 is gone, so no thin sliver is left between recess and notch",
+  "left edge: relief for the left wall rib (now reaching u 3.0 at v 47.662-48.662, was u 2.0) extended from u 2.51 to u 3.3, v 47.342-49.0, r0.5 inner fillets",
+  "top edge: the notch around the seat block was re-cut concentric with the block. The block's round end is r2.875 about the encoder MH1 axis (36.4587, 3.8); r5 had assumed r3.07 about (36.65, 3.6), which left only 0.159 mm at its tightest (r5 README said 0.24). New arc r3.1197 about (36.4587, 3.8): 0.245 mm all round; straight edge u=33.339 kept",
+  "r6 update: right-edge U-slot 2.2 wide to a rounded end at (52.2, 52.0) for an M2 screw into the V6.13 boss",
+  "r6 update: top-left pillar/web slot no longer ends in two sharp tips; straight cuts from the notch arc ends to the outer curve with r0.5 fillets"
+ ],
+ "edge_clearances_to_case_at_board_plane": {
+  "right boss (u 54.0-55.0, v 49.625-54.375)": {
+   "min_clearance_mm": 0.3,
+   "at_board": [
+    54.0,
+    54.675
+   ]
+  },
+  "left rib (u 1-3, v 47.662-48.662)": {
+   "min_clearance_mm": 0.231,
+   "at_board": [
+    3.175,
+    47.511
+   ]
+  },
+  "TL pillar + corner web": {
+   "min_clearance_mm": 0.125,
+   "at_board": [
+    6.218,
+    3.391
+   ]
+  },
+  "BR pillar + corner web": {
+   "min_clearance_mm": 0.125,
+   "at_board": [
+    50.084,
+    88.541
+   ]
+  },
+  "seat block at MH1 axis (r2.875)": {
+   "min_clearance_mm": 0.244,
+   "at_board": [
+    34.726,
+    6.394
+   ]
+  },
+  "right screw slot (U-slot at the B-side boss)": {
+   "min_clearance_mm": 0.51,
+   "at_board": [
+    53.49,
+    54.0
+   ]
+  }
+ },
+ "case_material_inside_outline_at_board_plane_mm2": 0.0,
+ "pads_inside_case_contact": [],
+ "pads_within_0p3mm_of_case_contact": [
+  {
+   "ref": "C11",
+   "side": "B",
+   "pad_to_case_contact_mm": 0.211
+  },
+  {
+   "ref": "R39",
+   "side": "B",
+   "pad_to_case_contact_mm": 0.255
+  }
+ ],
+ "case_changes_v6_9_to_v6_13": [
+  "back cover not present in the export (8 solids instead of 9)",
+  "TL and BR pillars joined to the case corner by a diagonal web (width matches the board slot, 0.125 mm per side, same as the pillar clearance)",
+  "new right wall boss u 54.0-55.0, v 49.625-54.375, Y 1-9.28 (through the board plane)",
+  "left wall rib extended inboard from u 2.0 to u 3.0 (v 47.662-48.662)",
+  "B-side post at (48, 70.5) hollowed into a ring: outer r4.0 (unchanged), bore r3.0, 1.0 mm wall; C11 / R7 keep their r5 clearances (0.43 / 0.54 mm)",
+  "B-side seat bosses at MH2 (3.8, 51) and MH4 (34.229, 91.2) removed",
+  "wheel, side buttons, front buttons and the encoder-side features (seat block, MH2 spigot) unchanged"
+ ],
+ "r6_update_2026_09_23": {
+  "why": [
+   "Tony: add one more screw hole at the right side of the main board -> chose an open U-slot at the V6.13 B-side boss (52.2, 52.0)",
+   "Tony: remove the two sharp corners at the top left (easier installation)"
+  ],
+  "right_screw_slot": {
+   "geometry": "open U-slot 2.2 mm wide from the right edge (u 53.49) to a rounded end centred on (52.2, 52.0): edges v 50.9 and v 53.1, r1.1 end arc through (51.1, 52.0)",
+   "case_boss": "V6.13 B-side boss at (52.2, 52.0), merged into the right wall; blind pilot dia ~1.75 (fill starts between r0.87 and r0.90) from the boss face Y 9.28 to Y ~12.25 (depth ~2.97 mm)",
+   "screw": "M2 thread-forming / self-tapping screw from the F (battery) side; head bears on the board F face (Y 8.275); length under head to the pilot bottom = 3.975 mm -> M2x3 (2.0 mm engagement) fits, M2x4 would bottom out",
+   "head_vs_case": {
+    "contact": "F-side right wall rib face u 54.0 (v 49.625-54.375, Y 1-9.28), 1.8 mm from the screw axis",
+    "head_dia_4.0_ISO7045": "interferes 0.31 mm3 (0.2 mm radial)",
+    "head_dia_3.8_ISO1207": "interferes 0.11 mm3",
+    "head_dia_3.6": "touches (0.000 mm)",
+    "head_dia_3.5": "0.05 mm clearance"
+   },
+   "copper_clearance_to_slot_mm": {
+    "In2.Cu PTT": 1.24,
+    "In2.Cu CELL": 1.74,
+    "SW3 B.CrtYd": 2.09,
+    "In2.Cu SYSTEM_SUPPLY": 2.35,
+    "nearest F.Cu/B.Cu item": "> 4.2 (B.Cu GND track 4.30)",
+    "In1.Cu GND pour": "0.30 (edge clearance, KiCad refill)"
+   },
+   "keepout": "rule area \"Right screw M2 head/boss keepout\" on F.Cu + B.Cu, 24-gon circumscribing r2.5 about (52.2, 52.0): no tracks, vias, pads, pours or footprints",
+   "case_clearance_at_board_plane": "no case material inside the slot region at Y 8.3-9.25; slot edge to the wall 0.51 mm"
+  },
+  "top_left_corner_trim": {
+   "removed": "the two board horns either side of the TL pillar/web slot, which ended in acute tips at (4.771, 1.942) and (1.942, 4.770); 2.95 mm2 of board removed",
+   "new_edge": "from each end of the r2.0 pillar notch arc straight to the curved outer edge: u = 6.2142 from v 3.386 up to v 1.887 then an r0.5 fillet to (6.634, 1.394) on the top curve; v = 6.2142 from u 3.386 left to u 1.888 then an r0.5 fillet to (1.393, 6.648) on the left curve",
+   "clearance": "minimum 0.125 mm (unchanged, at the notch arc ends next to the web); nothing else within 0.3 mm",
+   "copper": "none in or near the removed area"
+  },
+  "native_kicad_drc": "0 violations, 0 unconnected, 0 footprint errors after both edits (zones refilled): main/verification/main-drc-kicad10.rpt; the first r6 report is kept as main-drc-kicad10-r6-original.rpt",
+  "exports_regenerated": [
+   "main/gerber/* (9 layers + job)",
+   "main/stencil/* (2 paste layers + job)",
+   "main/drill/* (PTH, NPTH, SVG maps; hole table identical to the first r6 export)",
+   "main/main-gerber-drill.zip",
+   "main/verification/drill-report.txt",
+   "3d/main-populated-native.step",
+   "3d/main-populated-bodyv6.13.step",
+   "3d/bodyv6.13-fit-assembly.step",
+   "verification/bodyv6.13-fit-model-report.json",
+   "source/main/mechanical/main-outline.dxf"
+  ],
+  "unchanged": "footprints, tracks and vias, so the BOM and positions (main/assembly, main/reference) remain valid and were not re-exported; compared with the first r6 export, every Gerber except Edge_Cuts and In1_Cu (GND pour pulled back 0.3 mm from the new edges) differs only in its creation-date lines, and the drill files are identical apart from dates"
+ },
+ "encoder_holes_check_v6_13": {
+  "MH1 (36.4587, 3.8) - screw": {
+   "case": "seat block face at Y 3.5 (board B face rests on it; contact ring r 0.87-2.98) with a blind pilot dia 1.74 from Y 3.5 to Y 9.28 (5.78 deep); no case material within r 2.8 below the board (Y 1.25-2.5)",
+   "board": "NPTH dia 2.6 (unchanged) = M2 clearance, 0.3 radial to the shank",
+   "screw": "F face (Y 2.5) to pilot bottom 6.78 mm -> M2x5 (4.0 engagement) or M2x6 (5.0 engagement, 0.78 spare)",
+   "head": "on the F/cover side; dia 4 head is 0.29 inside the board edge; V6.13 has no cover - in V6.9 the cover inner face under MH1 was at Y 1.0 (0.2 mm under a 1.3 mm head)"
+  },
+  "MH2 (52.2, 19.5413) - boss": {
+   "case": "hollow spigot outer dia 2.55 (bore dia 1.74) spanning Y 2.5-3.5 (flush with the board F face), shoulder dia 3.89 at Y 3.5 that the board B face rests on",
+   "board": "NPTH dia 2.6 -> 2.8",
+   "radial_clearance_mm": {
+    "before": 0.025,
+    "after": 0.125
+   },
+   "shoulder_bearing_ring_mm": "r 1.40-1.945",
+   "nearby": "J1 courtyard 0.64 mm from the new hole edge; GND pours on F/B pulled back by KiCad refill; board edge 0.89 mm from the hole edge"
+  }
+ },
+ "mk1_mic_swap_2026_09_23": {
+  "why": [
+   "Tony: the SPM1423HM4H-B is out of stock at JLCPCB; the proposed SPH8878LR5H-1 is analog and bottom-port, so Tony asked for another top-port mic and chose the ST MP34DT05TR-A (PDM), front (B) side inside the case sound post"
+  ],
+  "part": "ST MP34DT05TR-A, LCSC C2688664, HCLGA 3 x 4 x 1 mm, top port; datasheet mechanical-source/datasheets/mp34dt05-a.pdf (DS12239 rev 4)",
+  "placement": "B.Cu at (48.000, 70.500), rotation 0, centred on the V6.13 hollow sound post (bore r3.0, Y 9.28-14) and the front-wall hole (dia 2.0 at (48, 70.5), Y 14-15); the old MK1 was on F.Cu at (48.000, 72.001)",
+  "footprint": {
+   "name": "openmicrodial_rev_a-FP_ST_MP34DT05_HCLGA_3x4",
+   "source": "DS12239 Fig. 12 land pattern (top view), mirrored for bottom mounting; pad order checked against Fig. 1 (bottom view) and the port position against Fig. 11",
+   "pads_local_mm": "1 Vdd (-0.45, +0.675), 2 LR (-0.45, -0.675), 3 CLK (+0.45, -0.675), 4 DOUT (+0.45, +0.675), all 0.40 x 0.95; ground ring as four pad-5 bars (+/-1.225, 0) 0.35 x 2.30 and (0, +/-1.725) 1.30 x 0.35, declared as internally connected jumper pads",
+   "sound_port": "dia 0.25 at local (0, -0.78) = board (48.000, 69.720); a line straight out of it passes the dia 2.0 front hole 0.22 mm inside its edge",
+   "courtyard_fab": "B.CrtYd 3.5 x 4.5; B.Fab body 3.0 x 4.0 with pin-1 chamfer and port circle; B.SilkS pin-1 dot",
+   "model": "models/MP34DT05TR-A.step, 3.1 x 4.1 x 1.1 maximum-size envelope (not vendor CAD)"
+  },
+  "nets": "1 Vdd audio::MIC_SUPPLY (U2 output, C7 100 nF), 2 LR GND (left channel, data valid while CLK low), 3 CLK audio::MIC_CLOCK (R6 22 ohm from U5), 4 DOUT MIC_PDM_DATA (U5 pin 10, R7 100k), 5 GND",
+  "ground": "two GND vias (0.45/0.2) on the left ring bar to the In1 plane; LR pad tied to the left bar; top bar linked to the left bar; right and bottom bars connect through the part's ring",
+  "rule_area": "'MK1 body: no vias' on F.Cu/In1.Cu/In2.Cu/B.Cu over (46.45-49.55, 68.45-72.55): vias not allowed, tracks allowed",
+  "reroute": {
+   "region": "all copper changes inside u 43.51-53.27, v 66.07-75.94",
+   "nets": [
+    "audio::MIC_SUPPLY",
+    "audio::MIC_CLOCK",
+    "MIC_PDM_DATA",
+    "MIC_PDM_CLK",
+    "AMP_ENABLE",
+    "CELL (0.12 mm sense trace only; the 1.0 mm battery trunk is untouched)",
+    "ENTER",
+    "MIC_POWER_ENABLE",
+    "GND (old mic stubs and 4 vias removed, 2 vias added)"
+   ],
+   "counts": "80 track segments and 14 vias removed, 67 segments and 10 vias added; board now 2763 segments, 363 vias (297 x 0.2/0.45, 66 x 0.3/0.6)",
+   "widths": "MIC_SUPPLY 0.15 mm (was 0.2), AMP_ENABLE and CELL sense partly 0.104 mm, other new segments 0.12 mm; all segments 0/45/90 degrees",
+   "method": "hand escapes from the four signal pads (locked) + negotiated router on the eight nets inside a local rip region, then dangling-remnant cleanup; the first KiCad DRC found two 'track has unconnected end' remnants (MIC_PDM_DATA In2, CELL In2), fixed before the final run"
+  },
+  "vias_in_sound_post": "inside the bore r3.0: GND (46.05, 70.5), GND (45.95, 71.3), MIC_PDM_DATA (46.125, 69.725), MIC_PDM_DATA (49.275, 72.875), AMP_ENABLE (49.875, 69.75); touching the bore edge: MIC_SUPPLY (48.8, 73.325), MIC_PDM_CLK (50.65, 68.775), ENTER (50.325, 72.425). Filled & capped vias keep the post sealed.",
+  "checks": {
+   "native_kicad_drc": "0 violations, 0 unconnected, 0 footprint errors (zones refilled): main/verification/main-drc-kicad10.rpt; the pre-swap report is in _to_delete",
+   "drc_lite": 0,
+   "split_signal_nets": [],
+   "non_45_degree_segments": 0,
+   "kicad_saved_vs_routed": "footprints, tracks and vias identical to the routed file after the KiCad save",
+   "fit_3d": "MK1 model 0.429 mm to the bore wall (nominal package 0.50), no new intersections; all other clearances unchanged (verification/bodyv6.13-fit-model-report.json)",
+   "gerber_diff_vs_pre_swap": "coordinate changes only inside u 42-55, v 62-80 on every layer except In1_Cu, whose pour changed only inside u 42.4-51.1, v 66.1-75.9 (its Gerber region fracture lines move elsewhere); Edge_Cuts unchanged apart from segment order and one fillet end re-rounded by 0.06 um; NPTH identical; F_Silkscreen unchanged"
+  },
+  "exports_regenerated": [
+   "main/gerber/* (9 layers + job)",
+   "main/stencil/* (2 paste layers + job)",
+   "main/drill/* (PTH, NPTH, SVG maps)",
+   "main/main-gerber-drill.zip",
+   "main/verification/drill-report.txt",
+   "main/verification/main-drc-kicad10.rpt",
+   "main/assembly/bom.csv and positions.csv (MK1 line)",
+   "main/reference/positions-kicad-all.csv (KiCad placement export)",
+   "3d/main-populated-native.step",
+   "3d/main-populated-bodyv6.13.step",
+   "3d/bodyv6.13-fit-assembly.step",
+   "verification/bodyv6.13-fit-model-report.json",
+   "fab-jlcpcb/main/* and fab-jlcpcb/ORDER-NOTES.md",
+   "models/MP34DT05TR-A.step and models/manifest.json"
+  ],
+  "open_points": [
+   "PDM clock must be 1.2-3.25 MHz (firmware)",
+   "sensitivity -26 dBFS vs -22 dBFS for the SPM1423 (about 4 dB less)",
+   "datasheet decoupling 100 nF + 1 uF near Vdd; only C7 100 nF, ~5 mm of track away on F",
+   "post cavity + dia 2 hole Helmholtz resonance roughly 5 kHz; consider a gasket between mic lid and front wall",
+   "CoHDL source still has the SPM1423 (the routed KiCad board is the authority)"
+  ]
+ },
+ "u6_charger_swap_2026_09_23": {
+  "why": [
+   "Tony: the SGM41562SAXTYH10G charger is out of stock at JLCPCB (the whole SGM41562 family was unavailable); Tony chose the TI BQ24073RGTR (plenty of stock) from the alternatives offered"
+  ],
+  "part": "TI BQ24073RGTR, LCSC C15220 (about 16,900 in stock at LCSC on 2026-09-23), VQFN-16 3 x 3 mm RGT with 1.68 mm exposed pad; standalone linear charger with power path: no I2C, VO(REG) 4.4 V, OVP 6.6 V, VBAT(REG) 4.2 V",
+  "placement": "F.Cu at (15.000, 10.000), rotation 0 (same centre as the old U6); pin 1 TS at (13.5375, 9.25)",
+  "footprint": {
+   "name": "openmicrodial_rev_a-FP_TI_RGT_VQFN16_3x3_EP1p68",
+   "source": "KiCad library Package_DFN_QFN RGT0016 geometry: 16 pads 0.825 x 0.25 at +/-1.4625 mm, 0.5 mm pitch, counter-clockwise from pin 1 top-left; EP 1.68 x 1.68 (pad 17) with four 0.68 mm paste windows at +/-0.42; courtyard +/-2.13; silk corner marks and pin-1 triangle",
+   "model": "models/BQ24073RGTR.step, 3.1 x 3.1 x 1.0 maximum-size envelope (not vendor CAD)"
+  },
+  "nets": "1 TS power::CELL_TEMPERATURE (J4 pin 1, NTC to GND at J4 pin 2); 2/3 BAT CELL (C40 4.7 uF); 4 CE GND (charging always enabled); 5 EN2 GND and 6 EN1 SYSTEM_SUPPLY (USB500 mode, 500 mA input limit); 7 PGOOD not connected; 8 VSS GND; 9 CHG power::CHG_STATUS to TP1 (open drain, no pull-up on the board); 10/11 OUT SYSTEM_SUPPLY (C48 4.7 uF); 12 ILIM power::CHG_ILIM, R38 3.3k to GND; 13 IN USB_VBUS (C41 4.7 uF); 14 TMR not connected (default timers: 30 min precharge, 5 h fast charge); 15 TD GND (termination enabled); 16 ISET power::CHG_ISET, R37 2.55k to GND (890/2.55k = 349 mA); 17 EP GND",
+  "parts_changed": {
+   "removed": "C51 100 nF (old VDD decoupling) and R33 100k (old nINT pull-up); nets power::CHG_VDD and power::CHG_NINT_BAT_DOMAIN deleted",
+   "re_used": "R37 91k -> 2.55k RC0402FR-072K55L (ISET) at (14.25, 6.9) rot 90; R38 442k -> 3.3k RC0402FR-073K3L (ILIM) at (17.62, 8.45) rot 90 (the 91k/442k pair was the SGM41562 NTC network); TP1 now power::CHG_STATUS",
+   "moved": "C41 VBUS -> (16.95, 6.7) rot 0; C48 SYS -> (17.9, 10.9) rot 270; C40 CELL -> (11.2, 10.6) rot 180",
+   "r38_value": "first placed as 3.24k (RC0402FR-073K24L) and changed to 3.3k because 3.24k is out of stock at LCSC; ILIM only programs the input limit when EN2=1/EN1=0, so any 1.1k-8k value works in USB500 mode (3.3k would give 1610/3.3k = 488 mA in ILIM mode)"
+  },
+  "reroute": {
+   "region": "charger copper inside u 10.0-21.4, v 4.9-14.1; in addition the charger branches of I2C_SCL/I2C_SDA were removed and their In2 stubs pruned back to the U5/U3/R28/R29 bus (SCL In2 run up to (29.85, 48.84), SDA In2 run up to (29.2, 45.35))",
+   "counts": "83 track segments and 13 vias removed, 40 segments and 12 vias added; board now 2720 segments, 362 vias (297 x 0.2/0.45, 65 x 0.3/0.6)",
+   "thermal_pad": "5 GND vias 0.45/0.2 in the EP at (15, 10) and (+/-0.5, +/-0.5) around it; CE, EN2, VSS and TD tied to the EP with short 0.25 mm stubs",
+   "power_paths": "VBUS 0.5 mm from the old VBUS trunk to C41 and IN; OUT pads 10/11 joined 0.25 mm then 0.6 mm to a 0.6/0.3 via at (19.047, 10.5) and a 1.0 mm In2 link to the existing SYSTEM_SUPPLY In2 run; BAT pads 2/3 joined 0.25 mm then 0.6 mm to a 0.6/0.3 via at (12.75, 10.0), 1.0 mm B.Cu to the existing CELL trunk at (13.625, 13.43), and 0.6 mm F.Cu to C40",
+   "signals": "ISET/ILIM/CHG 0.15 mm; TS rejoins the existing J4 run at (11.792, 9.484); EN1 via (14.75, 12.35) to SYSTEM_SUPPLY on In2",
+   "method": "scripted edit (s10.py) with every new segment ending on a pad centre, via or shared endpoint; dangling-stub prune on I2C; locked new copper; all segments 0/45/90 degrees"
+  },
+  "checks": {
+   "native_kicad_drc": "0 violations, 0 unconnected, 0 footprint errors (zones refilled): main/verification/main-drc-kicad10.rpt; the earlier reports are in _to_delete/before-charger-swap",
+   "drc_lite": 0,
+   "split_signal_nets": [],
+   "non_45_degree_segments": 0,
+   "courtyard_gaps": "tight but positive: R37/U6 0.04, R38/U6 0.02, C48/U6 0.04, R38/C48 0.04 mm (KiCad courtyard check passes)",
+   "kicad_saved_vs_routed": "tracks and vias identical to the scripted file after the KiCad save; footprints identical apart from C48's angle written as -90",
+   "fit_3d": "U6 envelope 3.1 x 3.1 x 1.0 is more than 1.5 mm from every case solid and outside the battery reserve (v 23.7-44.3); intersections, cross-board results and all clearances identical to the pre-swap run (verification/bodyv6.13-fit-model-report.json)",
+   "drill": "PTH 0.3 mm holes 66 -> 65; 0.2 mm holes unchanged (297 + 16); NPTH unchanged"
+  },
+  "exports_regenerated": [
+   "main/gerber/* (9 layers + job)",
+   "main/stencil/* (2 paste layers + job)",
+   "main/drill/* (PTH, NPTH, SVG maps)",
+   "main/main-gerber-drill.zip",
+   "main/verification/drill-report.txt",
+   "main/verification/main-drc-kicad10.rpt",
+   "main/assembly/bom.csv and positions.csv",
+   "main/reference/positions-kicad-all.csv (KiCad placement export)",
+   "3d/main-populated-native.step",
+   "3d/main-populated-bodyv6.13.step",
+   "3d/bodyv6.13-fit-assembly.step",
+   "verification/bodyv6.13-fit-model-report.json",
+   "fab-jlcpcb/main/* and fab-jlcpcb/ORDER-NOTES.md",
+   "models/BQ24073RGTR.step, RC0402FR-072K55L.step, RC0402FR-073K3L.step and models/manifest.json"
+  ],
+  "open_points": [
+   "battery NTC: the BQ24073 TS input needs a 10k NTC (103AT type, B about 3380-3435), not the 100k Murata NXFT15WF104FA2B050 the old design used; with a 10k NTC charging runs between about 0 and 50 C; with nothing on J4 the TS input is open and charging stays off, so for bench use without an NTC fit a 10k resistor across J4",
+   "firmware: remove the SGM41562 I2C driver (src/battery/charger.rs, address 0x03); charging is now automatic (349 mA, 500 mA input limit, 4.2 V, termination on, 5 h safety timer) and cannot be switched off from firmware (CE tied to GND)",
+   "charge status: CHG is open drain on TP1 with no pull-up; PGOOD is not connected",
+   "system rail: OUT regulates to 4.4 V from USB (the SGM41562 gave about 4.55 V); U7/U8 RT6150 inputs are unaffected",
+   "thermal: linear charger; at the start of fast charge (battery 3.0 V) the battery FET drops (4.4 - 3.0 V) x 0.35 A = about 0.5 W and the input FET up to (5.0 - 4.4 V) x 0.5 A = 0.3 W, so up to about 0.8 W in the 3 x 3 package, falling as the cell charges; the 5 filled EP vias spread it into the planes, and the BQ24073 thermal regulation (TJ 125 C) reduces the charge current if needed",
+   "CoHDL source still has the SGM41562 charger (the routed KiCad board is the authority)"
+  ]
+ },
+ "u7_regulator_swap_2026_09_24": {
+  "why": [
+   "Tony: \"what's RT6150B-33GQW for? it is also out of stock\"; after the explanation he chose \"RT6150BGQW + divider\" (the adjustable version of the same chip, already used for U8)"
+  ],
+  "function": "U7 is a Richtek RT6150B buck-boost converter making IO_3V3 from SYSTEM_SUPPLY (battery 3.0-4.2 V, or 4.4 V from the charger on USB); EN tied to SYSTEM_SUPPLY (always on), PS tied to GND (power-save mode). IO_3V3 feeds PANEL_LOGIC through U10, the touch controller (U3 pin 8) and R28/R29, the microphone supply through U2, and the 100k pull-ups R12-R19/R41; the MCU and the flash run from MCU_LDO1",
+  "part": "RT6150BGQW, LCSC C147972 (about 1,350 in stock at LCSC on 2026-09-24), WDFN-10 2.5 x 2.5, same pinout as RT6150B-33GQW; only pin 10 (FB) differs: the fixed version needs FB tied to VOUT, the adjustable one a divider (VFB 0.495-0.505 V, FB input current max 50 nA, datasheet DS6150A/B-06)",
+  "divider": {
+   "values": "R42 1M (IO_3V3 -> FB, RC0402FR-071ML, placed as UniOhm 0402WGF1004TCE C26083) and R43 180k (FB -> GND, RC0402FR-07180KL, placed as UniOhm 0402WGF1803TCE C25760, about 165,000 in stock)",
+   "output": "0.5 V x (1 + 1000/180) = 3.28 V nominal; about 3.2-3.35 V with VFB and 1% resistor tolerances; FB leakage (max 50 nA x 1M) adds at most 0.05 V",
+   "datasheet_limits": "R2 = 180k inside the recommended 80k-500k; the feed-forward formula Cff = 20 pF x (487k/R1) - 20 pF gives no capacitor for R1 >= 487k, so none is fitted (U8 has none either)",
+   "why_not_datasheet_values": "487k/86.6k (3.31 V) is the datasheet example, but no 487k 0402 was found in stock at LCSC; 1M/180k uses two well-stocked parts and draws 2.8 uA from the always-on rail"
+  },
+  "placement": "R42 B.Cu (35.5, 63.4) rot 0 (pad 1 IO_3V3 at 34.99, pad 2 FB at 36.01); R43 B.Cu (36.4, 64.9) rot -90 (pad 1 FB at y 64.39, pad 2 GND at y 65.41); both under U7, the only free area within reach (F.Cu around U7 is full)",
+  "reroute": {
+   "removed": "U7 pin 10 IO_3V3 strap on F.Cu (3 segments to C44 pad 1)",
+   "added": "FB: F.Cu 0.15 mm pin 10 -> via 0.45/0.2 at (36.575, 62.975) -> B.Cu 0.15 mm to R42.2 and R43.1; IO_3V3: via 0.45/0.2 at (35.2, 62.8) on the existing In2 IO_3V3 run (split there) -> B.Cu 0.2 mm to R42.1; GND: B.Cu 0.2 mm from R43.2 to U7's thermal-pad via (35.5, 65.0)",
+   "counts": "4 segments removed, 12 segments and 2 vias added; board now 2728 segments, 364 vias (299 x 0.2/0.45, 65 x 0.3/0.6); new net power::IO_FB (U7.10, R42.2, R43.1)",
+   "shielding": "the FB copper is on B.Cu with the In1 GND plane between it and U7's switching nodes on F.Cu"
+  },
+  "checks": {
+   "native_kicad_drc": "0 violations, 0 unconnected, 0 footprint errors (zones refilled): main/verification/main-drc-kicad10.rpt; the previous report is in _to_delete/before-u7-swap",
+   "drc_lite": 0,
+   "split_signal_nets": [],
+   "non_45_degree_segments": 0,
+   "kicad_saved_vs_routed": "footprints, tracks and vias identical to the scripted file (s11.py) after the KiCad save",
+   "fit_3d": "intersections, cross-board results and all clearances identical to the pre-change run; R42/R43 are not within 1.5 mm of a case solid",
+   "gerber_diff": "B_Cu/B_Mask/B_Paste changed only inside u 34.9-36.6, v 62.8-65.5; F_Cu only inside u 35.2-36.8, v 62.1-63.2; In2_Cu only at the new IO_3V3 via; In1_Cu there plus its region cut lines at the same heights; F_Mask, F_Paste, silkscreens, Edge_Cuts and NPTH unchanged; PTH gained the two new vias"
+  },
+  "exports_regenerated": [
+   "main/gerber/*",
+   "main/stencil/*",
+   "main/drill/*",
+   "main/main-gerber-drill.zip",
+   "main/verification/drill-report.txt",
+   "main/verification/main-drc-kicad10.rpt",
+   "main/assembly/bom.csv and positions.csv",
+   "main/reference/positions-kicad-all.csv",
+   "3d/main-populated-native.step",
+   "3d/main-populated-bodyv6.13.step",
+   "3d/bodyv6.13-fit-assembly.step",
+   "verification/bodyv6.13-fit-model-report.json",
+   "fab-jlcpcb/main/* and fab-jlcpcb/ORDER-NOTES.md",
+   "models/RC0402FR-07180KL.step and models/manifest.json"
+  ],
+  "open_points": [
+   "measure IO_3V3 on the first board (expect about 3.28 V)",
+   "the board now needs 2 x RT6150BGQW (U7, U8); check stock at upload",
+   "CoHDL source still has the fixed RT6150B-33GQW (the routed KiCad board is the authority)"
+  ]
+ },
+ "pin1_silk_dots_2026_09_24": {
+  "why": [
+   "Tony: \"the footprint of U4 seems to not having a pin 1 indicator\", then \"neither do U7 and U8\" and \"U20\"; an audit of the main board found ten ICs without any pin-1 silkscreen (only U6, MK1, J2 and SW1/SW2/SW5/SW6 had marks), and all ten got one"
+  ],
+  "mark": "filled circle on the part's own silkscreen layer (F.SilkS for top parts, B.SilkS for bottom parts), radius 0.1 with a 0.1 mm stroke = 0.3 mm diameter, added inside each footprint (fp_circle, fill yes) so it moves with the part",
+  "dots": {
+   "U1": {
+    "part": "NS4150B speaker amplifier (SOP-8)",
+    "side": "B",
+    "board_xy_mm": [
+     39.5,
+     68.475
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.84
+   },
+   "U2": {
+    "part": "TPS22918 microphone load switch (SOT-23-6)",
+    "side": "B",
+    "board_xy_mm": [
+     50.375,
+     65.8
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.83
+   },
+   "U3": {
+    "part": "H0216F002AM display + touch FPC connector (31 pins, 0.3 mm pitch, staggered rows)",
+    "side": "B",
+    "board_xy_mm": [
+     31.925,
+     50.325
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.72,
+    "note": "mounting pad 1.03 mm and pin 3 1.04 mm from the dot: it marks the pin-1 end of the row"
+   },
+   "U4": {
+    "part": "W25Q128JV flash (SOIC-8)",
+    "side": "F",
+    "board_xy_mm": [
+     29.887,
+     73.47
+    ],
+    "distance_to_pin1_pad_centre_mm": 1.04
+   },
+   "U5": {
+    "part": "SF32LB525UC6 MCU (QFN-68)",
+    "side": "F",
+    "board_xy_mm": [
+     51.575,
+     84.725
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.51
+   },
+   "U7": {
+    "part": "RT6150BGQW IO_3V3 (WDFN-10)",
+    "side": "F",
+    "board_xy_mm": [
+     34.125,
+     63.05
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.47
+   },
+   "U8": {
+    "part": "RT6150BGQW PANEL_4V (WDFN-10)",
+    "side": "F",
+    "board_xy_mm": [
+     46.525,
+     63.05
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.51
+   },
+   "U10": {
+    "part": "TPS22918 display-logic load switch (SOT-23-6)",
+    "side": "B",
+    "board_xy_mm": [
+     36.225,
+     58.45
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.83
+   },
+   "U20": {
+    "part": "USBLC6 USB ESD (SOT-23-6)",
+    "side": "F",
+    "board_xy_mm": [
+     29.05,
+     9.725
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.87
+   },
+   "Y1": {
+    "part": "48 MHz crystal (2016, 4 pads)",
+    "side": "F",
+    "board_xy_mm": [
+     49.324,
+     88.606
+    ],
+    "distance_to_pin1_pad_centre_mm": 0.74
+   }
+  },
+  "placement_rules": "grid search around pin 1: dot edge >= 0.15 mm from any copper pad on that side, >= 0.15 mm from existing silkscreen, >= 0.30 mm from the board edge, clear of via copper (vias tented); pin 1 must be the nearest pad and at most half as far as any other pad (U3: 0.75, its pin 1 sits between the mounting pad and pin 3); outside the part body preferred",
+  "checks": {
+   "kicad_drc": "KiCad 10.0.4 DRC with silk_over_copper, silk_edge_clearance and silk_overlap enabled (warnings): 0 errors, 0 warnings, 0 unconnected",
+   "copper": "tracks (2728), vias (364) and footprint positions identical to the U7 board 986d95fc; the KiCad-saved file equals the scripted file line for line apart from object order",
+   "gerbers": "compared as parsed Gerber objects (apertures, flashes, draws, regions) with the U7-change plots: F_Silkscreen +6 dots, B_Silkscreen +4 dots; F/B_Cu, In1/In2_Cu, F/B_Mask, F/B_Paste and Edge_Cuts unchanged; drill files not re-plotted (unchanged)",
+   "step": "the STEP exports contain no silkscreen, so 3d/*.step and the fit model were not re-exported"
+  },
+  "exports_regenerated": [
+   "main/gerber/* (paste layers moved to main/stencil/, job file split as before)",
+   "main/stencil/*",
+   "main/main-gerber-drill.zip",
+   "main/verification/main-drc-kicad10.rpt",
+   "fab-jlcpcb/main/main-jlcpcb-gerber.zip and fab-jlcpcb/ORDER-NOTES.md"
+  ],
+  "previous_outputs": "_to_delete/before-pin1-dots/"
+ },
+ "encoder_wheel_variant_2026_09_24": {
+  "why": [
+   "Tony: \"is it possible that we install the encoder to the other side of the PCB and bury it into the scroll wheel to save space?\" -> checked, then \"according to this installation layout, create a new version of the encoder board, side by side\"; choices (AskUserQuestion): keep J1 on the back (F) side; A/B first 'keep the wiring, fix in firmware', then changed mid-task to \"reverse the A/B signal, so the firmware will need no change\""
+  ],
+  "datasheet": "mechanical-source/datasheets/alps-ec05e.pdf Drawing No.3 (EC05E1220401): body 5.7 (7.6 over tabs) x 6.2, 2.7 tall above the mounting surface; hex shaft hole 1.73 (+0.05/0) across flats at the A face (top) and 1.72 (+0.03/-0.02) at the B face (mounting side), 2.7 long; shaft inserted from the A face; land pattern with a 3.0 x 3.0 PCB cut-out under the rotor and 2 x dia 0.62 holes",
+  "board": {
+   "enc1": "flipped to B.Cu at (47.5, 8.5), stored as rotation 180 with local y negated (KiCad's own B-side form): the part is turned over about the v axis, terminal row stays toward J1 (v 12.65), terminal A at u 49.5, terminal B at u 45.5, C (GND) at 47.5; side tabs at u 43.7/51.3; positioning holes and cut-out unchanged",
+   "nets": "terminal A -> ENC_B_CONTACT (J1 pin 3), terminal B -> ENC_A_CONTACT (J1 pin 2), C -> GND: turning the encoder over reverses its rotation sense as seen from the wheel, the swap restores the r6 direction (firmware unchanged)",
+   "copper": "removed 3 F.Cu pad stubs; added B.Cu stubs (45.5,12.65)-(45.5,13.9) ENC_A, (49.5,12.65)-(50.65,13.8) ENC_B, (47.5,12.65)-(47.5,13.7) GND, vias 0.45/0.2 at (45.5,13.9) ENC_A and (50.65,13.8) ENC_B, F.Cu (45.5,13.9)-(45.5,14.95); all other F.Cu segments are the r6 ones; min clearance 0.175 mm (as r6); 10 segments, 5 vias",
+   "silk": "F.SilkS text 'OMD ENC-W r6' at (40, 12); User.Comments circles for the wheel (dia 17) and cavity (dia 10.6)",
+   "script": "sandbox encflip/s13_encw.py (r6 encoder saved9 -> encw2 35e3916a) -> KiCad DRC + save (content identical apart from zone fills and the plot output directory)"
+  },
+  "checks": {
+   "kicad_drc": "0 violations, 0 unconnected, 0 footprint errors (zones refilled)",
+   "gerbers_vs_r6_encoder": "parsed-object compare: Edge_Cuts and NPTH identical; PTH +2 vias; ENC1 pads, mask and paste moved F -> B; F_Cu otherwise changed only at the pad stubs/vias; F_Silkscreen gained the label; B_Silkscreen empty on both",
+   "fit_3d": {
+    "PCB_encoder_wheel_1.0mm_nominal": {
+     "case_common": 0.0,
+     "case_dist": 0.0,
+     "new_wheel_common": 0.0,
+     "new_wheel_dist": 0.5,
+     "old_wheel_common": 0.0
+    },
+    "J1 (FH34SRJ-4S-0.5SH_99_)": {
+     "case_common": 0.0,
+     "case_dist": 1.124,
+     "new_wheel_common": 0.0,
+     "new_wheel_dist": 1.485,
+     "old_wheel_common": 0.0
+    },
+    "ENC1 (EC05E1220401)": {
+     "case_common": 0.0,
+     "case_dist": 3.678,
+     "new_wheel_common": 0.0,
+     "new_wheel_dist": 0.02,
+     "old_wheel_common": 49.2387
+    }
+   },
+   "fit_summary": "with the modified wheel: no interference; ENC1 (KiCad B-side seat, Y 3.28-6.45) >= 0.355 mm from the wheel body, hex stub 0.02 mm per side in the bore; unmodified V6.13 wheel x flipped ENC1 = 49.2 mm3 (this board needs the modified wheel); below the board only J1 (bottom Y 1.42, was ENC1 at Y -0.34)"
+  },
+  "wheel_proposal": {
+   "file": "encoder-wheel/mechanical/wheel-with-encoder-cavity-bodyv6.13.step",
+   "changes": "V6.13 wheel minus its lower hex shaft (1.905 across flats, Y 0.5-3.5) and dia 6.2 collar (Y 3.5-4.0); dia 10.6 cavity from the underside (Y 4.0) to Y 6.8; hex stub 1.68 across flats from Y 6.8 down to Y 4.1 (about 2.1 mm engaged in the 2.7 mm bore); axis Fusion X 19.5, Z 39.0",
+   "recommended": "thrust ring about 0.3 mm tall under the rim at r ~6.5 riding on bare PCB; tighten the top bore from dia 2.6 to about 2.3 on the case's dia 2.19 pin; SLA/MJF or moulded (FDM too coarse for the 1.68 hex)"
+  },
+  "finding_for_both_boards": "the V6.13 wheel's hex shaft is 1.905 across flats (2.20 across corners) vs the 1.72 across-flats bore: the 0.62 mm3 overlap long called an intended press fit is not usable; the wheel hex should be about 1.68 across flats (free play about +/-2.5 deg at the nominal 1.72 bore)",
+  "fab": "fab-jlcpcb/encoder-wheel/ (BOM same parts; CPL ENC1 Bottom rot 0, J1 Top rot 270); two-sided assembly",
+  "exports": [
+   "encoder-wheel/gerber/*, stencil/*, drill/*, encoder-wheel-gerber-drill.zip",
+   "encoder-wheel/verification/encoder-wheel-drc-kicad10.rpt, drill-report.txt, encoder-wheel-fit-report.json",
+   "encoder-wheel/reference/positions-kicad-all.csv (KiCad placement export), assembly/bom.csv + positions.csv",
+   "3d/encoder-wheel-populated-native.step, 3d/encoder-wheel-populated-bodyv6.13.step, 3d/bodyv6.13-encoder-wheel-fit-assembly.step",
+   "fab-jlcpcb/encoder-wheel/*"
+  ]
+ }
+}

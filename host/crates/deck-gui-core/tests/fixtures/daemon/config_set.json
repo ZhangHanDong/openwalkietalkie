@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "hooks.enabled"
+  ],
+  "changed": [
+    "hooks.enabled"
+  ],
+  "keys": [
+    "hooks.enabled"
+  ],
+  "restart_needed": []
+}

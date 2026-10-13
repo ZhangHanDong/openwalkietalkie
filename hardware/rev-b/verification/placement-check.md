@@ -1,0 +1,9 @@
+# placement check: 0 errors, 1 warnings
+
+- WARN PROX: R6.1 -> U5.11: 4.10 mm > 4.0
+
+- flash vs DAC-filter direction from U5: 90 deg
+- RF straight-line chain pin53 -> AE1 feed: 15.2 mm
+- ratsnest total (non-GND, MST): 1477 mm
+- longest nets: IO_3V3 139, SYSTEM_SUPPLY 112, MIC_PDM_DATA 49, audio::DAC_FILTER_N 47, audio::MIC_CLOCK 46, audio::DAC_FILTER_P 45, AMP_ENABLE 45, MIC_POWER_ENABLE 41, MACRO_RIGHT 37, SHIFT 34, CELL 31, ENTER 30
+- B side parts (67): C12 C13 C14 C16 C17 C18 C19 C2 C20 C21 C22 C24 C25 C26 C29 C30 C42 C43 C44 C45 C46 C47 C49 C5 C50 C52 C53 C57 C6 C7 L3 L4 L5 MK1 R1 R10 R11 R2 R28 R29 R30 R31 R32 R34 R35 R36 R39 R41 R42 R43 R45 R46 R48 R6 R7 R8 R9 SW3 SW4 U10 U2 U3 U4 U5 U7 U8 Y1

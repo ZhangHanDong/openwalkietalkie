@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Bluetooth antenna and pi matching network. Both shunt positions remain
+// unpopulated until RF tuning with the final PCB and enclosure.
+// Relative placement and board integration contract: docs/rf-layout.md.
+subdesign RF {
+    ports {
+        required FEED: Pin
+        required GND: Pin
+    }
+    #[placement_hint("PCB corner; reserve local x=0..6.5mm, y=-1.5..5mm without ground on all layers; see docs/rf-layout.md")]
+    inst ant: antenna::ANT_2450AT18B100E
+    #[placement_hint("inline with RF feed; top layer, no signal vias or branches; short route from MCU BRF_ANT")]
+    inst rf_series: passive::R_0R_J_0402
+    // Real registry part supplies the lands. Its 3.9pF is a catalog value,
+    // not a tuned RF value; assembly.json excludes both sites from fitting.
+    #[intent("DNP: both RF shunts are excluded by assembly.json; retain their PCB pads")]
+    #[placement_hint("DNP per assembly.json; CHIP_0402 pads retained; A on feed centerline, B toward ground; short individual ground via at each B, outside antenna clearance")]
+    inst rf_shunt: [passive::C_3p9_100V_C0G_0402; 2]
+
+    #[impedance(50ohm, frequency: 2.4GHz)]
+    net _: FEED, rf_series.A, rf_shunt[0].A
+    #[impedance(50ohm, frequency: 2.4GHz)]
+    net BT_ANT: rf_series.B, ant.FEED, rf_shunt[1].A
+    net _: GND, rf_shunt[0..=1].B
+
+    layout {
+        // Local top-side coordinates, in mm. RF travels left to right.
+        // Origin is the feed crossing into the antenna no-ground region.
+        // The parent will place/rotate this entire group at a PCB corner.
+        place ant at (3.25mm, 0mm)
+        place rf_series at (-2.2mm, 0mm)
+        // Registry CHIP_0402 geometry: pad A at x=-0.51mm.
+        // After +270deg rotation, these offsets put both A pads on y=0.
+        // Both footprints remain on the PCB even while unpopulated.
+        place rf_shunt[0] at (-3.65mm, 0.51mm) rotate 270
+        place rf_shunt[1] at (-0.75mm, 0.51mm) rotate 270
+    }
+}

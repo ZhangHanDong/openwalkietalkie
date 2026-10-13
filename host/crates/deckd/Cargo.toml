@@ -1,0 +1,89 @@
+[package]
+name = "deckd"
+description = "OpenWalkieTalkie host service: owns the deck's HID link, the agent roster and cards"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "deckd"
+path = "src/main.rs"
+
+[dependencies]
+deck-proto = { workspace = true }
+deck-model = { workspace = true }
+deck-client = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+toml_edit = { workspace = true }
+hidapi = { workspace = true }
+crossbeam-channel = { workspace = true }
+tokio = { workspace = true, features = ["fs"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = { workspace = true }
+clap = { workspace = true }
+directories = { workspace = true }
+blake3 = { workspace = true }
+thiserror = { workspace = true }
+libc = { workspace = true }
+axum = { workspace = true }
+futures-util = { workspace = true }
+notify = { workspace = true }
+arc-swap = { workspace = true }
+getrandom = { workspace = true }
+# The Codex app-server daemon speaks JSON-RPC over a WebSocket on a Unix
+# socket (`deckd::codexd`); the same crate serves the test fakes.
+tokio-tungstenite = { workspace = true }
+
+sha2 = "=0.10.9"
+semver = "=1.0.28"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = { workspace = true }
+# Week 4: the voice pipeline (HOST-CONTRACT-W4 §3 B11). Gated exactly like
+# `security-framework` above — CoreAudio, AVFoundation and Speech.framework
+# exist on no other platform, and the workspace still has to `cargo check` on
+# one.
+cpal = { workspace = true }
+rubato = { workspace = true }
+rtrb = { workspace = true }
+objc2 = { workspace = true }
+block2 = { workspace = true }
+objc2-foundation = { workspace = true }
+objc2-core-audio = { workspace = true }
+objc2-core-foundation = { workspace = true }
+objc2-speech = { workspace = true }
+objc2-avf-audio = { workspace = true }
+objc2-app-kit = { workspace = true }
+# The local recogniser's engine (`audio::whisper`): whisper.cpp with Metal.
+whisper-rs = { workspace = true }
+# The local synthesiser's engine (`audio::kokoro`): Kokoro via sherpa-onnx.
+sherpa-onnx = { workspace = true }
+# The deck's BLE audio service (`deckd::ble`): CoreBluetooth on a private
+# serial queue. CoreBluetooth itself has no binding crate in this tree; the
+# few classes the link needs are declared in `ble/cb.rs`.
+dispatch2 = { workspace = true }
+# The Info.plist a launchd-started bare `deckd` needs for CoreBluetooth's
+# usage string (src/main.rs).
+embed_plist = { workspace = true }
+
+[dev-dependencies]
+
+# B10's run loop can only be tested on the process's **main** thread: a
+# `dispatch_async` to the main queue runs nowhere else (V13), and libtest
+# runs every `#[test]` on a worker. `harness = false` gives this one file
+# the real `fn main()`, which is the only place the claim is true.
+[[test]]
+name = "voice_mainloop"
+harness = false
+
+# Week 5's in-process AppleScript runner, for the same reason: `NSAppleScript`
+# is not thread-safe, the daemon reaches it through B10's main-thread hop, and
+# a `#[test]` runs on a libtest worker whose main queue nobody drains. Only a
+# `harness = false` target's `fn main` *is* the main thread.
+[[test]]
+name = "desktop_mainloop"
+harness = false

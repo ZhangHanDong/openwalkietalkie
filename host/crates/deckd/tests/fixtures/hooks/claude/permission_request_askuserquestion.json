@@ -1,0 +1,27 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/w/project/.deck-fixture/transcript.jsonl",
+  "cwd": "/w/project",
+  "permission_mode": "default",
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "AskUserQuestion",
+  "tool_input": {
+    "questions": [
+      {
+        "question": "Which colour do you prefer?",
+        "header": "Colour",
+        "options": [
+          {
+            "label": "Red",
+            "description": "A warm colour"
+          },
+          {
+            "label": "Green",
+            "description": "A cool colour"
+          }
+        ],
+        "multiSelect": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Manufacturer lands, component-side view. Local +y is down the drawing.
+// See docs/audio-display-bindings.md for sources and mechanical envelopes.
+
+#[doc("docs/spm1423hm4h-b.pdf")]
+pub part MIC_KNOWLES_SPM1423HM4H_B: SPM1423HM4H_B {
+    primary { mfr: "Knowles", mpn: "SPM1423HM4H-B", footprint: FP_KNOWLES_SPM1423HM4H_B }
+}
+
+pub pad P_SPM1423_LAND {
+    shape: circle
+    size: (0.91mm)
+    layer: top_copper
+    plating: smd
+}
+
+// Knowles Rev D pp7-8: TOP acoustic port; no hole through the PCB.
+// Origin is package center. Body 3.76 x 4.72 x 1.25 mm, +/-0.10 each;
+// cap acoustic port is (0,-1.03), diameter 0.84 +/-0.05 mm.
+pub footprint FP_KNOWLES_SPM1423HM4H_B {
+    pad 1: P_SPM1423_LAND at (-1.17mm, -1.65mm)
+    pad 2: P_SPM1423_LAND at (-1.17mm, 0mm)
+    pad 3: P_SPM1423_LAND at (-1.17mm, 1.65mm)
+    pad 4: P_SPM1423_LAND at (1.17mm, 1.65mm)
+    pad 5: P_SPM1423_LAND at (1.17mm, 0mm)
+    // Pin 6 is the union of two circles, offset 0.20 mm on both axes.
+    pad 6: P_SPM1423_LAND at (1.17mm, -1.65mm)
+    pad 6: P_SPM1423_LAND at (0.97mm, -1.45mm)
+    courtyard { shape: rect, at: (0mm, 0mm), size: (4.36mm, 5.32mm) }
+    silkscreen_ref { at: (0mm, 3.2mm) }
+}
+
+// 600 ohm +/-25% at 100 MHz, 1.5 A through 85 C, derates to 1 A at
+// 125 C. Initial DCR <=0.08 ohm. This is not the 120-ohm BLM15 bead.
+#[doc("docs/murata-blm31.pdf")]
+pub part FERRITE_MURATA_BLM31PG601SN1L: SpeakerFerrite600R {
+    primary { mfr: "Murata", mpn: "BLM31PG601SN1L", footprint: FP_MURATA_BLM31PG_1P5A_REFLOW }
+}
+
+pub pad P_BLM31PG_REFLOW {
+    shape: rect
+    size: (1.15mm, 1.8mm)
+    layer: top_copper
+    plating: smd
+}
+
+// Murata JENF243A_0006AC-01 p7: reflow a=2.0, b=4.3, c=d=1.8 mm
+// for the 1.5 A device and 18/35/70 um copper. Body is centered, no polarity.
+pub footprint FP_MURATA_BLM31PG_1P5A_REFLOW {
+    pad 1: P_BLM31PG_REFLOW at (-1.575mm, 0mm)
+    pad 2: P_BLM31PG_REFLOW at (1.575mm, 0mm)
+    courtyard { shape: rect, at: (0mm, 0mm), size: (4.8mm, 2.3mm) }
+    silkscreen_ref { at: (0mm, -1.7mm) }
+}

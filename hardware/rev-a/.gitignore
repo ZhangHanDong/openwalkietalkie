@@ -1,0 +1,14 @@
+# Local editor/cache state is not part of the frozen hardware release.
+.DS_Store
+__pycache__/
+*.pyc
+*.kicad_prl
+*.lck
+*.kicad_pcb.lck
+*.kicad_sch.lck
+*.bak
+*-backups/
+.history/
+# CoHDL regeneration is unrouted and must never be confused with final PCBs.
+out/
+build/

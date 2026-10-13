@@ -1,0 +1,5 @@
+TARGET_NAME = 'openwalkietalkie'
+WERROR = True
+JLINK_DEVICE = 'SF32LB52X_NOR'
+CORE = 'HCPU'
+CHIP = 'SF32LB52X'

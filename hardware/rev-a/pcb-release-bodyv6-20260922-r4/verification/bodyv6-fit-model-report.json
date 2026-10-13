@@ -1,0 +1,284 @@
+{
+ "revision": "BodyV6 ECO r4 - populated fit model",
+ "date": "2026-09-22",
+ "inputs": {
+  "case": "mechanical-source/case/BodyV6.step",
+  "case_sha256": "1edc693d05153437e929a56b1947ed83183dbdf96b86ae6da8a6ad54200f974f",
+  "main_board_sha256": "d07edce15128b787e0ee17e90b9a001f45a9b1c3971d8a0c0c59cae16669b42e",
+  "encoder_board_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+  "component_models": "3d/*-populated-native.step (KiCad 10.0.4 native export of models/ -- registered vendor CAD or labelled envelopes, see models/manifest.json); C52/C53 DNP have no model",
+  "board_bodies": "1.0 mm nominal prisms rebuilt from Edge.Cuts with NPTH holes (KiCad exports only the 0.929 mm dielectric stack)"
+ },
+ "frame": "BodyV6.step coordinates: X = u - 28, Z = 47.5 - v (u,v = KiCad board mm), Y = board normal, F (battery/back) side toward -Y",
+ "board_pose": {
+  "main": "B face on the case pillar seats at Y = 9.275, F face Y = 8.275",
+  "encoder": "B face on the case post shoulders at Y = 3.5 (spigots dia 2.4 reach Y 2.5), F face Y = 2.5, facing the back cover; the cover boss tops are at Y = 2.3 so the board can float 0.2 mm toward the cover (screw clamp tolerance)"
+ },
+ "case_solids": {
+  "Case": [
+   "-28.000",
+   "-0.000",
+   "-47.500",
+   "28.000",
+   "15.000",
+   "47.500"
+  ],
+  "Wheel": [
+   "11.000",
+   "0.500",
+   "30.501",
+   "27.941",
+   "12.500",
+   "47.499"
+  ],
+  "SideButton_R": [
+   "25.800",
+   "2.500",
+   "-1.243",
+   "29.200",
+   "12.500",
+   "24.757"
+  ],
+  "SideButton_L1": [
+   "-29.200",
+   "2.500",
+   "24.101",
+   "-25.800",
+   "12.500",
+   "33.899"
+  ],
+  "SideButton_L2": [
+   "-29.200",
+   "2.500",
+   "12.101",
+   "-25.800",
+   "12.500",
+   "21.899"
+  ],
+  "SideButton_L3": [
+   "-29.200",
+   "2.500",
+   "0.101",
+   "-25.800",
+   "12.500",
+   "9.899"
+  ],
+  "FrontButton_1": [
+   "0.200",
+   "12.800",
+   "-14.590",
+   "23.245",
+   "16.200",
+   "-4.590"
+  ],
+  "FrontButton_2": [
+   "-23.245",
+   "12.800",
+   "-14.590",
+   "-0.200",
+   "16.200",
+   "-4.590"
+  ],
+  "BackCover": [
+   "-26.300",
+   "-0.000",
+   "-45.800",
+   "26.300",
+   "2.300",
+   "45.800"
+  ]
+ },
+ "case_solid_naming": "Fusion export is one part with 9 solids; names here are interpretations by bounding box (Case, Wheel, 4 side buttons, 2 front buttons, BackCover)",
+ "intersections": [
+  {
+   "item": "main:J5 (TYPE-C-31-M-12)",
+   "case_part": "Case",
+   "volume_mm3": 0.1625,
+   "interpretation": "USB-C shell vs the case opening corners (u 23.45-32.55, v 0.27-1.0): same 0.16 mm3 as r3/BodyV5 (undimensioned rounded mouth corners); unchanged"
+  },
+  {
+   "item": "encoder:ENC1 (EC05E1220401)",
+   "case_part": "Wheel",
+   "volume_mm3": 0.6213,
+   "interpretation": "wheel shaft inside the encoder hollow-shaft bore (u 46.5-48.5, v 7.4-9.6): the intended press-fit; same 0.62 mm3 as r3"
+  },
+  {
+   "item": "encoder:ENC1 (EC05E1220401)",
+   "case_part": "BackCover",
+   "volume_mm3": 15.9418,
+   "interpretation": "NEW in BodyV6: the encoder body (2.86 mm below the encoder-board F face at Y 2.5) passes through the full 1.0 mm back-cover plate over u 44.6-50.4 / v 6.15-12.0 and protrudes 0.35 mm beyond the outer cover face (Y -0.345). BodyV5 had no back cover in the fit model, so this was never checked. Needs a ~6 x 6 mm cover opening (or pocket) at the encoder, a different board level, or a lower-profile encoder."
+  }
+ ],
+ "cross_board_intersections": [],
+ "clearances_under_1p5mm": [
+  {
+   "item": "main:PCB_main_1.0mm_nominal",
+   "Case": 0.0,
+   "Wheel": 0.32,
+   "SideButton_R": 0.303,
+   "SideButton_L1": 0.242,
+   "SideButton_L2": 0.239,
+   "SideButton_L3": 0.239
+  },
+  {
+   "item": "main:R6 (RC0402FR-0722RL)",
+   "Case": 1.014
+  },
+  {
+   "item": "main:SW6 (SKTDLDE010)",
+   "SideButton_L3": 0.06
+  },
+  {
+   "item": "main:Y1 (E1SB48E001G00E)",
+   "Case": 0.611
+  },
+  {
+   "item": "main:C45 (C3216X7R1C106K160AC)",
+   "Case": 1.318
+  },
+  {
+   "item": "main:C7 (CC1206JRNPO8BN104)",
+   "Case": 1.066
+  },
+  {
+   "item": "main:SW2 (SKTDLDE010)",
+   "SideButton_L2": 0.06
+  },
+  {
+   "item": "main:L3 (WPN201610U4R7MT)",
+   "Case": 1.063
+  },
+  {
+   "item": "main:SW5 (SKTDLDE010)",
+   "SideButton_R": 0.06
+  },
+  {
+   "item": "main:J5 (TYPE-C-31-M-12)",
+   "Case": 0.0
+  },
+  {
+   "item": "main:MK1 (SPM1423HM4H-B)",
+   "Case": 1.014
+  },
+  {
+   "item": "main:C31 (CC0603KRX5R6BB225)",
+   "Case": 1.014
+  },
+  {
+   "item": "main:J1 (53261-0271)",
+   "Case": 1.218
+  },
+  {
+   "item": "main:SW1 (SKTDLDE010)",
+   "SideButton_L1": 0.06
+  },
+  {
+   "item": "main:C26 (CC0603KRX5R6BB105)",
+   "Case": 0.85
+  },
+  {
+   "item": "main:C27 (CC0603KRX5R6BB225)",
+   "Case": 1.091
+  },
+  {
+   "item": "main:C13 (CC0603KRX5R6BB475)",
+   "Case": 1.15
+  },
+  {
+   "item": "main:C12 (CC0805KRX5R8BB106)",
+   "Case": 1.242
+  },
+  {
+   "item": "main:SW3 (PTS636SM25SMTRLFS)",
+   "FrontButton_1": 1.49
+  },
+  {
+   "item": "main:SW3 (PTS636SM25SMTRLFS)",
+   "FrontButton_1": 0.89
+  },
+  {
+   "item": "main:C11 (CC0603KRX5R6BB105)",
+   "Case": 0.041
+  },
+  {
+   "item": "main:R7 (RC0402FR-07100KL)",
+   "Case": 0.025
+  },
+  {
+   "item": "main:U1 (NS4150B)",
+   "Case": 1.45
+  },
+  {
+   "item": "main:U2 (TPS22918DBVR)",
+   "Case": 1.23
+  },
+  {
+   "item": "main:C6 (CC0402JRNPO9BN102)",
+   "Case": 1.475
+  },
+  {
+   "item": "main:C28 (CC0603KRX5R6BB475)",
+   "Case": 0.799
+  },
+  {
+   "item": "main:R39 (RC0402FR-071ML)",
+   "Case": 0.325
+  },
+  {
+   "item": "main:C29 (CC0603KRX5R6BB475)",
+   "Case": 1.231
+  },
+  {
+   "item": "main:SW4 (PTS636SM25SMTRLFS)",
+   "FrontButton_2": 1.49
+  },
+  {
+   "item": "main:SW4 (PTS636SM25SMTRLFS)",
+   "FrontButton_2": 0.89
+  },
+  {
+   "item": "main:C17 (CC0603KRX5R6BB475)",
+   "Case": 1.369
+  },
+  {
+   "item": "main:R9 (RC0402FR-071ML)",
+   "Case": 1.334
+  },
+  {
+   "item": "encoder:PCB_encoder_1.0mm_nominal",
+   "Case": 0.0,
+   "Wheel": 0.0,
+   "BackCover": 0.2
+  },
+  {
+   "item": "encoder:J1 (FH34SRJ-4S-0.5SH_99_)",
+   "Case": 1.162,
+   "Wheel": 1.485,
+   "BackCover": 0.415
+  },
+  {
+   "item": "encoder:ENC1 (EC05E1220401)",
+   "Wheel": 0.0,
+   "BackCover": 0.0
+  }
+ ],
+ "findings": [
+  "ENC1 vs BackCover: 15.94 mm3 interference (see intersections). This is the one new BodyV6 conflict.",
+  "Encoder board vs Wheel: 0 mm. The wheel hub underside (r <= ~3 mm) lies at Y = 3.5, coincident with the encoder board B face around the 3.0 x 4.59 mm aperture; the wheel would rub on the board unless the board sits 0.2 mm lower (on the cover bosses) or the hub is relieved.",
+  "C11 (44.5,68.5) and R7 (47.1,67.5), B side: 0.041 / 0.025 mm to the case post that seats on the B face around (45.4-47.5, 68.0-69.5). Inherited from r3 (same post in BodyV5); nominal envelopes only, so real parts may touch. Consider 0.2 mm moves or a post relief.",
+  "R39 0.325 mm and Y1 0.611 mm from the new bottom-right pillar/block (placed in this ECO); main board edge 0.32 mm from the wheel rim at (42.2,15.6); 0.24-0.30 mm from the side-button bodies.",
+  "Side switches SW1/SW2/SW5/SW6: 0.06 mm to the side-button bodies (actuator preload gap, as in BodyV5). SW3/SW4 0.89 mm to the front-button caps (travel gap).",
+  "J5 USB-C 0.16 mm3 in the case mouth corners: unchanged from r3.",
+  "Encoder J1 underside 0.415 mm above the cover plate; laterally clear of the MH2 boss."
+ ],
+ "limitations": [
+  "Static nominal assembly; no button travel, no display module, no battery, no cable, no fasteners.",
+  "Component geometry is the release model set (vendor CAD where registered, otherwise labelled envelopes).",
+  "Boolean interference threshold 1e-4 mm3; clearances reported only below 1.5 mm; distances to the Case solid computed for every item."
+ ],
+ "outputs": {
+  "3d/main-populated-bodyv6.step": "main board + 120 fitted components in the BodyV6 frame",
+  "3d/encoder-populated-bodyv6.step": "encoder board + ENC1 + J1 in the BodyV6 frame",
+  "3d/bodyv6-fit-assembly.step": "BodyV6 case solids + both populated boards"
+ }
+}

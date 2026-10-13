@@ -1,0 +1,13 @@
+{
+  "emitted": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/source/encoder/out/openmicrodial-encoder-rev-a.kicad_pcb",
+  "routed": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/encoder-45deg.kicad_pcb",
+  "emitted_sha256": "b9a19408bbbb6eed574fe890f6774db6c06b388243b49ba9cdd95beacf340f7b",
+  "routed_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+  "checked_source_refs": 2,
+  "board_only_refs": [
+    "MH1",
+    "MH2"
+  ],
+  "errors": [],
+  "passed": true
+}

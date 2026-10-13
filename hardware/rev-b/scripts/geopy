@@ -1,0 +1,4 @@
+#!/bin/sh
+# python 3.12 with shapely + numpy + rtree + matplotlib + build123d
+SP=$(ls -d ~/.cohdl-dev-runtime/cam-venv/lib/python3.12/site-packages)
+exec "/Users/tony/Library/Application Support/Replicator/cad-runtime/macos-arm64_py3.12.13_b123d-0.10.0_bdvslot-0.0.2_bdwh-0.2.0_cadpy-0.2.3_r4/python/bin/python3" -c "import sys, runpy; sys.path.append('$SP'); sys.argv = sys.argv[1:]; runpy.run_path(sys.argv[0], run_name='__main__')" "$@"

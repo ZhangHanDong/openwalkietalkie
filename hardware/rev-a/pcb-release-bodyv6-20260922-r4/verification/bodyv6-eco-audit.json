@@ -1,0 +1,343 @@
+{
+ "revision": "BodyV6 ECO r4 (pre-fabrication review)",
+ "date": "2026-09-22",
+ "inputs": {
+  "r3_main_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "r3_encoder_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+  "bodyv6_step": "mechanical-source/case/BodyV6.step",
+  "bodyv6_step_sha256": "1edc693d05153437e929a56b1947ed83183dbdf96b86ae6da8a6ad54200f974f"
+ },
+ "boards": {
+  "main": {
+   "file": "main/main-45deg.kicad_pcb",
+   "sha256": "d07edce15128b787e0ee17e90b9a001f45a9b1c3971d8a0c0c59cae16669b42e",
+   "bytes": 1168294,
+   "footprints": 135,
+   "tracks": 2783,
+   "vias": 369,
+   "drc_lite_issues": 0,
+   "drc_lite_examples": [],
+   "split_signal_nets": [],
+   "gnd_pad_groups_without_zones": 83,
+   "non_45_degree_segments": 0,
+   "non_45_examples": [],
+   "component_changes_vs_r3": [
+    [
+     "J1",
+     [
+      33.2,
+      69.0,
+      90.0,
+      "B.Cu"
+     ],
+     [
+      33.0,
+      84.9,
+      90.0,
+      "F.Cu"
+     ]
+    ],
+    [
+     "MH3",
+     "removed"
+    ],
+    [
+     "MH4",
+     [
+      35.2,
+      91.2,
+      0.0,
+      "F.Cu"
+     ],
+     [
+      34.229,
+      91.2,
+      0.0,
+      "F.Cu"
+     ]
+    ],
+    [
+     "R39",
+     [
+      52.7,
+      87.0,
+      -90.0,
+      "B.Cu"
+     ],
+     [
+      52.8,
+      86.8,
+      0.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "TP10",
+     [
+      33.5,
+      83.0,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      34.15,
+      83.0,
+      180.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "TP3",
+     [
+      33.5,
+      85.0,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      34.15,
+      85.0,
+      180.0,
+      "B.Cu"
+     ]
+    ]
+   ],
+   "nets_with_changed_copper": [
+    "CAL",
+    "CELL",
+    "DEBUG_RX_SWDIO",
+    "DEBUG_TX_SWCLK",
+    "ENC_A",
+    "ENC_B",
+    "ENTER",
+    "ESC",
+    "FLASH_CLK",
+    "FLASH_CS",
+    "FLASH_IO1",
+    "FLASH_IO2",
+    "FLASH_IO3",
+    "GND",
+    "I2C_SCL",
+    "I2C_SDA",
+    "IO_3V3",
+    "MACRO_LEFT",
+    "MACRO_RIGHT",
+    "PANEL_4V",
+    "PANEL_CLK",
+    "PANEL_D0",
+    "PANEL_D1",
+    "PANEL_D2",
+    "PANEL_D3",
+    "PANEL_RESET",
+    "PANEL_TE",
+    "PTT",
+    "RESET_ACTIVE_HIGH",
+    "SHIFT",
+    "TOUCH_IRQ",
+    "TOUCH_RESET",
+    "audio::SPEAKER_MINUS",
+    "audio::SPEAKER_PLUS"
+   ]
+  },
+  "encoder": {
+   "file": "encoder/encoder-45deg.kicad_pcb",
+   "sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+   "bytes": 84826,
+   "footprints": 4,
+   "tracks": 9,
+   "vias": 3,
+   "drc_lite_issues": 0,
+   "drc_lite_examples": [],
+   "split_signal_nets": [],
+   "gnd_pad_groups_without_zones": 3,
+   "non_45_degree_segments": 0,
+   "non_45_examples": [],
+   "component_changes_vs_r3": [
+    [
+     "J1",
+     [
+      48.5,
+      16.8,
+      -90.0,
+      "F.Cu"
+     ],
+     [
+      48.0,
+      16.8,
+      -90.0,
+      "F.Cu"
+     ]
+    ]
+   ],
+   "nets_with_changed_copper": [
+    "ENC_A_CONTACT",
+    "ENC_B_CONTACT",
+    "GND"
+   ]
+  }
+ },
+ "drc_lite_rules": "copper clearance 0.10, copper-to-edge 0.30, NPTH/hole clearance 0.20, hole-to-hole 0.20, courtyard overlap, keepout zones; zone fills not modelled (GND plane connectivity not checked); run native KiCad 10 DRC before fabrication",
+ "component_changes": [
+  [
+   "J1",
+   [
+    33.2,
+    69.0,
+    90.0,
+    "B.Cu"
+   ],
+   [
+    33.0,
+    84.9,
+    90.0,
+    "F.Cu"
+   ]
+  ],
+  [
+   "MH3",
+   "removed"
+  ],
+  [
+   "MH4",
+   [
+    35.2,
+    91.2,
+    0.0,
+    "F.Cu"
+   ],
+   [
+    34.229,
+    91.2,
+    0.0,
+    "F.Cu"
+   ]
+  ],
+  [
+   "R39",
+   [
+    52.7,
+    87.0,
+    -90.0,
+    "B.Cu"
+   ],
+   [
+    52.8,
+    86.8,
+    0.0,
+    "B.Cu"
+   ]
+  ],
+  [
+   "TP10",
+   [
+    33.5,
+    83.0,
+    180.0,
+    "B.Cu"
+   ],
+   [
+    34.15,
+    83.0,
+    180.0,
+    "B.Cu"
+   ]
+  ],
+  [
+   "TP3",
+   [
+    33.5,
+    85.0,
+    180.0,
+    "B.Cu"
+   ],
+   [
+    34.15,
+    85.0,
+    180.0,
+    "B.Cu"
+   ]
+  ],
+  [
+   "encoder:J1",
+   [
+    48.5,
+    16.8,
+    -90.0,
+    "F.Cu"
+   ],
+   [
+    48.0,
+    16.8,
+    -90.0,
+    "F.Cu"
+   ]
+  ]
+ ],
+ "nets_with_changed_copper": [
+  "CAL",
+  "CELL",
+  "DEBUG_RX_SWDIO",
+  "DEBUG_TX_SWCLK",
+  "ENC_A",
+  "ENC_B",
+  "ENTER",
+  "ESC",
+  "FLASH_CLK",
+  "FLASH_CS",
+  "FLASH_IO1",
+  "FLASH_IO2",
+  "FLASH_IO3",
+  "GND",
+  "I2C_SCL",
+  "I2C_SDA",
+  "IO_3V3",
+  "MACRO_LEFT",
+  "MACRO_RIGHT",
+  "PANEL_4V",
+  "PANEL_CLK",
+  "PANEL_D0",
+  "PANEL_D1",
+  "PANEL_D2",
+  "PANEL_D3",
+  "PANEL_RESET",
+  "PANEL_TE",
+  "PTT",
+  "RESET_ACTIVE_HIGH",
+  "SHIFT",
+  "TOUCH_IRQ",
+  "TOUCH_RESET",
+  "audio::SPEAKER_MINUS",
+  "audio::SPEAKER_PLUS"
+ ],
+ "nets_with_changed_copper_count": 34,
+ "bodyv6_fit": "see bodyv6-fit-audit.json",
+ "reroute_windows": [
+  {
+   "window": "main x 29.4-41, y 67-92 (grid 62-92)",
+   "nets": 26,
+   "trunks": [
+    "audio::SPEAKER_PLUS",
+    "audio::SPEAKER_MINUS"
+   ],
+   "method": "negotiated-congestion grid router, 0.025 mm grid, 0.104 mm signals, 0.5 mm trunks (B.Cu only), 0.45/0.20 vias, 0.6/0.30 trunk vias"
+  },
+  {
+   "window": "main x 46-54.7, y 85.6-93.2 (grid 44.5-54.7 x 84-93.2)",
+   "nets": 17,
+   "reason": "BR pillar notch; R39 moved"
+  },
+  {
+   "window": "main x 48.5-54.7, y 46-57",
+   "nets": [
+    "CELL",
+    "PTT"
+   ],
+   "reason": "right pillar notch"
+  }
+ ],
+ "native_kicad_drc": {
+  "main": "main/verification/main-drc-kicad10.rpt (0 violations, 0 unconnected, 0 footprint errors; zones refilled)",
+  "encoder": "encoder/verification/encoder-drc-kicad10.rpt (0 violations, 0 unconnected, 0 footprint errors)"
+ },
+ "boards_note": "hashes are of the KiCad 10.0.4-saved files (zone fills refilled by KiCad; footprints/tracks/vias identical to the scripted ECO output)"
+}

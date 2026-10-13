@@ -1,0 +1,486 @@
+{
+  "frame": "mm; +X footprint-local X, +Y negative footprint-local Y, +Z outward; Z=0 solder-contact seating plane",
+  "models": {
+    "SKTDLDE010": {
+      "source_path": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/SKTDLDE010.step",
+      "source_sha256": "eacd491738cbe4bbd7fdb905a7873e55d0bb945c123023eb1ae7150fda69bbd3",
+      "normalized_path": "/private/tmp/bodyv5-model-datums.2cpqLa/SKTDLDE010-seated.step",
+      "normalized_sha256": "e01e47a418d4642540cafce343ee9eebb294907ea7b1993047646aae0942e27f",
+      "rigid_transform_mm": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          -1,
+          0,
+          1.185
+        ],
+        [
+          0,
+          0,
+          -1,
+          0.775
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "source_bounds_mm": [
+        -1.9500001000000011,
+        -0.34999601856218,
+        -0.7750001,
+        1.9500001000000016,
+        2.685000100000001,
+        1.2249999999999983
+      ],
+      "normalized_bounds_mm": [
+        -1.9500001,
+        -1.5000001,
+        -0.4500000000000466,
+        1.9500001,
+        1.5349960185620002,
+        1.5500001000000005
+      ],
+      "solid_count": 1,
+      "volume_mm3": 10.776430639039306,
+      "in_memory_rigid_volume_delta_mm3": 5.329070518200751e-15,
+      "step_roundtrip_volume_delta_mm3": 5.456453067154143e-10,
+      "step_roundtrip_max_bound_delta_mm": 1.7985612998927536e-13,
+      "seating_face_evidence": [
+        {
+          "face": 54,
+          "normal": [
+            1.2755319676300052e-16,
+            0.0,
+            -1.0
+          ],
+          "point_mm": [
+            -1.7,
+            0.75,
+            0.7749999999999996
+          ],
+          "bounds_mm": [
+            -1.0,
+            0.35,
+            0.7749999999999997,
+            1.0000000000000002,
+            0.75,
+            0.7750000000000001
+          ],
+          "area_mm2": 0.8
+        },
+        {
+          "face": 287,
+          "normal": [
+            -5.860552283705442e-16,
+            0.0,
+            -1.0
+          ],
+          "point_mm": [
+            -1.8499999999999996,
+            1.735,
+            0.7749999999999981
+          ],
+          "bounds_mm": [
+            -1.7999999999999998,
+            1.535,
+            0.7749999999999979,
+            -1.4800000000000004,
+            1.735,
+            0.7749999999999981
+          ],
+          "area_mm2": 0.06399999999999993
+        },
+        {
+          "face": 295,
+          "normal": [
+            1.4651380709263658e-15,
+            0.0,
+            -1.0
+          ],
+          "point_mm": [
+            1.8499999999999988,
+            1.735,
+            0.7749999999999981
+          ],
+          "bounds_mm": [
+            1.4800000000000009,
+            1.535,
+            0.7749999999999976,
+            1.799999999999999,
+            1.735,
+            0.774999999999998
+          ],
+          "area_mm2": 0.06399999999999967
+        }
+      ],
+      "below_seating_geometry": [
+        {
+          "bounds_mm": [
+            1.749999999999997,
+            -0.21500000000000538,
+            -0.4499999999999979,
+            1.9499999999999986,
+            0.2149999999999947,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.031713999999999735,
+          "center_mm": [
+            1.8499999999999979,
+            -5.1986433272684395e-15,
+            -0.1984125938071506
+          ]
+        },
+        {
+          "bounds_mm": [
+            -1.949999999999997,
+            -0.21500000000000563,
+            -0.44999999999999796,
+            -1.7499999999999953,
+            0.21499999999999453,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.0317139999999998,
+          "center_mm": [
+            -1.8499999999999963,
+            -5.605105246125318e-15,
+            -0.19841259380715032
+          ]
+        }
+      ],
+      "ideal_local_PCB_intersection_volume_mm3": 0,
+      "notes": [
+        "Source guide-tab centres are x=\u00b11.85,y=1.185; native tab envelopes are 0.20\u00d70.43 mm, not cylindrical pins.",
+        "Source z=.775 contact/support faces map to zero; signal-terminal undersides at source z=.755 remain .020 mm above that seating plane.",
+        "Output actuator points toward footprint-local +Y (physical CAD -Y). Highest modeled point 1.55 mm; guide tabs penetrate .45 mm."
+      ]
+    },
+    "PTS636SM25SMTRLFS": {
+      "source_path": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/PTS636Sx25SMTRLFS-kicad.step",
+      "source_sha256": "2c973c7ce924c16f5fac1f8c2724eb5ce12a68288c15ff61a05b44230f9e18f6",
+      "normalized_path": "/private/tmp/bodyv5-model-datums.2cpqLa/PTS636SM25SMTRLFS-seated.step",
+      "normalized_sha256": "86f6396c16b6fa888497820d6fc68d0fc2ecb09be81c1a11ff1ceb472dce9c35",
+      "rigid_transform_mm": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0.05
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "source_bounds_mm": [
+        -4.0,
+        -1.8500000000000025,
+        -0.05000000000000002,
+        4.0,
+        1.8500000000000005,
+        2.5
+      ],
+      "normalized_bounds_mm": [
+        -4.0,
+        -1.8500000000000025,
+        0.0,
+        4.0,
+        1.8500000000000005,
+        2.5500000000000003
+      ],
+      "solid_count": 5,
+      "volume_mm3": 36.482270703834374,
+      "in_memory_rigid_volume_delta_mm3": 0.0,
+      "step_roundtrip_volume_delta_mm3": 9.148766941535769e-05,
+      "step_roundtrip_max_bound_delta_mm": 4.440892098500626e-16,
+      "seating_face_evidence": [
+        {
+          "face": 189,
+          "normal": [
+            0.0,
+            2.2e-16,
+            1.0
+          ],
+          "point_mm": [
+            4.0,
+            0.3,
+            -0.05
+          ],
+          "bounds_mm": [
+            3.562132034356,
+            -0.3,
+            -0.05,
+            4.0,
+            0.3,
+            -0.04999999999999987
+          ],
+          "area_mm2": 0.26272077938640004
+        },
+        {
+          "face": 219,
+          "normal": [
+            0.0,
+            2.2e-16,
+            1.0
+          ],
+          "point_mm": [
+            -4.0,
+            0.3,
+            -0.05
+          ],
+          "bounds_mm": [
+            -4.0,
+            -0.3,
+            -0.05,
+            -3.562132034356,
+            0.3,
+            -0.04999999999999987
+          ],
+          "area_mm2": 0.26272077938640004
+        }
+      ],
+      "below_seating_geometry": [],
+      "ideal_local_PCB_intersection_volume_mm3": 0,
+      "notes": [
+        "KiCad community-authored shared Sx25 geometry, not manufacturer-native CAD.",
+        "Both actual model terminal undersides lie at source z=-.05; a +.05 mm rigid lift seats those terminals at z0 without PCB intrusion.",
+        "This produces conservative 2.55 mm modeled height, versus 2.5 mm nominal height in the source README; no shape scaling/reshaping was performed.",
+        "All five constituent solids are retained; both gull-wing contact patches fall inside the exact 1.25\u00d71.0 mm pads at x=\u00b13.875,y=0.",
+        "STEP export/reimport has measured numerical volume drift; prefer the original source plus the listed rigid transform where exact vendor topology retention is required."
+      ]
+    },
+    "EC05E1220401": {
+      "source_path": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/encoder/mechanical/vendor/EC05E1220401.step",
+      "source_sha256": "62894793f7c5777e9c13bc590f3019936e4edfa23319625f5c2f7d551aa2bd87",
+      "normalized_path": "/private/tmp/bodyv5-model-datums.2cpqLa/EC05E1220401-seated.step",
+      "normalized_sha256": "b68a7ad32b5f4c60e8f85b310d644724d8597e1d83f19368aa061a84da6adf3b",
+      "rigid_transform_mm": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0.1
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "source_bounds_mm": [
+        -3.8356244580023655,
+        -4.400000100000002,
+        -0.4000000000265584,
+        3.835624458000105,
+        2.516722861190246,
+        2.7599999999532985
+      ],
+      "normalized_bounds_mm": [
+        -3.835624458002105,
+        -4.400000100000028,
+        -0.3000000000898781,
+        3.835624458,
+        2.51672286119,
+        2.8600000000374
+      ],
+      "solid_count": 1,
+      "volume_mm3": 50.690212237818244,
+      "in_memory_rigid_volume_delta_mm3": -7.105427357601002e-15,
+      "step_roundtrip_volume_delta_mm3": 4.197221038992893e-05,
+      "step_roundtrip_max_bound_delta_mm": 8.410161456140486e-11,
+      "seating_face_evidence": [
+        {
+          "face": 162,
+          "normal": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "point_mm": [
+            -3.4791421360000077,
+            0.8000000000000003,
+            -0.10000000000000003
+          ],
+          "bounds_mm": [
+            -3.4791421360000077,
+            -0.8000000000000003,
+            -0.10000000000000003,
+            -3.170857863982028,
+            0.8000000000000003,
+            -0.10000000000000003
+          ],
+          "area_mm2": 0.4932548352287677
+        },
+        {
+          "face": 163,
+          "normal": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "point_mm": [
+            3.4791421360000077,
+            0.8000000000000003,
+            -0.10000000000000003
+          ],
+          "bounds_mm": [
+            3.170857864000011,
+            -0.8000000000000003,
+            -0.10000000000000003,
+            3.4791421360000077,
+            0.8000000000000003,
+            -0.10000000000000003
+          ],
+          "area_mm2": 0.49325483519999497
+        }
+      ],
+      "below_seating_geometry": [
+        {
+          "bounds_mm": [
+            0.9000000000000015,
+            -2.999999999999994,
+            -0.30000000002655836,
+            1.4999999999999993,
+            -2.399999999999996,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.07616267791002428,
+          "center_mm": [
+            1.1999999999948012,
+            -2.699999999999995,
+            -0.13783672489598786
+          ]
+        },
+        {
+          "bounds_mm": [
+            -1.4999999999999993,
+            0.899999999999999,
+            -0.30000000002655836,
+            -0.9000000000000015,
+            1.4999999999999993,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.07616267790328866,
+          "center_mm": [
+            -1.1999999999910917,
+            1.2,
+            -0.13783672488550391
+          ]
+        },
+        {
+          "bounds_mm": [
+            -1e-07,
+            -1.3000001000000068,
+            -0.2000001000058831,
+            1.3000000999999994,
+            0.6500000999652615,
+            -0.0009998999999998898
+          ],
+          "volume_mm3": 0.11997633246252613,
+          "center_mm": [
+            0.8286082818387265,
+            -0.47839721473481167,
+            -0.09320890329598228
+          ]
+        },
+        {
+          "bounds_mm": [
+            -1.3000000999999994,
+            -0.6500000004522479,
+            -0.20000009999998106,
+            1.0037506857068909e-07,
+            1.3000000999999999,
+            -0.0009998999999998898
+          ],
+          "volume_mm3": 0.11997633261344451,
+          "center_mm": [
+            -0.8286082815907294,
+            0.4783972144527524,
+            -0.09320890348350792
+          ]
+        },
+        {
+          "bounds_mm": [
+            -1.4999999999999993,
+            -2.999999999999994,
+            -0.30000000002655836,
+            -0.9000000000000015,
+            -2.399999999999996,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.07616267791002428,
+          "center_mm": [
+            -1.2000000000051994,
+            -2.6999999999999944,
+            -0.13783672489598783
+          ]
+        },
+        {
+          "bounds_mm": [
+            0.9000000000000015,
+            0.899999999999999,
+            -0.30000000002655836,
+            1.4999999999999993,
+            1.4999999999999993,
+            -0.0009999999999998899
+          ],
+          "volume_mm3": 0.07616267790328866,
+          "center_mm": [
+            1.200000000008909,
+            1.2000000000000004,
+            -0.13783672488550394
+          ]
+        }
+      ],
+      "ideal_local_PCB_intersection_volume_mm3": 0,
+      "notes": [
+        "STEP declares an INCH length context; OpenCascade import converts the complete shape to mm. Do not apply an additional \u00d725.4 scale.",
+        "Source side solder-foot underside z=-.10 maps to seating z0; rotor axis remains x=y=0.",
+        "Output maximum height 2.86 mm and maximum underside insertion .30 mm.",
+        "Four .60 mm boss cylinders exist: x=\u00b11.2,y=-2.7 use the .62 mm NPTHs; x=\u00b11.2,y=+1.2 are accommodated by the nominal central keyed aperture.",
+        "The nominal central aperture offers tangent contact at the two upper .30-radius bosses, not extra radial clearance. Two lower .62 mm NPTHs offer .01 mm nominal radial clearance; production tolerances still govern.",
+        "STEP export/reimport has measured numerical volume drift; prefer the original source plus the listed rigid transform where exact vendor topology retention is required."
+      ]
+    }
+  },
+  "no_board_or_case_changes": true,
+  "limits": [
+    "Intrinsic vendor geometry only; no complete case-fit or placement approval.",
+    "Seating plane is not inferred from bare STEP board-core Z maximum; assemble at actual component-side copper/solder datum from final native stackup.",
+    "Vendor CAD and community models do not include procurement/manufacturing/solder tolerances."
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "SKTDLDE010": {
+    "manufacturer": "Alps Alpine",
+    "source_kind": "Manufacturer STEP, unmodified",
+    "product_url": "https://tech.alpsalpine.com/e/products/detail/SKTDLDE010/",
+    "download_url": "https://tech.alpsalpine.com/cms.media/product_3dcad_sktdlde010_en_68a4d9e302.zip",
+    "step_file": "SKTDLDE010.step",
+    "step_header_date": "2013-12-02T05:39:24",
+    "zip_entry_date": "2025-07-07",
+    "catalog_file": "../../../docs/alps-sktd.pdf",
+    "nominal_dimensions_mm": {
+      "width": 3.9,
+      "depth_including_stem": 2.9,
+      "height_above_mount": 1.55,
+      "stem_width": 1.5,
+      "stem_height": 0.9,
+      "stem_projection": 0.95,
+      "guide_boss_depth": 0.45,
+      "guide_boss_pitch": 3.7,
+      "recommended_guide_hole_diameter": 0.55,
+      "guide_line_to_stem_front": 1.5,
+      "travel": 0.15
+    },
+    "notes": [
+      "The supplied PDF is an interactive 3D PDF, not a dimensioned drawing.",
+      "Use the project Alps SKTD catalog Drawing No.1 for dimensions.",
+      "STEP placement origin and orientation must be read from imported geometry; it is not a PCB-origin model."
+    ],
+    "sha256": "eacd491738cbe4bbd7fdb905a7873e55d0bb945c123023eb1ae7150fda69bbd3"
+  },
+  "PTS636SM25SMTRLFS": {
+    "manufacturer": "C&K / Littelfuse",
+    "source_kind": "KiCad library STEP based on manufacturer drawing; not manufacturer-authored CAD",
+    "step_file": "PTS636Sx25SMTRLFS-kicad.step",
+    "step_header_date": "2022-11-09T13:06:46",
+    "download_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/raw/master/Button_Switch_SMD.3dshapes/SW_Tactile_SPST_NO_Straight_CK_PTS636Sx25SMTRLFS.step",
+    "model_source_merge_request": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/merge_requests/828",
+    "datasheet_url": "https://www.ckswitches.com/media/2779/pts636.pdf",
+    "license_file": "KiCad-model-license.md",
+    "nominal_dimensions_mm": {
+      "body_length": 6.1,
+      "body_width": 3.7,
+      "height_above_mount": 2.5,
+      "body_height": 1.9,
+      "actuator_length": 2.7,
+      "actuator_width": 1.3,
+      "overall_terminal_span": 8.0,
+      "terminal_width": 0.6,
+      "travel": 0.25
+    },
+    "local_coordinates": {
+      "units": "mm",
+      "origin": "Actuator center projected onto PCB mounting plane",
+      "x": "Along the 6.1 mm body length and terminals",
+      "y": "Along the 3.7 mm body width",
+      "z": "Away from PCB; actuator toward +Z"
+    },
+    "notes": [
+      "SM25 is the 2.5 mm height, 180 gf, white-actuator variant with gull-wing SMT terminals and no ground pin.",
+      "KiCad Sx25 model covers the shared dimensions of SM25/SK25.",
+      "The official datasheet was verified with web reading; direct HTTP download currently returns 403."
+    ],
+    "sha256": "2c973c7ce924c16f5fac1f8c2724eb5ce12a68288c15ff61a05b44230f9e18f6"
+  }
+}

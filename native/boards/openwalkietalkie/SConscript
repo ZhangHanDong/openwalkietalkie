@@ -1,0 +1,17 @@
+from building import *
+cwd = GetCurrentDir()
+base = os.path.join(os.getenv('SIFLI_SDK'), 'customer/boards/sf32lb52-lcd_base')
+src = Glob('*.c')
+# OWT_BOARD=hw-a (tools/build-native.sh) selects the Rev A pin map, hw-b the
+# Rev B one (Rev A's plus OWT_BOARD_HW_B for the three pins that moved). The
+# defines live here rather than in the project SConstruct because
+# DefineGroup's CPPDEFINES apply to every build that includes the board, so
+# the bootloader child project (OWT_BOOT_IMAGES=1) compiles these files for
+# the right board as well.
+board = os.environ.get('OWT_BOARD')
+defines = ['OWT_BOARD_HW_A=1'] if board in ('hw-a', 'hw-b') else []
+if board == 'hw-b':
+    defines.append('OWT_BOARD_HW_B=1')
+group = DefineGroup('OpenWalkieTalkieBoard', src, depend=[], CPPPATH=[cwd, base],
+                    CPPDEFINES=defines)
+Return('group')

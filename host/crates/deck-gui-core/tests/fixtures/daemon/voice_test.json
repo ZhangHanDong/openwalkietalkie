@@ -1,0 +1,18 @@
+{
+  "chime": "ready",
+  "input_uid": null,
+  "limits": [
+    "`played` means the chime was queued on the audio thread, not that anybody heard it: a chime carries no utterance id, so there is no `voice.utterance` report to wait for. The `voice.route` events after this call are the route it took",
+    "the system default device and the system volume are never touched (\u00a77): the chime goes to the deck's own output UID at the operator's `set speaker` gain"
+  ],
+  "listening": false,
+  "output_uid": null,
+  "permissions": {
+    "microphone": "unknown",
+    "speech": "unknown"
+  },
+  "played": true,
+  "route": "a2dp",
+  "speaking": null,
+  "what": "speaker"
+}

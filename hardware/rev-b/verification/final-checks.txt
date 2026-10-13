@@ -1,0 +1,28 @@
+antenna clearance, nets within 3.2 mm:
+   0.00  rf::BT_ANT
+   0.00  rf::BT_ANT (pad AE1)
+   0.22  rf::BT_ANT (pad R47)
+   0.31  PANEL_D1
+   0.42  PANEL_D3
+   0.43  rf::BT_ANT (pad C58)
+   0.92  audio::DAC_FILTER_P (pad C2)
+   0.92  audio::DAC_FILTER_N (pad C2)
+   1.17  audio::DAC_FILTER_P
+   1.24  rf::ANT_MATCH (pad R47)
+   1.32  audio::DAC_FILTER_N
+   1.36  rf::ANT_MATCH
+   1.68  rf::ANT_MATCH (pad L6)
+   1.82  rf::BT_RF_LINE
+   2.27  rf::ANT_MATCH (pad R40)
+   2.38  PANEL_RESET (pad R30)
+   2.62  audio::DAC_FILTER_N (pad R2)
+   2.62  audio::DAC_FILTER_P (pad R1)
+   2.64  PANEL_RESET
+   3.13  MCU_LDO1
+   3.14  AMP_ENABLE
+nearest non-GND other-net vias to a Y1 pad centre: [(1.471818602953502, 'TOUCH_RESET', 40.35, 29.1), (1.5767847031221502, 'PANEL_TE', 41.55, 32.95), (1.5767847031221536, 'PANEL_TE', 41.55, 32.95)]
+nearest signal via to a Y1 pad, edge to edge (mm, via net, via u, v, pad, pad net): [(0.78, 'TOUCH_RESET', 40.35, 29.1, 'Y1.1', 'XTAL48_XI'), (0.854, 'PANEL_TE', 41.55, 32.95, 'Y1.3', 'XTAL48_XO'), (0.854, 'PANEL_TE', 41.55, 32.95, 'Y1.4', 'GND')]
+nearest GND via to a Y1 pad, edge to edge (mm, via net, via u, v, pad, pad net): [(0.58, 'GND', 43.17, 32.514, 'Y1.3', 'XTAL48_XO'), (0.826, 'GND', 42.225, 29.6, 'Y1.1', 'XTAL48_XI'), (0.851, 'GND', 40.875, 32.45, 'Y1.3', 'XTAL48_XO')]
+Y1 window 38.7 28.64 43.88 33.62
+inner-layer tracks: {'In1.Cu MCU_VSYS': 13.3, 'In2.Cu ENC_B': 9.0, 'In1.Cu MCU_LDO1': 8.0, 'In2.Cu USB_MCU_N': 7.0, 'In2.Cu PANEL_ENABLE': 6.9, 'In2.Cu USB_MCU_P': 4.8}
+vias 477

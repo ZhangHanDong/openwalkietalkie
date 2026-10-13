@@ -1,0 +1,18 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/w/project/.deck-fixture/transcript.jsonl",
+  "cwd": "/w/project",
+  "permission_mode": "default",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf node_modules",
+    "description": "Remove node_modules directory"
+  },
+  "tool_use_id": "toolu_03FIXTURE",
+  "tool_response": {
+    "stdout": "SCRUBBED-OUTPUT",
+    "stderr": "",
+    "interrupted": false
+  }
+}

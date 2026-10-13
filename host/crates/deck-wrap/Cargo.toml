@@ -1,0 +1,11 @@
+[package]
+name = "deck-wrap"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+deck-proto = { path = "../deck-proto" }
+embedded-graphics = "0.8"
+markdown = "=1.0.0"

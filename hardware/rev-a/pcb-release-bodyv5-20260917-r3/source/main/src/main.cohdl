@@ -1,0 +1,337 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// OpenMicroDial Rev A SCHEMATIC DRAFT, CoHDL 0.7.1.
+// BodyV5 v8, 1.0 mm four-layer main board. Placement and routing are rebuilt
+// from the measured cavity/support geometry; see mechanical/pcb-spec.json.
+// See docs/layout.md and docs/open-items.md for interface and release requirements.
+
+design OpenMicroDialRevA {
+    inst mcu: MCU_SF32LB525UC6
+    subdesign power: Power
+    subdesign controls: Controls
+    subdesign audio: Audio
+    subdesign rf: RF
+    inst display: contrib_display::H0216F002AM
+    inst flash: flash::FLASH_W25Q128JVSIQ
+    #[placement_hint("top edge, centered; native USB data and charging")]
+    inst usbc: usb::connectors::type_c::USB_C_HRO_TYPE_C_31_M_12
+    inst usb_esd: esd::ESD_USBLC6
+    inst cc_rd: [passive::R_5K1_F_0402; 2]
+    inst i2c_pull: [passive::R_10K_F_0402; 2]
+    inst touch_pull: passive::R_100K_F_0402
+    inst panel_reset_pd: passive::R_100K_F_0402
+    inst reset_pd: passive::R_1M_F_0402
+
+    #[crystal_oscillator(mcu, XTAL48M_XI, XTAL48M_XO)]
+    inst xtal48: osc::XTAL_48MHZ
+    inst l_buck: passive::IND_4U7_WPN201610U
+
+    inst c_vcc: passive::C_4u7_10V_X5R_0603
+    inst c_vsys: passive::C_2u2_10V_X5R_0603
+    inst c_brf: passive::C_2u2_10V_X5R_0603
+    inst c_buck: passive::C_4u7_10V_X5R_0603
+    inst c_vout1: passive::C_4u7_10V_X5R_0603
+    inst c_vout2: passive::C_4u7_10V_X5R_0603
+    inst c_ret: passive::C_470n_10V_X5R_0402
+    inst c_rtc: passive::C_1u_10V_X5R_0603
+    inst c_sip: passive::C_2u2_10V_X5R_0603
+    inst c_ldo1: passive::C_2u2_10V_X5R_0603
+    inst c_ldo2: passive::C_2u2_10V_X5R_0603
+    inst c_audio: passive::C_2u2_10V_X5R_0603
+    inst c_audio_ref: passive::C_1u_10V_X5R_0603
+    inst c_adc_ref: passive::C_4u7_10V_X5R_0603
+    inst c_flash: passive::C_100n_16V_X7R_0402
+    inst c_display_io: passive::C_100n_16V_X7R_0402
+    inst c_display_vci: passive::C_1u_10V_X5R_0603
+    inst c_display_bat: passive::C_4u7_10V_X5R_0603
+    inst c_display_hf: passive::C_100n_16V_X7R_0402
+
+    // No USB/UART bridge, debug header, on-board probe or extra debug USB port.
+    // PA34 is an ACTIVE-HIGH long-reset input; it is not an active-low nRESET.
+    #[designator("TP4")]
+    inst tp_gnd: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP10")]
+    inst tp_vref: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP8")]
+    inst tp_tx_swclk: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP6")]
+    inst tp_rx_swdio: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP3")]
+    inst tp_cal: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP5")]
+    inst tp_reset_high: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP2")]
+    inst tp_bat: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP7")]
+    inst tp_sys: misc::TEST_POINT_ROUND_1MM
+    #[designator("TP9")]
+    inst tp_vbus: misc::TEST_POINT_ROUND_1MM
+
+    #[high_current(500mA)]
+    net USB_VBUS [5V]: usbc.VBUS, usb_esd.VBUS, power.VBUS, tp_vbus.SIGNAL
+    // External SGM41562SA is the sole charger. MCU VBUS is deliberately NC.
+    net CELL [4.2V]: power.BAT, mcu.VBAT, tp_bat.SIGNAL
+    // 4.55V is the SGM41562SA reset regulation target, not battery-mode voltage.
+    #[high_current(2A)]
+    net SYSTEM_SUPPLY [4.55V]: power.SYS, mcu.VCC, audio.SYS, c_vcc.A, tp_sys.SIGNAL
+    #[intent("external retained 3.3V rail for touch and control pull-ups")]
+    net IO_3V3 [3.3V]: power.VIO, controls.VIO, audio.VIO, display.IOVCC, i2c_pull[0..=1].A,
+                       touch_pull.A, c_display_io.A, tp_vref.SIGNAL
+    #[intent("MCU internal VSYS output supplies RF only; never tie to charger SYS")]
+    net MCU_VSYS [3.3V]: mcu.VSYS, mcu.AVDD_BRF, c_vsys.A, c_brf.A
+    // LDO1: 2.2uF + 2.2uF + 0.1uF = 4.5uF; below SiFli's 9.6uF cap limit.
+    net MCU_LDO1 [3.3V]: mcu.VDD33_VOUT1, flash.VCC, mcu.AVDD33_AUD, c_ldo1.A, c_audio.A, c_flash.A
+    net MCU_LDO2: mcu.VDD33_VOUT2, c_ldo2.A
+    net SIP_1V8: mcu.VDD18_VOUT, c_sip.A
+    net BUCK_LX: mcu.BUCK_LX, l_buck.A
+    net BUCK_FB: mcu.BUCK_FB, l_buck.B, c_buck.A
+    net VOUT1: mcu.VDD_VOUT1, c_vout1.A
+    net VOUT2: mcu.VDD_VOUT2, c_vout2.A
+    net RETENTION: mcu.VDD_RET, c_ret.A
+    net RTC: mcu.VDD_RTC, c_rtc.A
+    net AUDIO_REF: mcu.AUD_VREF, c_audio_ref.A
+    net ADC_REF: mcu.GPADC_VREF, c_adc_ref.A
+    // PDM1 shares PA22/23 with XTAL32K. Use the calibrated internal LF clock.
+    // Keep the microphone off except while capturing; see power-and-audio.md.
+    net MIC_POWER_ENABLE: mcu.PA28, audio.MIC_EN
+    net MIC_PDM_CLK: mcu.PA22, audio.PDM_CLK
+    net MIC_PDM_DATA: mcu.PA23, audio.PDM_DATA
+    net DAC_P: mcu.DACP, audio.DACP
+    net DAC_N: mcu.DACN, audio.DACN
+    net AMP_ENABLE: mcu.PA20, audio.AMP_ENABLE
+
+    net PANEL_4V [4V]: power.VPANEL, display.VBAT, c_display_bat.A, c_display_hf.A
+    net PANEL_LOGIC [3.3V]: power.VCI, display.VCI, display.VCI_EN, c_display_vci.A
+    net PANEL_ENABLE: mcu.PA10, power.PANEL_EN
+    net PANEL_VCI_ENABLE: mcu.PA11, power.VCI_EN
+    net PANEL_RESET: mcu.PA09, display.RESET, panel_reset_pd.A
+    net PANEL_TE: mcu.PA02, display.TE
+    net PANEL_CS: mcu.PA03, display.CSX
+    net PANEL_CLK: mcu.PA04, display.WRX_SCL
+    net PANEL_D0: mcu.PA05, display.SDI_RDX
+    net PANEL_D1: mcu.PA06, display.DCX
+    net PANEL_D2: mcu.PA07, display.D0
+    net PANEL_D3: mcu.PA08, display.D1
+
+    // Pinmux verified for SF32LB525, not copied from the old 3.3V symbol.
+    // _P/_N suffixes let KiCad identify both routed differential-pair spans.
+    net USB_C_P: usbc.DP, usb_esd.IO1_A
+    net USB_C_N: usbc.DN, usb_esd.IO2_A
+    net USB_MCU_P: usb_esd.IO1_B, mcu.PA35
+    net USB_MCU_N: usb_esd.IO2_B, mcu.PA36
+    net CC1: usbc.CC1, cc_rd[0].A
+    net CC2: usbc.CC2, cc_rd[1].A
+    net I2C_SDA: mcu.PA41, power.SDA, display.TP_SDA, i2c_pull[0].B
+    net I2C_SCL: mcu.PA42, power.SCL, display.TP_SCL, i2c_pull[1].B
+    net TOUCH_IRQ: mcu.PA43, display.TP_INT, touch_pull.B
+    net TOUCH_RESET: mcu.PA44, display.TP_RST
+
+    // A3's documented wake pins are PA24..27 and PA34..44. PA28..33 are
+    // excluded even though the SDK's generic PA24..44 query accepts them.
+    net PTT: mcu.PA24, controls.PTT
+    net ENTER: mcu.PA25, controls.ENTER
+    net ESC: mcu.PA26, controls.ESC
+    net SHIFT: mcu.PA27, controls.SHIFT
+    net MACRO_LEFT: mcu.PA37, controls.MACRO_LEFT
+    net MACRO_RIGHT: mcu.PA38, controls.MACRO_RIGHT
+    net ENC_A: mcu.PA39, controls.ENC_A
+    net ENC_B: mcu.PA40, controls.ENC_B
+    net DEBUG_TX_SWCLK: mcu.PA19, tp_tx_swclk.SIGNAL
+    net DEBUG_RX_SWDIO: mcu.PA18, tp_rx_swdio.SIGNAL
+    net CAL: mcu.PA01, tp_cal.SIGNAL
+    net RESET_ACTIVE_HIGH: mcu.PA34, tp_reset_high.SIGNAL, reset_pd.A
+
+    net XTAL48_XI: mcu.XTAL48M_XI, xtal48.XIN
+    net XTAL48_XO: mcu.XTAL48M_XO, xtal48.XOUT
+    net FLASH_CS: mcu.PA12, flash.CS
+    net FLASH_IO1: mcu.PA13, flash.DO
+    net FLASH_IO2: mcu.PA14, flash.WP
+    net FLASH_IO0: mcu.PA15, flash.DI
+    net FLASH_CLK: mcu.PA16, flash.CLK
+    net FLASH_IO3: mcu.PA17, flash.HOLD
+    // PA13/PA17 default-low boot straps select SPI NOR; do not pull them high.
+
+    net BT_RF: mcu.BRF_ANT, rf.FEED
+
+    #[ground(primary)]
+    net GND [gnd]: power.GND, controls.GND, audio.GND, rf.GND, mcu.EPAD, usbc.GND, usbc.SHIELD,
+                   usb_esd.GND, display.GND1, display.GND7, display.GND12, display.GND22,
+                   display.GND25, display.GND28, display.GND31, flash.GND, xtal48.GND,
+                   cc_rd[0..=1].B, panel_reset_pd.B, reset_pd.B, c_vcc.B, c_vsys.B, c_brf.B,
+                   c_buck.B, c_vout1.B, c_vout2.B, c_ret.B, c_rtc.B, c_sip.B, c_ldo1.B, c_ldo2.B,
+                   c_audio.B, c_audio_ref.B, c_adc_ref.B, c_flash.B, c_display_io.B,
+                   c_display_vci.B, c_display_bat.B, c_display_hf.B, tp_gnd.SIGNAL
+    nc: mcu.VBUS, mcu.MIC_BIAS, mcu.ADCP, mcu.PA00, mcu.PA29, mcu.PA30, mcu.PA31, mcu.PA32, mcu.PA33
+    nc: usbc.SBU1, usbc.SBU2
+    nc: display.TP_VCC, display.MTP_PWR, display.D1P, display.D1N, display.CLKP, display.CLKN,
+        display.D0P, display.D0N
+
+    layout {
+        // BodyV5 mm: u = Fusion X + 28, v = 47.5 - Fusion Z.
+        // Native KiCad STEP is (u, -v, F-positive z). In this enclosure:
+        // top/F is the USB/battery face, pointing toward -Fusion Y;
+        // bottom/B faces the display. Finished B mask seats at Y=9.275;
+        // current .9992mm stack plus two masks puts finished F at Y=8.24532.
+        // Required stack is display -> PCB -> insulated battery. No global flip.
+        // Battery reservation: mechanical/front-battery.json; F body 41x20x7.
+        // Individual button/FPC/acoustic side fits remain assembly release gates.
+        // SKTD origins are locating-hole midpoints; local +y faces the stem.
+        // Enclosure left/right is viewed from the screen, not from this frame.
+        // C&K origins are actuator centres; the two contacts lie along u.
+        // RF relative layout is anchored between the two lower BodyV5 bosses;
+        // the finalizer adds layer-specific copper keepouts from layout-spec.json.
+        // SKTD side actuators retain F; macro actuators face the display on B.
+        // U3 is aligned to the H0216F002AMT003A module's 31-land axis and the
+        // user's 38mm FPC3-H0175Y003MT006-1 cable, with a bottom-side return fold.
+        // Native U3 B0 is CoHDL bottom rotate180; local entry is -y, not +y.
+        // The folded cable must clear the FULL macro-button travel envelope;
+        // mouth heights still need physical fit confirmation (see docs).
+        // R12-R27/C32-C39 remain eight local per-input triads, never a matrix.
+        // J2 and encoder J1 use dual-contact FH34SRJ sockets on the F face.
+        // Both mouths face -u. Route the 6-way ribbon around the encoder
+        // board's free left edge, returning below it without twisting.
+        // Physical pin n reaches pin n; pins2/4 carry raw encoder A/B.
+        diff_pair(USB_C_P, USB_C_N) [differential_impedance: 90ohm]
+        diff_pair(USB_MCU_P, USB_MCU_N) [differential_impedance: 90ohm]
+        length_match(USB_C_P, USB_C_N) [tolerance: 0.15mm]
+        length_match(USB_MCU_P, USB_MCU_N) [tolerance: 0.15mm]
+        board_outline: "mechanical/main-outline.dxf"
+        // BEGIN generated component placements (tools/apply_placements.py)
+        place controls.ptt at (52.240000mm, 30.742641mm) rotate 90
+        place controls.enter at (3.760000mm, 18.500000mm) rotate 270
+        place controls.esc at (3.760000mm, 30.500000mm) rotate 270
+        place controls.shift at (3.760000mm, 42.500000mm) rotate 270
+        place controls.macro_left at (46.245000mm, 57.090000mm) rotate 180 side bottom
+        place controls.macro_right at (9.755000mm, 57.090000mm) rotate 180 side bottom
+        place usbc at (28.000000mm, 4.000000mm) rotate 180
+        place controls.encoder_fpc at (32.500000mm, 16.800000mm) rotate 270
+        place display at (36.600000mm, 48.200000mm) rotate 180 side bottom
+        place audio.mic at (48.000000mm, 72.000680mm)
+        place mcu at (48.000000mm, 81.500000mm) rotate 180
+        place flash at (34.300000mm, 76.000000mm)
+        place c_flash at (40.100000mm, 72.750000mm)
+        place xtal48 at (47.800000mm, 88.800000mm) rotate 135
+        place c_brf at (42.650000mm, 85.050000mm) rotate 180
+        place rf at (44mm, 91.000000mm) rotate 180
+        place l_buck at (51.800000mm, 76.300000mm) rotate 90
+        place c_buck at (53.000000mm, 75.700000mm) rotate 270 side bottom
+        place c_vcc at (47.400000mm, 77.250000mm) side bottom
+        place c_vsys at (51.900000mm, 73.400000mm) rotate 90
+        place c_vout1 at (51.500000mm, 77.100000mm) rotate 270 side bottom
+        place c_vout2 at (49.000000mm, 79.836667mm) side bottom
+        place c_ret at (51.150000mm, 82.331667mm) rotate 90 side bottom
+        place c_rtc at (53.700000mm, 81.000000mm) rotate 90 side bottom
+        place c_sip at (44.000000mm, 76.500000mm) rotate 270 side bottom
+        place c_ldo1 at (41.750000mm, 77.250000mm) rotate 90
+        place c_ldo2 at (49.000000mm, 81.500000mm) side bottom
+        place c_audio at (43.300000mm, 78.000000mm) rotate 90
+        place c_audio_ref at (41.850000mm, 81.100000mm) rotate 180
+        place c_adc_ref at (53.000000mm, 85.000000mm) rotate 180 side bottom
+        place controls.pull[0] at (49.440000mm, 24.000000mm) rotate 270
+        place controls.series[0] at (49.440000mm, 26.000000mm) rotate 270
+        place controls.filter[0] at (49.440000mm, 28.000000mm) rotate 270
+        place controls.pull[1] at (6.810000mm, 20.850000mm) rotate 90
+        place controls.series[1] at (6.810000mm, 18.950000mm) rotate 90
+        place controls.filter[1] at (6.810000mm, 17.050000mm) rotate 90
+        place controls.pull[2] at (6.810000mm, 32.850000mm) rotate 90
+        place controls.series[2] at (6.810000mm, 30.950000mm) rotate 90
+        place controls.filter[2] at (6.810000mm, 29.050000mm) rotate 90
+        place controls.pull[3] at (6.810000mm, 44.850000mm) rotate 90
+        place controls.series[3] at (6.810000mm, 42.950000mm) rotate 90
+        place controls.filter[3] at (6.810000mm, 41.050000mm) rotate 90
+        // Keep each macro's conditioning local while clearing its switch body
+        // and the display-side ribbon lane. The right trio uses the F face.
+        place controls.pull[4] at (44.000000mm, 59.000000mm) rotate 180
+        place controls.series[4] at (43.100000mm, 58.000000mm) rotate 180
+        place controls.filter[4] at (40.900000mm, 58.000000mm) rotate 180
+        place controls.pull[5] at (3.900000mm, 55.500000mm) rotate 180 side bottom
+        place controls.series[5] at (3.900000mm, 56.800000mm) side bottom
+        place controls.filter[5] at (3.350000mm, 58.000000mm) side bottom
+        place controls.pull[6] at (32.000000mm, 11.450000mm)
+        place controls.series[6] at (33.900000mm, 11.450000mm)
+        place controls.filter[6] at (35.800000mm, 11.450000mm)
+        place controls.pull[7] at (31.000000mm, 13.400000mm)
+        place controls.series[7] at (32.900000mm, 13.400000mm)
+        place controls.filter[7] at (34.800000mm, 13.400000mm)
+        place usb_esd at (27.500000mm, 11.500000mm) rotate 270
+        place cc_rd[0] at (21.900000mm, 10.800000mm) side bottom
+        place cc_rd[1] at (21.900000mm, 12.200000mm) side bottom
+        place power.battery at (17.000000mm, 16.500000mm)
+        place power.ntc_harness at (9.000000mm, 8.000000mm)
+        place power.charger at (15.000000mm, 10.000000mm)
+        place power.c_in at (12.250000mm, 7.800000mm) rotate 90
+        place power.c_sys at (15.000000mm, 6.600000mm) rotate 90
+        place power.c_bat at (18.400000mm, 8.100000mm)
+        place power.c_vdd at (17.800000mm, 10.800000mm)
+        place power.rt1 at (12.300000mm, 10.600000mm)
+        place power.rt2 at (12.300000mm, 11.800000mm) rotate 180
+        place power.r_nint at (18.700000mm, 12.000000mm)
+        place power.tp_nint at (20.500000mm, 12.000000mm)
+        place c_display_io at (34.710000mm, 44.850000mm) rotate 180 side bottom
+        place c_display_vci at (35.150000mm, 51.400000mm)
+        place c_display_bat at (33.845000mm, 48.200000mm) rotate 90
+        place c_display_hf at (33.745000mm, 45.400000mm)
+        place panel_reset_pd at (19.345000mm, 51.200000mm)
+        place touch_pull at (31.500000mm, 51.200000mm)
+        place i2c_pull[0] at (27.500000mm, 51.200000mm)
+        place i2c_pull[1] at (29.500000mm, 51.200000mm)
+        place reset_pd at (52.700000mm, 87.000000mm) rotate 90 side bottom
+        place power.io_reg at (35.500000mm, 64.500000mm)
+        place power.l_io at (32.500000mm, 64.500000mm) rotate 90
+        place power.c_io_in at (31.800000mm, 68.000000mm) rotate 180
+        place power.c_io_out[0] at (33.000000mm, 61.000000mm) rotate 180
+        place power.c_io_out[1] at (38.000000mm, 61.000000mm)
+        place power.panel_reg at (48.000000mm, 64.500000mm)
+        place power.l_panel at (45.000000mm, 64.500000mm) rotate 90
+        place power.c_panel_in at (43.300000mm, 67.300000mm) rotate 180
+        place power.c_panel_out[0] at (45.500000mm, 61.000000mm) rotate 180
+        place power.c_panel_out[1] at (50.500000mm, 61.000000mm)
+        place power.r_fb_top at (51.400000mm, 63.200000mm) rotate 270
+        place power.r_fb_bottom at (51.400000mm, 65.200000mm) rotate 270
+        place power.r_panel_pd at (52.500000mm, 66.800000mm)
+        place power.vci_sw at (35.500000mm, 60.000000mm) side bottom
+        place power.c_vci_in at (38.500000mm, 60.000000mm) rotate 90 side bottom
+        place power.c_vci_slew at (32.400000mm, 60.000000mm) rotate 90 side bottom
+        place power.r_vci_discharge at (32.400000mm, 62.000000mm) rotate 90 side bottom
+        place power.r_vci_pd at (38.500000mm, 62.000000mm) side bottom
+        place audio.speaker at (33.200000mm, 69.000000mm) rotate 270 side bottom
+        place audio.amp at (41.000000mm, 71.300000mm) rotate 90 side bottom
+        place audio.fb[0] at (39.400000mm, 64.300000mm) side bottom
+        place audio.fb[1] at (44.600000mm, 64.300000mm) side bottom
+        place audio.c_output[0] at (37.700000mm, 66.700000mm) rotate 90 side bottom
+        place audio.c_output[1] at (39.000000mm, 66.700000mm) rotate 90 side bottom
+        place audio.c_output[2] at (42.000000mm, 66.700000mm) rotate 90 side bottom
+        place audio.c_supply at (44.500000mm, 68.500000mm) side bottom
+        place audio.c_supply_bulk at (44.900000mm, 66.430000mm) side bottom
+        place audio.c_bypass at (38.000000mm, 72.000000mm) rotate 90 side bottom
+        place audio.r_enable_pd at (37.700000mm, 74.500000mm) side bottom
+        place audio.r_dac[0] at (35.000000mm, 78.500000mm) side bottom
+        place audio.r_dac[1] at (35.000000mm, 80.000000mm) side bottom
+        place audio.c_dac_diff at (36.800000mm, 77.800000mm) rotate 90 side bottom
+        place audio.c_input[0] at (40.000000mm, 78.000000mm) rotate 90 side bottom
+        place audio.c_input[1] at (42.000000mm, 78.000000mm) rotate 90 side bottom
+        place audio.r_input[0] at (40.000000mm, 75.500000mm) rotate 90 side bottom
+        place audio.r_input[1] at (42.000000mm, 75.500000mm) rotate 90 side bottom
+        place audio.mic_power at (52.250000mm, 64.250000mm) rotate 180 side bottom
+        place audio.c_mic_input at (49.300000mm, 63.000000mm) rotate 270 side bottom
+        place audio.c_mic_slew at (53.000000mm, 62.250000mm) side bottom
+        place audio.r_mic_enable_pd at (53.000000mm, 69.000000mm) rotate 90 side bottom
+        place audio.r_mic_discharge at (53.000000mm, 66.900000mm) rotate 270 side bottom
+        place audio.c_mic_supply at (42.250000mm, 74.550000mm) rotate 180
+        place audio.r_mic_clk at (48.000000mm, 67.750000mm) rotate 180
+        place audio.r_mic_data_pd at (47.100000mm, 67.500000mm) rotate 270 side bottom
+        place tp_gnd at (31.300000mm, 83.000000mm) side bottom
+        place tp_vref at (33.500000mm, 83.000000mm) side bottom
+        place tp_tx_swclk at (35.700000mm, 83.000000mm) side bottom
+        place tp_rx_swdio at (31.300000mm, 85.000000mm) side bottom
+        place tp_cal at (33.500000mm, 85.000000mm) side bottom
+        place tp_reset_high at (35.700000mm, 85.000000mm) side bottom
+        place tp_vbus at (23.000000mm, 14.000000mm)
+        place tp_sys at (25.600000mm, 15.000000mm)
+        place tp_bat at (28.200000mm, 15.000000mm)
+        place rf.ant at (40.750000mm, 91.000000mm) rotate 180
+        place rf.rf_series at (45.550000mm, 88.000000mm) rotate 270
+        place rf.rf_shunt[0] at (45.040000mm, 86.500000mm) rotate 180
+        place rf.rf_shunt[1] at (45.040000mm, 89.500000mm) rotate 180
+        // END generated component placements
+    }
+}

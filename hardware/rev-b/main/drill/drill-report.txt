@@ -1,0 +1,27 @@
+Drill report for main-revb.kicad_pcb
+Created on 2026-10-06T23:26:07
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  In1.Cu                    in1
+    L3 :  In2.Cu                    in2
+    L4 :  B.Cu                      back
+
+
+Drill file 'main-revb-PTH.drl' contains
+    plated through holes:
+    =============================================================
+    T1  0.200mm  0.0079"  (477 holes))
+    T2  0.600mm  0.0236"  (4 holes)  (with 4 slots)
+
+    Total plated holes count 481
+
+
+Drill file 'main-revb-NPTH.drl' contains
+    unplated through holes:
+    =============================================================
+    T1  0.600mm  0.0236"  (10 holes))
+    T2  2.000mm  0.0787"  (2 holes))
+
+    Total unplated holes count 12

@@ -1,0 +1,88 @@
+{
+ "revision": "OpenWalkieTalkie main board Rev B (BodyV6.13 case): MCU group re-placed on the B (display) side under the display, antenna AE1 moved to the corner below the scroll wheel, PTT and front left/right switches centred on their buttons, audio path placed and routed away from the flash/display buses, battery connector J3 -> Molex 53261-0371 (pin 1 CELL, 2 NTC, 3 GND), TP_VCC tied to IO_3V3 via R48, r6 carry-overs (R4/R5 moved to the NS4150B pins, value kept at r6's 22k, TOUCH_RESET pull-down R45, charger CHG to PA33 with R46); full re-route on 4 layers with In1/In2 GND planes",
+ "date": "2026-10-06",
+ "kicad_version": "10.0.4",
+ "based_on": {
+  "release": "rev-a/pcb-release-bodyv6.13-20260923-r6",
+  "main_sha256": "54822c39eeab34cf7167fa3b20b75db822559016ee9f5c149b93631f5727c2d2"
+ },
+ "case": {
+  "file": "rev-a/mechanical-source/case/BodyV6.13.step",
+  "path_from_release": "../rev-a/mechanical-source/case/BodyV6.13.step",
+  "sha256": "9d3eaedd4cdc180b925e87b9718fe30b96340b8cba7b0dc08486a5419848e649"
+ },
+ "boards": {
+  "main": {
+   "file": "main/main-revb.kicad_pcb",
+   "sha256": "5af87eda008ece6885898e20b01f31e93bc2696dc0bb44840f893ab3319fc5cf",
+   "copper_layers": 4,
+   "stackup": "JLC04101H-3313 (prepreg 0.0994 mm, core 0.7 mm)",
+   "thickness_mm": 1.0,
+   "fitted_components": 125,
+   "assembly_sides": {
+    "B.Cu": 65,
+    "F.Cu": 60
+   },
+   "vias": 477,
+   "via_in_or_touching_smd_pad": 48,
+   "min_track_mm": 0.12,
+   "min_gap_mm": 0.1,
+   "native_drc_violations": 0,
+   "native_unconnected": 0,
+   "native_drc_report": "verification/main-revb-drc.rpt",
+   "audio_crosstalk_errors": 0,
+   "inner_layer_signal_mm": {
+    "In1": {
+     "MCU_VSYS": 13.3,
+     "MCU_LDO1": 8.0
+    },
+    "In2": {
+     "ENC_B": 9.0,
+     "USB_MCU_N": 7.0,
+     "PANEL_ENABLE": 6.9,
+     "USB_MCU_P": 4.8
+    }
+   },
+   "source_parity": "PCB is the netlist of record for Rev B (no updated schematic); see verification/netlist-diff-vs-r6.txt",
+   "inner_planes": "In1 and In2 solid GND, each filling as one piece; In2 no-fill rule area at the R39 GND via (33.22, 30.0)",
+   "antenna_clearance_nearest_mm": {
+    "PANEL_D1": 0.31,
+    "PANEL_D3": 0.42,
+    "PANEL_RESET (R30)": 2.38,
+    "all other non-RF, non-GND, non-DAC copper": ">= 3.1"
+   },
+   "final_checks": "verification/final-checks.txt",
+   "nearest_via_to_Y1_pad_edge_to_edge_mm": {
+    "signal (TOUCH_RESET)": 0.78,
+    "GND": 0.58
+   },
+   "outline_note": "Outline is r6's except the bottom-right corner, rounded to match the top-left (2026-10-06); overall size unchanged, fits BodyV6.13 with no interference."
+  },
+  "encoder": {
+   "note": "unchanged; use rev-a/pcb-release-bodyv6.13-20260923-r6 encoder/ or encoder-wheel/"
+  }
+ },
+ "fab": {
+  "main-bom-jlcpcb.csv": "6cd843801ca2892c3704e1a91c70fedd570993bf23270fd9141cd6f83ec1f8f3",
+  "main-cpl-jlcpcb.csv": "1c98b2728e2983cdacf2f2d6172a903c62397188eed6f92f4389bd657725e8e4",
+  "main-orientation-check.csv": "3ed897427dc719da7f07c7eb76545527480815766c3fd268c14762bad34bfd95",
+  "main-revb-jlcpcb-gerber.zip": "f2b1903858f5db569f18d6adc83ef351620548fa9b284f65101e274b0de0c93c"
+ },
+ "firmware_pin_changes": {
+  "AMP_ENABLE": "PA20 -> PA01",
+  "CAL (TP3)": "PA01 -> PA00",
+  "CHG_STATUS": "new on PA33",
+  "PA20": "unused"
+ },
+ "verification": {
+  "main-revb-drc.json": "1e41ff8ae7acca6773a3c86977b53665634e07a89bc08be6535ff810a3e76178",
+  "main-revb-drc.rpt": "d79e3bebd8cbe5ec4dce5d78eff173fddde7d5d52392b6eb0c17cd099d9d9004",
+  "audio-xtalk.md": "5ffb823dfc17bda94ec064e98ba682cff0784895594f2f4d8e662f45c0258b97",
+  "audio-xtalk.json": "2ecaa7b438bf8d2502a646fcb790d06654ad13bb531c088834bf62c12633dbb3",
+  "placement-check.md": "3d316ae5247bb183d76c3aacc8ec8026982955242e95ac1dfc3a4e496367a964",
+  "final-checks.txt": "c0b2c0bb649e8e2ad07c162d550d15e4105ac6aecb72d4ea3301e802cd95e8cc",
+  "netlist-diff-vs-r6.txt": "88c7ab989a4cae9e42ca64a4ba29f81050e1d0add7cc6226a214d177e03795b1",
+  "bodyv6.13-fit-model-report.json": "9cda65ff0be8783fa3b2d01e8a71e84c3d7f208806c87d3853dd6a07a7e2ca81",
+  "review-2026-10-05.md": "885db5be19f5c68b9570eb941ffd99e9f4db7777ce80a2e95b51dc17122df8f2"
+ }
+}

@@ -1,0 +1,15 @@
+# Generated CAD solids are reviewed in CAD, not line-merged as text.
+*.step binary
+*.stp binary
+*.f3d binary
+*.pdf binary
+*.PDF binary
+*.zip binary
+*.png binary
+*.dxf binary
+*.gbr binary
+*.drl binary
+*.rtf binary
+# Preserve signed-off manifest bytes on every platform, including line endings.
+pcb-release-bodyv5-20260917-r3/** -text -whitespace
+mechanical-source/** -text

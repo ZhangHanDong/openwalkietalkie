@@ -1,0 +1,105 @@
+{
+  "purpose": "Current BodyV5 case, selected display/cable and original component evidence; r3 routed PCBs are fabrication authority.",
+  "files": {
+    "case/BodyV5-USB-face-battery-fit.f3d": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/layout-gpt6-fresh-20260916/usb-face-battery/mechanical/BodyV5-USB-face-battery-fit.f3d",
+      "sha256": "48f61dee681dd7b4e03ed6b7037e56642fb7b05902b91aa68d3981292f5bc5b8",
+      "bytes": 747874
+    },
+    "case/BodyV5-USB-face-battery-fit.step": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/layout-gpt6-fresh-20260916/usb-face-battery/mechanical/BodyV5-USB-face-battery-fit.step",
+      "sha256": "05dd4badb9b4f9a79a874e8cc2da15fa8edda5b2a5b7ed87b4ee7e74062a10de",
+      "bytes": 1092075
+    },
+    "display/H0216F002AMT003A_V2.dxf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/display-analysis/vendor/H0216F002AMT003A_V2.dxf",
+      "sha256": "cedffbb7fc82ee14b3126b88351298c508dd730c0e022737f5afb17361e9f31c",
+      "bytes": 3193736
+    },
+    "display/H0216F002AMT003A_V2_specification.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/display-analysis/vendor/H0216F002AMT003A_V2_specification.pdf",
+      "sha256": "1678551e901937e5b64379e159d90fe9a4950cc7e24a3e77ed1cd1f983f947f3",
+      "bytes": 1872918
+    },
+    "display/FPC3-H0175Y003MT006-1_V0.dxf": {
+      "source": "/Users/tony/Desktop/Display/dxf/FPC3-H0175Y003MT006-1_V0.dxf",
+      "sha256": "1fa48155fac36343fb971ff52586c08669e560e3fa2cfef56c74e5e71261d1cf",
+      "bytes": 209544
+    },
+    "vendor/buttons/SKTDLDE010.step": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/SKTDLDE010.step",
+      "sha256": "eacd491738cbe4bbd7fdb905a7873e55d0bb945c123023eb1ae7150fda69bbd3",
+      "bytes": 1083476
+    },
+    "vendor/buttons/SKTDLDE010-Read me first.rtf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/SKTDLDE010-Read me first.rtf",
+      "sha256": "c763afa98b0073f1a07579409c7842a91e42a6e6f881d94a74c7880041a2aafa",
+      "bytes": 44232
+    },
+    "vendor/buttons/SKTDLDE010.PDF": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/SKTDLDE010.PDF",
+      "sha256": "49c25fa7b0d2edf0dd3f6540ec36f9cb6d66b51c9566a74062c897390ab7f858",
+      "bytes": 112049
+    },
+    "vendor/buttons/PTS636Sx25SMTRLFS-kicad.step": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/PTS636Sx25SMTRLFS-kicad.step",
+      "sha256": "2c973c7ce924c16f5fac1f8c2724eb5ce12a68288c15ff61a05b44230f9e18f6",
+      "bytes": 381371
+    },
+    "vendor/buttons/KiCad-model-license.md": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/KiCad-model-license.md",
+      "sha256": "45d2bce75e5a4208f5afb01b8fb2c406e700371c4fe2b5f5cd5c443d46db4d8f",
+      "bytes": 2101
+    },
+    "vendor/buttons/button-model-sources.json": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/mechanical/vendor/buttons/button-model-sources.json",
+      "sha256": "213e371956179da33aa3a7a6f41c51ec760044e5db595bfec41ee0843d0269f4",
+      "bytes": 2835
+    },
+    "vendor/encoder/EC05E1220401.step": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/encoder/mechanical/vendor/EC05E1220401.step",
+      "sha256": "62894793f7c5777e9c13bc590f3019936e4edfa23319625f5c2f7d551aa2bd87",
+      "bytes": 1116553
+    },
+    "vendor/encoder/Read me first.rtf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/encoder/mechanical/vendor/Read me first.rtf",
+      "sha256": "8876b93a81abf812c3aaf52b3801bea233ec49905c763754a60a43b26d315ec8",
+      "bytes": 8712
+    },
+    "datasheets/alps-ec05e.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/alps-ec05e.pdf",
+      "sha256": "0966ec3e9d33dabb966acce518b8c63ae05c076e02bbf20e84233ac3ebf615b3",
+      "bytes": 312882
+    },
+    "datasheets/alps-sktd.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/alps-sktd.pdf",
+      "sha256": "d7af6c62749c667927274a47588e6fa3971b50f09e1003d22d0c095d0c7a378f",
+      "bytes": 179795
+    },
+    "datasheets/sf32lb52x-a3.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/sf32lb52x-a3.pdf",
+      "sha256": "e38b88221fb70d947c089c0a836e3dbc62961387f9345527c6d07b6b0479d07b",
+      "bytes": 4377306
+    },
+    "datasheets/spm1423hm4h-b.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/spm1423hm4h-b.pdf",
+      "sha256": "c1113669918e1662f7b81c025d3ccf4e950acee7e2168a5c3e4c5e2e0e9654e4",
+      "bytes": 653723
+    },
+    "datasheets/murata-blm31.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/murata-blm31.pdf",
+      "sha256": "a908b6160188c0ad6e75ae091b70ddc3790eab1ed7e4e5317c531110064ede10",
+      "bytes": 523680
+    },
+    "datasheets/murata-nxft15.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/murata-nxft15.pdf",
+      "sha256": "6aa055c1f8c6047fc621de74569575dc6ac9e2f8bd91f466581455eb67f63fb6",
+      "bytes": 223168
+    },
+    "datasheets/hro-type-c-31-m-12-family-drawing.pdf": {
+      "source": "/Users/tony/projects/conol/openmicrodial/hardware/rev-a/docs/hro-type-c-31-m-12-family-drawing.pdf",
+      "sha256": "c5a4131fb0432bfc24dae4597173d9a3d242c8c778506e2b3032181c75aaedd4",
+      "bytes": 891027
+    }
+  }
+}

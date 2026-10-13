@@ -1,0 +1,72 @@
+{
+  "checks": [
+    {
+      "net": "USB_C_P",
+      "native_track_via_items": 18,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "USB_C_N",
+      "native_track_via_items": 15,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "USB_MCU_P",
+      "native_track_via_items": 28,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "USB_MCU_N",
+      "native_track_via_items": 22,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "BT_RF",
+      "native_track_via_items": 3,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "XTAL48_XI",
+      "native_track_via_items": 8,
+      "geometry_unchanged": true
+    },
+    {
+      "net": "XTAL48_XO",
+      "native_track_via_items": 8,
+      "geometry_unchanged": true
+    }
+  ],
+  "reference_plane_projection_checks": [
+    {
+      "net": "USB_C_P",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "USB_C_N",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "USB_MCU_P",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "USB_MCU_N",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "BT_RF",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "XTAL48_XI",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    },
+    {
+      "net": "XTAL48_XO",
+      "additional_In1_ground_loss_in_F_track_projection_plus_0p1mm_mm2": 0.0
+    }
+  ],
+  "signal_copper_unchanged": true,
+  "reference_plane_projection_unchanged": true,
+  "passed": true
+}

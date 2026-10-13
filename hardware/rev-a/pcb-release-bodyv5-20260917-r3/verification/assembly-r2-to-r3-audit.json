@@ -1,0 +1,32 @@
+{
+  "main": {
+    "passed": true,
+    "placements_byte_identical": true,
+    "bom_changes": [
+      {
+        "reference": "J2",
+        "fields": [
+          "Comment",
+          "Footprint"
+        ]
+      }
+    ],
+    "bom_sha256": "ab158205c705905260fe066db9eb0412ecba2f8a0f70ad97529e7ee86ab66470",
+    "positions_sha256": "f37d49ca2c5282f6d54eab88950c2eacd43320eadc65be1ea632da15e8706f92"
+  },
+  "encoder": {
+    "passed": true,
+    "placements_byte_identical": true,
+    "bom_changes": [
+      {
+        "reference": "J1",
+        "fields": [
+          "Comment",
+          "Footprint"
+        ]
+      }
+    ],
+    "bom_sha256": "8dbf6af4522068386e6c8095d33ff2a322c20fbffbd4b325986612c0fe370a21",
+    "positions_sha256": "28e40cf9a022032f7c074ff1cb44a12624567165f33cb34e8bbde54f6adb0854"
+  }
+}

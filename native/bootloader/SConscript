@@ -1,0 +1,19 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+objs = []
+
+# The SDK's own second-stage bootloader sources, unchanged (board.c, boot_flash.c,
+# bf0_ap_hal_msp.c, efuse.c, secboot.c, main.c, the SD/NAND drivers, PSRAM).
+Import('SIFLI_SDK')
+sdk_board = os.path.join(SIFLI_SDK, 'example/boot_loader/project/butterflmicro/board/SConscript')
+objs.extend(SConscript(sdk_board, variant_dir="board", duplicate=0))
+
+# Our recovery mode on top of it (wraps boot_images_help, see owt/SConscript).
+objs.extend(SConscript(os.path.join(cwd, 'owt/SConscript'), variant_dir="owt", duplicate=0))
+
+# SDK drivers and CherryUSB.
+objs.extend(SConscript(os.path.join(SIFLI_SDK, 'SConscript'), variant_dir="sifli_sdk", duplicate=0))
+
+Return('objs')

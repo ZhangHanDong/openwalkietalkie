@@ -1,0 +1,10 @@
+{
+  "board": "main",
+  "board_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "model_manifest_sha256": "9ce9ade20efa6d52890aa610d235ec2a9f803c103b74b8f171ff6374fe6283ab",
+  "components": 120,
+  "solid_count": 129,
+  "maximum_bounds_or_volume_delta": 8.727913193062875e-06,
+  "passed": true,
+  "scope": "Every component solid bounds and volume from official KiCad model placement matches fit-model placement within1e-4mm/mm3"
+}

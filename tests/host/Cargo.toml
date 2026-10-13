@@ -1,0 +1,20 @@
+[package]
+name = "openwalkietalkie-host-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+embedded-hal = "1.0"
+# The shared `ui` tree draws with these; versions track native/core/Cargo.lock.
+embedded-graphics = "0.8"
+profont = "0.7"
+
+[features]
+# Rev A hardware (180-degree panel mounting); see the root manifest.
+hw-a = []
+# Rev B hardware: Rev A plus the charger's CHG pin; see the root manifest.
+hw-b = ["hw-a"]
+
+[lib]
+path = "lib.rs"

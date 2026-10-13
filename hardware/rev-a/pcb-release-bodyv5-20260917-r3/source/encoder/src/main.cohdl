@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Physically separate 1.0mm PCB in BodyV5; wheel -> PCB -> encoder.
+design OpenMicroDialEncoderRevA {
+    #[placement_hint("rotor axis at Fusion X=19.5 Z=39; body on outer-shell side")]
+    inst wheel: ENC_ALPS_EC05E1220401
+    #[placement_hint("FPC socket to main PCB; dual contacts, accessible F-side back-flip latch")]
+    inst main_fpc: CONN_HIROSE_FH34SRJ_4S_0P5SH_99
+
+    // Passive wheel only. Pull-ups and input filtering live on the main PCB.
+    // Both sockets face -x on F.Cu. The ribbon returns beneath this board
+    // around its free left edge; no twist, and physical pin n reaches pin n.
+    net ENC_A_CONTACT: wheel.A, main_fpc.P2
+    net ENC_B_CONTACT: wheel.B, main_fpc.P3
+    #[ground(primary)]
+    net GND [gnd]: wheel.C, main_fpc.P1, main_fpc.P4
+    nc: main_fpc.MP, wheel.MP
+
+    layout {
+        board_outline: "mechanical/encoder-outline.dxf"
+        // Board frame: u=X+28, v=47.5-Z. Finished F face is Fusion Y=2.5;
+        // F components face -Y, away from the wheel. B face is Y=3.5.
+        place wheel at (47.5mm, 8.5mm)
+        // Mouth faces -u into the free corridor toward the main-board socket.
+        place main_fpc at (48.5mm, 16.8mm) rotate 270
+    }
+}

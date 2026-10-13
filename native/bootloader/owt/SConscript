@@ -1,0 +1,19 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+sdk_board = os.path.join(os.getenv('SIFLI_SDK'), 'example/boot_loader/project/butterflmicro/board')
+musb_port = os.path.join(os.getenv('SIFLI_SDK'), 'external/cherryusb/port/musb')
+# recovery.c, the patched musb port and the SiFli glue (see usb_dc_musb.c).
+src = Glob('*.c')
+# usb_config.h lives here: CherryUSB includes it by name from every unit; the
+# port copies need the register and DMA headers next to the SDK's originals.
+path = [cwd, sdk_board, musb_port]
+# The SDK bootloader's boot_images_help() calls board_init_psram() (another
+# object file) right before it jumps to the application; recovery.c wraps that
+# call to decide between recovery mode and the application. (`--wrap` cannot
+# catch boot_images_help itself: main.c defines and calls it in one object.)
+group = DefineGroup('OwtRecovery', src, depend=[''], CPPPATH=path,
+                    CPPDEFINES=['CFG_BOOTLOADER'],
+                    LINKFLAGS=['-Wl,--wrap=board_init_psram'])
+Return('group')

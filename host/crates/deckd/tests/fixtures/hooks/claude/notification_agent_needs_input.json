@@ -1,0 +1,9 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/w/project/.deck-fixture/transcript.jsonl",
+  "cwd": "/w/project",
+  "hook_event_name": "Notification",
+  "message": "Claude needs your input",
+  "title": "Input needed",
+  "notification_type": "agent_needs_input"
+}

@@ -1,0 +1,3 @@
+Designator,Design MPN,Layer,JLC Rotation,Centre X,Centre Y,Pin 1 X,Pin 1 Y,Pin 1 is toward (seen from top),Origin to pad-centre offset mm
+ENC1,EC05E1220401,Top,0,47.500,-8.500,45.500,-12.650,lower left,1.75
+J1,FH34SRJ-4S-0.5SH(99),Top,270,48.000,-16.800,49.150,-17.550,lower right,0.10

@@ -1,0 +1,26 @@
+{
+  "main/bom": {
+    "rows": 43,
+    "inspection": "{\"kind\":\"table\",\"sheet\":\"bom\",\"address\":\"A1:E8\",\"rows\":8,\"cols\":5,\"values\":[[\"Comment\",\"Designator\",\"Footprint\",\"Manufacturer\",\"Quantity\"],[\"2450AT18B100E\",\"AE1\",\"FP_ANT_2450AT18B100E\",\"Johanson Technology\",1],[\"CC0603KRX5R6BB105\",\"C1,C3,C4,C5,C11,C15,C21,C26,C49\",\"CHIP_0603\",\"Yageo\",9],[\"CC0603JRNPO9BN152\",\"C2\",\"CHIP_0603\",\"Yageo\",1],[\"CC0402JRNPO9BN102\",\"C6,C32,C33,C34,C35,C36,C37,C38,C39,C50\",\"CHIP_0402\",\"Yageo\",10],[\"CC1206JRNPO8BN104\",\"C7\",\"CHIP_1206\",\"Yageo\",1],[\"CC0402JRNPO9BN331\",\"C8,C9,C10\",\"CHIP_0402\",\"Yageo\",3],[\"CC0805KRX5R8BB106\",\"C12\",\"CHIP_0805\",\"Yageo\",1]]}",
+    "errors": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+    "source_board_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7"
+  },
+  "main/positions": {
+    "rows": 120,
+    "inspection": "{\"kind\":\"table\",\"sheet\":\"positions\",\"address\":\"A1:E8\",\"rows\":8,\"cols\":5,\"values\":[[\"Designator\",\"Mid X\",\"Mid Y\",\"Layer\",\"Rotation\"],[\"AE1\",40.75,-91,\"Top\",180],[\"C1\",38,-72,\"Bottom\",270],[\"C2\",36.8,-77.8,\"Bottom\",270],[\"C3\",40,-78,\"Bottom\",270],[\"C4\",42,-78,\"Bottom\",270],[\"C5\",49.3,-63,\"Bottom\",90],[\"C6\",53,-62.25,\"Bottom\",180]]}",
+    "errors": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+    "source_board_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7"
+  },
+  "encoder/bom": {
+    "rows": 2,
+    "inspection": "{\"kind\":\"table\",\"sheet\":\"bom\",\"address\":\"A1:E3\",\"rows\":3,\"cols\":5,\"values\":[[\"Comment\",\"Designator\",\"Footprint\",\"Manufacturer\",\"Quantity\"],[\"EC05E1220401\",\"ENC1\",\"FP_ALPS_EC05E1220401\",\"Alps Alpine\",1],[\"FH34SRJ-4S-0.5SH(99)\",\"J1\",\"FP_HIROSE_FH34SRJ_4S\",\"Hirose\",1]]}",
+    "errors": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+    "source_board_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be"
+  },
+  "encoder/positions": {
+    "rows": 2,
+    "inspection": "{\"kind\":\"table\",\"sheet\":\"positions\",\"address\":\"A1:E3\",\"rows\":3,\"cols\":5,\"values\":[[\"Designator\",\"Mid X\",\"Mid Y\",\"Layer\",\"Rotation\"],[\"ENC1\",47.5,-8.5,\"Top\",0],[\"J1\",48.5,-16.8,\"Top\",270]]}",
+    "errors": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+    "source_board_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be"
+  }
+}

@@ -1,0 +1,45 @@
+{
+ "revision": "BodyV6 ECO r4",
+ "date": "2026-09-22",
+ "case_step": "mechanical-source/case/BodyV6.step",
+ "case_sha256": "1edc693d05153437e929a56b1947ed83183dbdf96b86ae6da8a6ad54200f974f",
+ "board_sha256": "d07edce15128b787e0ee17e90b9a001f45a9b1c3971d8a0c0c59cae16669b42e",
+ "frame": "u = Fusion X + 28, v = 47.5 - Fusion Z; PCB Y 8.245..9.275, F/top toward -Y (battery), B toward +Y (display)",
+ "keepouts_checked": [
+  "pillar TL (4.8,4.8) r1.8+0.32",
+  "pillar R (52.2,52) r1.8+0.32",
+  "pillar BR (51.2,90.2) r1.8+0.32",
+  "rib L (1-2,47.7-48.7)+0.3",
+  "MH4 (34.229,91.2) r1.0+0.3",
+  "seat TL r2.8 (B side)",
+  "seat R r2.8 (B side)",
+  "seat BR r2.8 (B side)",
+  "seat MH4 r1.8 + rib (B side)"
+ ],
+ "hits": {
+  "pillar TL (4.8,4.8) r1.8+0.32": [],
+  "pillar R (52.2,52) r1.8+0.32": [],
+  "pillar BR (51.2,90.2) r1.8+0.32": [
+   "courtyard Y1 (distance to keepout centre 2.118)"
+  ],
+  "rib L (1-2,47.7-48.7)+0.3": [],
+  "MH4 (34.229,91.2) r1.0+0.3": [],
+  "seat TL r2.8 (B side)": [],
+  "seat R r2.8 (B side)": [],
+  "seat BR r2.8 (B side)": [
+   "track B.Cu MACRO_RIGHT",
+   "via MACRO_LEFT",
+   "via MACRO_RIGHT"
+  ],
+  "seat MH4 r1.8 + rib (B side)": []
+ },
+ "notes": [
+  "Y1 courtyard is 0.318 mm from the BR pillar surface (r1.8); crystal body envelope 2.1x1.7 is inside the courtyard, body gap >= 0.6 mm",
+  "encoder board: MH1/MH2 dia 2.6 NPTH for dia 2.4 spigots; J1 body envelope 0.52 mm from the dia 3.8 cover boss at MH2 after the 0.5 mm move",
+  "speaker J1 (F) at (33.0,84.9) rot 90 sits inside the V6 free F-side region at the bottom-left; the speaker itself mounts from the back (Y<7.7) in the case cutout",
+  "seat BR (B side, r2.8 around the pillar at (51.2,90.2)): no component; one 0.104 mm B.Cu track (MACRO_RIGHT, x=48.55) and two tented vias (MACRO_LEFT (48.975,88.2), MACRO_RIGHT (48.55,90.3)) lie under the outer part of the seat annulus, under solder mask (board setup: vias tented front and back). r3 likewise had tracks under the V5 boss seats. Move them outward if a bare seat face is required.",
+  "board_sha256 / encoder_board_sha256 are the KiCad 10.0.4-saved release files; hits re-evaluated on those files."
+ ],
+ "encoder_board_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+ "keepouts_checked_note": "hits exclude the MH4 NPTH pad itself"
+}

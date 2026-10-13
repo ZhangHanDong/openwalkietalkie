@@ -1,0 +1,5 @@
+Ref,Val,Package,PosX,PosY,Rot,Side
+"ENC1","EC05E1220401","openmicrodial_encoder_rev_a-FP_ALPS_EC05E1220401",47.500000,-8.500000,0.000000,top
+"J1","FH34SRJ-4S-0.5SH(99)","openmicrodial_encoder_rev_a-FP_HIROSE_FH34SRJ_4S",48.500000,-16.800000,-90.000000,top
+"MH1","Mounting hole","",36.458714,-3.800000,0.000000,top
+"MH2","Mounting hole","",52.200000,-19.541286,0.000000,top

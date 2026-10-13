@@ -1,0 +1,103 @@
+{
+  "main": {
+    "native_inventory": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/verification/native-inventory.json",
+    "native_inventory_sha256": "fb6e638ad36e732b5b60ea54716f7dc86add50a3ded696802b67e8e6f7299354",
+    "source_board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/main-45deg.kicad_pcb",
+    "source_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+    "checks": {
+      "source_hash_unchanged": true,
+      "every_drill_and_slot_matches_inventory": true,
+      "drill_dimensions_exact": true,
+      "native_CPL_all_refs_and_poses_exact": true,
+      "required_J5_present": true
+    },
+    "drill_files": [
+      {
+        "file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/drill/main-45deg-PTH.drl",
+        "sha256": "e5ca8ec9aad688ca78a2136de165a4b76d557983ef136486f2aa28002167e3d1",
+        "tools_nm": {
+          "1": 200000,
+          "2": 200000,
+          "3": 300000,
+          "4": 600000
+        },
+        "round_count": 402,
+        "slot_count": 4
+      },
+      {
+        "file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/drill/main-45deg-NPTH.drl",
+        "sha256": "173ee21f5d9be88c260be62957b8ff68ca5c87f9b50f336f843fe3af5f0b2e05",
+        "tools_nm": {
+          "1": 600000,
+          "2": 2000000
+        },
+        "round_count": 13,
+        "slot_count": 0
+      }
+    ],
+    "inventory_holes": 419,
+    "exported_holes": 419,
+    "matched_round_holes": 415,
+    "matched_slots": 4,
+    "max_coordinate_rounding_nm": 500,
+    "coordinate_note": "Excellon is absolute metric with 0.001 mm output precision; each coordinate matches the native inventory after +Y-down to -Y conversion within the half-LSB 0.0005 mm rounding bound. Drill diameters are exact. CPL uses 0.000001 mm precision and matches native integer-nanometre origins, exact rotations and sides.",
+    "missing_drills": [],
+    "extra_drills": [],
+    "native_cpl_file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/reference/positions-kicad-all.csv",
+    "native_cpl_sha256": "1f882f7483ed5ba349bec30c31fe027097d98747a3d8e47dda3a856816e15452",
+    "native_cpl_rows": 136,
+    "cpl_differences": [],
+    "missing_cpl_refs": [],
+    "planned_assembly_cpl_count": 120,
+    "pass": true
+  },
+  "encoder": {
+    "native_inventory": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/verification/native-inventory.json",
+    "native_inventory_sha256": "f472b27f7245ba69d4ea6f4192e60372829a249bb89c6fb100d1ec18ff542e47",
+    "source_board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/encoder-45deg.kicad_pcb",
+    "source_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+    "checks": {
+      "source_hash_unchanged": true,
+      "every_drill_and_slot_matches_inventory": true,
+      "drill_dimensions_exact": true,
+      "native_CPL_all_refs_and_poses_exact": true,
+      "required_J5_present": true
+    },
+    "drill_files": [
+      {
+        "file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/drill/encoder-45deg-PTH.drl",
+        "sha256": "64b9b1aacd3627567203b0891e3966ba2bcb1ed1a70ef010a368c9943c7cd9b9",
+        "tools_nm": {
+          "1": 200000
+        },
+        "round_count": 3,
+        "slot_count": 0
+      },
+      {
+        "file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/drill/encoder-45deg-NPTH.drl",
+        "sha256": "1316a695f81a86b6900423614eec406b25af002d84e9b5211d8face0fc04859a",
+        "tools_nm": {
+          "1": 620000,
+          "2": 2000000
+        },
+        "round_count": 4,
+        "slot_count": 0
+      }
+    ],
+    "inventory_holes": 7,
+    "exported_holes": 7,
+    "matched_round_holes": 7,
+    "matched_slots": 0,
+    "max_coordinate_rounding_nm": 286,
+    "coordinate_note": "Excellon is absolute metric with 0.001 mm output precision; each coordinate matches the native inventory after +Y-down to -Y conversion within the half-LSB 0.0005 mm rounding bound. Drill diameters are exact. CPL uses 0.000001 mm precision and matches native integer-nanometre origins, exact rotations and sides.",
+    "missing_drills": [],
+    "extra_drills": [],
+    "native_cpl_file": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/reference/positions-kicad-all.csv",
+    "native_cpl_sha256": "e2fdd6705297a898e5efbb4689e7d3304984d9ecbbe50ef9a26277e4a8483c09",
+    "native_cpl_rows": 4,
+    "cpl_differences": [],
+    "missing_cpl_refs": [],
+    "planned_assembly_cpl_count": 2,
+    "pass": true
+  }
+}

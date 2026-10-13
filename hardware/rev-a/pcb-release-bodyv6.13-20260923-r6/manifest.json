@@ -1,0 +1,885 @@
+{
+ "revision": "BodyV6.13 ECO revision r6, updated 2026-09-23 (adapts BodyV6.9 r5 to the BodyV6.13 case: right-edge recess extended past the new wall boss, left-rib relief deepened, seat-block notch re-cut concentric with the block; update: open U-slot on the right edge for an M2 screw into the boss at (52.2, 52.0), sharp tips beside the top-left pillar slot removed; encoder MH2 boss hole enlarged from 2.6 to 2.8 mm; MK1 microphone SPM1423HM4H-B (F side, out of stock at JLCPCB) replaced by the top-port PDM ST MP34DT05TR-A on the B side inside the case sound post, main copper re-routed locally; U6 charger SGM41562SA (out of stock) replaced by the standalone TI BQ24073RGTR with a local re-route; U7 3.3 V regulator RT6150B-33GQW (out of stock) replaced by the adjustable RT6150BGQW with a 1M/180k feedback divider on the B side; silkscreen pin-1 dots added to U1-U5, U7, U8, U10, U20 and Y1 (2026-09-24); alternative encoder board encoder-wheel/ with ENC1 on the wheel side inside the scroll wheel, A/B swapped (2026-09-24)",
+ "date": "2026-09-23",
+ "kicad_version": "10.0.4",
+ "based_on": {
+  "release": "pcb-release-bodyv6.9-20260922-r5",
+  "main_sha256": "9557372946eb6312b47ea35e3d8bae7c8ed6b97967e3743cc4c340db4f393af6",
+  "encoder_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4"
+ },
+ "case": {
+  "file": "mechanical-source/case/BodyV6.13.step",
+  "sha256": "9d3eaedd4cdc180b925e87b9718fe30b96340b8cba7b0dc08486a5419848e649",
+  "note": "export contains no back cover"
+ },
+ "boards": {
+  "main": {
+   "file": "main/main-45deg.kicad_pcb",
+   "sha256": "54822c39eeab34cf7167fa3b20b75db822559016ee9f5c149b93631f5727c2d2",
+   "copper_layers": 4,
+   "thickness_mm": 1.0,
+   "fitted_components": 120,
+   "assembly_sides": {
+    "F.Cu": 70,
+    "B.Cu": 50
+   },
+   "native_drc_violations": 0,
+   "native_unconnected": 0,
+   "native_drc_report": "main/verification/main-drc-kicad10.rpt",
+   "source_parity": "not checked (CoHDL placements hand-edited in r5, cohdl check not run)",
+   "exact_45_degree_routing": true,
+   "note": "outline changed vs r5 (and again in the same-day r6 update: right screw U-slot, top-left corner trim, plus an F/B keepout rule area); later MK1 changed to MP34DT05TR-A on B.Cu at (48, 70.5) with a local re-route (u 43.5-53.3, v 66.1-75.9) and a 'MK1 body: no vias' rule area; later U6 changed to BQ24073RGTR at (15, 10) with R37/R38 re-valued, C40/C41/C48 moved, C51/R33 removed and a local re-route (u 10.0-21.4, v 4.9-14.1, plus the I2C charger branches); later U7 changed to the adjustable RT6150BGQW with FB divider R42/R43 on B.Cu under U7 (u 34.9-36.8, v 62.1-65.5); later filled pin-1 dots added to the silkscreen of U1-U5, U7, U8, U10, U20 and Y1 (silkscreen layers only); everything else identical to r5",
+   "sha256_first_r6": "3037f1a33d65434dd8a5cc296b5b24819c2339069dd9eb93f9d027fbef4adb6d",
+   "sha256_before_mic_swap": "5e41c696ef3a4365d2cc623dea599d64c86c299bc0db25dad1d49aaf835549cf",
+   "sha256_before_charger_swap": "ac26663faccfbd864902ca9fb6abe55bb61176480cb611fe7c7b93c33db4bb1f",
+   "sha256_before_u7_swap": "e90b5dd17cb4680a82755fa266c475cdd0d6ecdeeaee3f970825cfd4e5423db9",
+   "sha256_before_pin1_dots": "986d95fcf15204208a645b1b76a13ddfc9928d8509d5a43fe27e9462c486b47e"
+  },
+  "encoder": {
+   "file": "encoder/encoder-45deg.kicad_pcb",
+   "sha256": "384a992f8278b6db990709a5e2a7003ad69f99e386da7045039f8e7b0667ad2f",
+   "copper_layers": 2,
+   "thickness_mm": 1.0,
+   "fitted_components": 2,
+   "assembly_sides": {
+    "F.Cu": 2,
+    "B.Cu": 0
+   },
+   "native_drc_violations": 0,
+   "native_unconnected": 0,
+   "native_drc_report": "encoder/verification/encoder-drc-kicad10.rpt",
+   "source_parity": "not checked (CoHDL placements hand-edited in r5, cohdl check not run)",
+   "exact_45_degree_routing": true,
+   "note": "r4 board with MH2 (the hole around the case spigot) enlarged from 2.6 to 2.8 mm; nothing else changed",
+   "sha256_r4": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4"
+  },
+  "encoder_wheel": {
+   "file": "encoder-wheel/encoder-wheel-45deg.kicad_pcb",
+   "sha256": "e1437f77b45c96671553143a165570bd858ae428033db24080336929b2dba001",
+   "copper_layers": 2,
+   "thickness_mm": 1.0,
+   "fitted_components": 2,
+   "assembly_sides": {
+    "F.Cu": 1,
+    "B.Cu": 1
+   },
+   "native_drc_violations": 0,
+   "native_unconnected": 0,
+   "native_drc_report": "encoder-wheel/verification/encoder-wheel-drc-kicad10.rpt",
+   "note": "alternative to encoder/: ENC1 (EC05E1220401) flipped to B.Cu inside the scroll wheel, terminals A/B swapped onto ENC_B/ENC_A so the rotation sense is unchanged, 2 vias added; needs encoder-wheel/mechanical/wheel-with-encoder-cavity-bodyv6.13.step",
+   "derived_from": "encoder/encoder-45deg.kicad_pcb"
+  }
+ },
+ "fit_model": {
+  "report": "verification/bodyv6.13-fit-model-report.json",
+  "assembly": "3d/bodyv6.13-fit-assembly.step",
+  "aligned_boards": [
+   "3d/main-populated-bodyv6.13.step",
+   "3d/encoder-populated-bodyv6.13.step"
+  ],
+  "note": "only the long-standing USB-C corner and wheel press-fit intersections (unchanged by the r6 updates; new MK1 0.43 mm to the sound-post bore; the U6 charger and U7 regulator changes alter no result); cover-related checks not possible (no cover in the export)",
+  "encoder_wheel": {
+   "report": "encoder-wheel/verification/encoder-wheel-fit-report.json",
+   "assembly": "3d/bodyv6.13-encoder-wheel-fit-assembly.step",
+   "aligned_board": "3d/encoder-wheel-populated-bodyv6.13.step",
+   "note": "with the modified wheel: no interference"
+  }
+ },
+ "qualification": "Native KiCad 10.0.4 DRC clean on the main board (encoder unchanged from r4, clean there); Gerber/drill/stencil/position/STEP exported from the hashed file. Review in KiCad before ordering; CoHDL check, cable fit model and cover checks not done; see README.",
+ "files": {
+  "3d/bodyv6.13-encoder-wheel-fit-assembly.step": {
+   "sha256": "3eb185645e1f7435b7a1c0fe625dbdf199457b27c420d23bc2827d0b56dd3ce8",
+   "bytes": 18628783
+  },
+  "3d/bodyv6.13-fit-assembly.step": {
+   "sha256": "047623111f23e557f0fb43721ce8a2315177a7486a61e655932eeaba87a683a9",
+   "bytes": 18563374
+  },
+  "3d/encoder-populated-bodyv6.13.step": {
+   "sha256": "75a3f1f8f3eaea3319f4971c8325d16cba390872be96e59d62d0641f22d7242a",
+   "bytes": 2861486
+  },
+  "3d/encoder-populated-native.step": {
+   "sha256": "fb012bf48cd590f9bb227f59b1ad7953dbac2615b121c82ae85ffc896a1b666c",
+   "bytes": 993965
+  },
+  "3d/encoder-wheel-populated-bodyv6.13.step": {
+   "sha256": "ab129df665a8b5ae78a05d69072ee93a34d411d15839011f944ad104be050815",
+   "bytes": 2924644
+  },
+  "3d/encoder-wheel-populated-native.step": {
+   "sha256": "296c6ef7f4b0716211fa5f1535c2213dad066edb17d51bbdd06504eafb0ee64e",
+   "bytes": 994002
+  },
+  "3d/main-populated-bodyv6.13.step": {
+   "sha256": "6380ebb40c9d74895de6e19e8ff0ffdbeac367bbc92bd5db6eec5c2b0241a270",
+   "bytes": 13625897
+  },
+  "3d/main-populated-native.step": {
+   "sha256": "693f11da8c35c1aec279f2ffe1bd03ea570767d3fc81b2c2605627f89bf3a5b1",
+   "bytes": 1921724
+  },
+  "LICENSE": {
+   "sha256": "6e471d647db50527d0c75ee5f1a55a74012ab177c73282bef0bdc7f6562b7ded",
+   "bytes": 8852
+  },
+  "README.md": {
+   "sha256": "2d380b54af2745576442cee09def1155e5f7ceba461849bad8b96ae389ac21e1",
+   "bytes": 31663
+  },
+  "assembly-notes/FH34SRJ-4S-official-drawing.pdf": {
+   "sha256": "6fd044bb208541c3bf0da98bba194fe31acc8194b4a35679bd02946a73713c71",
+   "bytes": 1691261
+  },
+  "assembly-notes/cable-concept.json": {
+   "sha256": "baeb3c14577bc640e432029fce74dc7a62946d49211653f91191ee7be48ca520",
+   "bytes": 4081
+  },
+  "assembly-notes/interboard-cable-path.png": {
+   "sha256": "cec63074a68ca6937b81dbc1c8846625b720a4f8eb7b897c70ebbc6363321b33",
+   "bytes": 189770
+  },
+  "assembly-notes/usb-envelope-interpretation.json": {
+   "sha256": "946bbd454f061e732c6e3993250e9b41abdb951b5a6b287c32e255f85df7f108",
+   "bytes": 13194
+  },
+  "encoder-wheel/README.md": {
+   "sha256": "7de97228442d97240142ac1a1acaba974c8ef7fdef2c34eee377f8a01b84ca94",
+   "bytes": 5412
+  },
+  "encoder-wheel/assembly/bom.csv": {
+   "sha256": "8dbf6af4522068386e6c8095d33ff2a322c20fbffbd4b325986612c0fe370a21",
+   "bytes": 158
+  },
+  "encoder-wheel/assembly/positions.csv": {
+   "sha256": "585275219c80d06946dfd293d1ed8b2b2f5eb4ccf28c38c7693c6b2ea54c32ed",
+   "bytes": 87
+  },
+  "encoder-wheel/drill/encoder-wheel-45deg-NPTH-drl_map.svg": {
+   "sha256": "f69c72181434af15313b811fd5235858cf41345614664c66469ad1c93b34783d",
+   "bytes": 66038
+  },
+  "encoder-wheel/drill/encoder-wheel-45deg-NPTH.drl": {
+   "sha256": "7324993dc6a84ff5df064564cb9cf4495d0209f2c31a8bbbacccc21915db3179",
+   "bytes": 507
+  },
+  "encoder-wheel/drill/encoder-wheel-45deg-PTH-drl_map.svg": {
+   "sha256": "27f6be638d3f3b4fd7ab70d0f2d742f069b592904aad54d1c04089c317d3ab0b",
+   "bytes": 24650
+  },
+  "encoder-wheel/drill/encoder-wheel-45deg-PTH.drl": {
+   "sha256": "8cc74cedf7ac1e9ed7e8e105b98b0ebea7b35b30fe6a3d2c5ca45485d57992e5",
+   "bytes": 377
+  },
+  "encoder-wheel/encoder-wheel-45deg.kicad_pcb": {
+   "sha256": "e1437f77b45c96671553143a165570bd858ae428033db24080336929b2dba001",
+   "bytes": 89954
+  },
+  "encoder-wheel/encoder-wheel-45deg.kicad_prl": {
+   "sha256": "07c0416de8b9618be5bdcf1cdcb9117b8271ca58947081b900f3890c55da2083",
+   "bytes": 2534
+  },
+  "encoder-wheel/encoder-wheel-45deg.kicad_pro": {
+   "sha256": "4621919d2f90258cb9de4aaa7682efd28d02049dcb7354147bbe0b814b9d3a96",
+   "bytes": 9767
+  },
+  "encoder-wheel/encoder-wheel-gerber-drill.zip": {
+   "sha256": "53956307f929af6bffc446ee7267f7502bed9415a4da9ee2bc261cfa06b3b854",
+   "bytes": 22762
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-B_Cu.gbr": {
+   "sha256": "5a589ad236b0e7e89b4d9275b242a3e94df2ed30d349ae7df3930378101e00ae",
+   "bytes": 28392
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-B_Mask.gbr": {
+   "sha256": "89d6928e35f5e8ef1f9693087cb68e3a03831d28a8a91380198a8beacb765340",
+   "bytes": 875
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-B_Silkscreen.gbr": {
+   "sha256": "db079cf31606b2ef2f75611e3309ee1c2bf9970cd8ee0aa8b3e496415436b9c8",
+   "bytes": 465
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-Edge_Cuts.gbr": {
+   "sha256": "0575a2711ce431023bed5ae665cfb3a7a7eeee3e39435c35cca6199bc9fee060",
+   "bytes": 4564
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-F_Cu.gbr": {
+   "sha256": "988590b9d0b923823083d9994ee9a94437e2a2240e869325bd9ec2d956d1bcd4",
+   "bytes": 28609
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-F_Mask.gbr": {
+   "sha256": "f6876dcaa07f09a2b19f3da0866e9450e4bd2ba6b03634c0be5acbb05e2f0add",
+   "bytes": 918
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-F_Silkscreen.gbr": {
+   "sha256": "fc688c8c95a5d03d91e717629efd6b4b1fe49e9482d23e9683fdf9ac96ee809f",
+   "bytes": 5073
+  },
+  "encoder-wheel/gerber/encoder-wheel-45deg-job.gbrjob": {
+   "sha256": "8e4d39dfc745b3af59627474c1746de363ac8030271e8d3b1aca590dd644fc78",
+   "bytes": 2631
+  },
+  "encoder-wheel/mechanical/wheel-with-encoder-cavity-bodyv6.13.step": {
+   "sha256": "61a521411ac93241a00c5d4a1939c29bd19fd7b0cb8b6a0f923fb7fdf0c4045c",
+   "bytes": 153192
+  },
+  "encoder-wheel/reference/positions-kicad-all.csv": {
+   "sha256": "ed574d08c41e5c3944ad5a5f36f1bbc3ee3aa5a402c9d0adc61634f318791c7b",
+   "bytes": 378
+  },
+  "encoder-wheel/stencil/encoder-wheel-45deg-B_Paste.gbr": {
+   "sha256": "79f454dd0ecb349f4a2c55e082517257e55b75a98c077d2932ad2cb585d5c6a9",
+   "bytes": 667
+  },
+  "encoder-wheel/stencil/encoder-wheel-45deg-F_Paste.gbr": {
+   "sha256": "1a67657c988b4a60d84486ef7997c2018f61531057557fa62eba4fbe1021c547",
+   "bytes": 691
+  },
+  "encoder-wheel/stencil/encoder-wheel-45deg-job.gbrjob": {
+   "sha256": "3bd79399dfee65e4f5b0e45ebb46edde8a32839a8019d8aa07245f2c36c49eca",
+   "bytes": 1971
+  },
+  "encoder-wheel/verification/drill-report.txt": {
+   "sha256": "a29f8daba8740d72eeabb8447ad2257062fa006ec1cf0b7ca062ff1c5bb76f1a",
+   "bytes": 759
+  },
+  "encoder-wheel/verification/encoder-wheel-drc-kicad10.rpt": {
+   "sha256": "ada51e629e445467cbec902cf820b640f8ce0ce1249ac3e4e50228f3ae9c99db",
+   "bytes": 502
+  },
+  "encoder-wheel/verification/encoder-wheel-fit-report.json": {
+   "sha256": "f8e3fdc21e8e33a513327fb528df4f3f4417ac76817786e498e1dd9ff75e5d70",
+   "bytes": 2861
+  },
+  "encoder/assembly/bom.csv": {
+   "sha256": "8dbf6af4522068386e6c8095d33ff2a322c20fbffbd4b325986612c0fe370a21",
+   "bytes": 158
+  },
+  "encoder/assembly/positions.csv": {
+   "sha256": "eb7af329e5c3e57336cbe357f278698ee03aa4d0dc4c2a53633e7047ad4028fb",
+   "bytes": 82
+  },
+  "encoder/drill/encoder-45deg-NPTH-drl_map.svg": {
+   "sha256": "66d27fa7301b8c64c8b495395b6952468f440c2de740666bcecc4cd81ec767e4",
+   "bytes": 66032
+  },
+  "encoder/drill/encoder-45deg-NPTH.drl": {
+   "sha256": "15415db9082cac813a6a2a3b9456c1106689d645e16512932e29fdd27b7d7c8b",
+   "bytes": 507
+  },
+  "encoder/drill/encoder-45deg-PTH-drl_map.svg": {
+   "sha256": "f36ec441abf505c37daa8cab9355d72c1461128e446d81b873dd710fd702d7f4",
+   "bytes": 24344
+  },
+  "encoder/drill/encoder-45deg-PTH.drl": {
+   "sha256": "3e247bdb8f2f75c25667917405a9b466d04736a44fe29aea68f71bcce17b3a99",
+   "bytes": 352
+  },
+  "encoder/encoder-45deg.kicad_pcb": {
+   "sha256": "384a992f8278b6db990709a5e2a7003ad69f99e386da7045039f8e7b0667ad2f",
+   "bytes": 84833
+  },
+  "encoder/encoder-45deg.kicad_prl": {
+   "sha256": "0bc56b0e1af11d31aef242792d16db926ebf602977a487658e46331d82d9e5c2",
+   "bytes": 2639
+  },
+  "encoder/encoder-45deg.kicad_pro": {
+   "sha256": "054436298f911b67ec8f8836a6325358681163f83684e634d597dc811ecfd55a",
+   "bytes": 9761
+  },
+  "encoder/encoder-gerber-drill.zip": {
+   "sha256": "75b21ce4092385e1cc8efb0e0bd93b55298faa082c277b7d08260b0ae0e1718a",
+   "bytes": 20869
+  },
+  "encoder/gerber/encoder-45deg-B_Cu.gbr": {
+   "sha256": "bf3dc8754e4fb7d025eefe0254c1ae32290b2ae23fc9da08506a469cc8e630d2",
+   "bytes": 22098
+  },
+  "encoder/gerber/encoder-45deg-B_Mask.gbr": {
+   "sha256": "fd546ad61d2b1a04a5070bae3999053f0f246c23920b1f04373b8a74c2b1543b",
+   "bytes": 685
+  },
+  "encoder/gerber/encoder-45deg-B_Silkscreen.gbr": {
+   "sha256": "330dcd5d314cc71ec29730107cb297ae053580cae66efea565fabda2bf2040e7",
+   "bytes": 459
+  },
+  "encoder/gerber/encoder-45deg-Edge_Cuts.gbr": {
+   "sha256": "d4a4937918f7411587b97a2484df43ddce374b784b44edd83bbc84255b49b9fe",
+   "bytes": 4558
+  },
+  "encoder/gerber/encoder-45deg-F_Cu.gbr": {
+   "sha256": "fac044a16170643a33483ed02f5b462d01aaade2e4cdf9244869c7cef4efcc84",
+   "bytes": 31012
+  },
+  "encoder/gerber/encoder-45deg-F_Mask.gbr": {
+   "sha256": "d8728cf0c8c676c506462afc79e5fe90dbd4298000a87f3d813f6dd6a2d27a61",
+   "bytes": 1096
+  },
+  "encoder/gerber/encoder-45deg-F_Silkscreen.gbr": {
+   "sha256": "b085ab03cd25f30c2aee9cbc0a4121042f0c0ba4376fedda5c1f3618a290879d",
+   "bytes": 963
+  },
+  "encoder/gerber/encoder-45deg-job.gbrjob": {
+   "sha256": "0b091ad5c096e13e41dd7d58dce96802fae5575d4fb0bee09f286dda2f84fd21",
+   "bytes": 2583
+  },
+  "encoder/reference/bom-cohdl-original.csv": {
+   "sha256": "25361d29b4d24594dd19c965e8f53fe5fd9870ef75baff410e1ce4c8f8911bf6",
+   "bytes": 161
+  },
+  "encoder/reference/positions-kicad-all.csv": {
+   "sha256": "1b22f5c4308d5e137824ae1984df0fa9bf7bf3c6b9ba8a8b9d1172194051a3e8",
+   "bytes": 373
+  },
+  "encoder/stencil/encoder-45deg-B_Paste.gbr": {
+   "sha256": "b2c04744c3a331dd82d085a7fbfb545aff87a4ea9d87d1f493ac06ae3ab3e4a7",
+   "bytes": 458
+  },
+  "encoder/stencil/encoder-45deg-F_Paste.gbr": {
+   "sha256": "a43413fc21cf36d4d99b494740caece7e2266774c582801b38ab3170bc29f984",
+   "bytes": 888
+  },
+  "encoder/stencil/encoder-45deg-job.gbrjob": {
+   "sha256": "f4efe6d6cfdbee4d021d1624ad9566c7fffff493433f3c8c799c58b704a565de",
+   "bytes": 1953
+  },
+  "encoder/verification/drill-report.txt": {
+   "sha256": "0066da09b8d7c4d672c94a0b6b1f2246e850f096938b3e07608d92890a8eb15e",
+   "bytes": 741
+  },
+  "encoder/verification/encoder-drc-kicad10-r4.rpt": {
+   "sha256": "c76a50e6676496776bdfd050fca8cfe6383f3315dac749c3d4c6b0055f81bea9",
+   "bytes": 496
+  },
+  "encoder/verification/encoder-drc-kicad10.rpt": {
+   "sha256": "796fff91429fa98821e9034c28080649ad834b37de2b20321baa3390d53eee8d",
+   "bytes": 496
+  },
+  "fab-jlcpcb/ORDER-NOTES.md": {
+   "sha256": "807895f6f98c490c233ccd405298a8a5a3f637b57a8ee0948e6b4f6b67ad8d39",
+   "bytes": 10747
+  },
+  "fab-jlcpcb/encoder-wheel/encoder-wheel-bom-jlcpcb.csv": {
+   "sha256": "aaa20b10f724b088b3e4e139dfd7eeeec042a1863ace2478037d23de131e337d",
+   "bytes": 410
+  },
+  "fab-jlcpcb/encoder-wheel/encoder-wheel-cpl-jlcpcb.csv": {
+   "sha256": "090570908f1609f1aa6e0c27c9dd12de1a41326564ffdb400f929cad07d55ede",
+   "bytes": 99
+  },
+  "fab-jlcpcb/encoder-wheel/encoder-wheel-jlcpcb-gerber.zip": {
+   "sha256": "46a0da34e8d5d3ec2429f3256918c1a85ca2901046e50062bfcd542dc0d9d8f7",
+   "bytes": 23859
+  },
+  "fab-jlcpcb/encoder-wheel/encoder-wheel-orientation-check.csv": {
+   "sha256": "e643c726a9ec71ce7eefebcf92f00a4fa93188ac9c4774b9e2fc3cb47a04b8fc",
+   "bytes": 293
+  },
+  "fab-jlcpcb/encoder/encoder-bom-jlcpcb.csv": {
+   "sha256": "aaa20b10f724b088b3e4e139dfd7eeeec042a1863ace2478037d23de131e337d",
+   "bytes": 410
+  },
+  "fab-jlcpcb/encoder/encoder-cpl-jlcpcb.csv": {
+   "sha256": "d71606de1bb0502f6d1066c2a57a976ae0835e7cf543078a7c6fab86a95cdf79",
+   "bytes": 96
+  },
+  "fab-jlcpcb/encoder/encoder-jlcpcb-gerber.zip": {
+   "sha256": "97a4a219034a90540e5cb2a21d78e841d6273e7a64b96725a87cb57cffec85b6",
+   "bytes": 21903
+  },
+  "fab-jlcpcb/encoder/encoder-orientation-check.csv": {
+   "sha256": "3e8077d2fa5e544e15ca8a1d29e9ec217872fa05c0f5e547e58a82bc0f7966be",
+   "bytes": 289
+  },
+  "fab-jlcpcb/main/main-bom-jlcpcb.csv": {
+   "sha256": "a63fe056e0c738b9136b1c416c529ef683980dbedf434c8075c309c372c05ecf",
+   "bytes": 6404
+  },
+  "fab-jlcpcb/main/main-cpl-jlcpcb.csv": {
+   "sha256": "aa2876d28373d74845d0c2b5ecbfaa6b8bd5675fe2386f738b17fb9783ab8f79",
+   "bytes": 3631
+  },
+  "fab-jlcpcb/main/main-jlcpcb-gerber.zip": {
+   "sha256": "3d0e3f41774c1e10ad7949d1f238192352bc1220e520dcb2f27b6279d0a76d7f",
+   "bytes": 146722
+  },
+  "fab-jlcpcb/main/main-orientation-check.csv": {
+   "sha256": "e22d79cf27d035149d1e51bf399bf37fdcc9eb65d2c8b4ef43433528d860ad73",
+   "bytes": 1531
+  },
+  "main/assembly/bom.csv": {
+   "sha256": "6e656a43966698c8f2d258904b1f0acd519bbfa14118349a9b14f01943f5038d",
+   "bytes": 2336
+  },
+  "main/assembly/positions.csv": {
+   "sha256": "08689ae550188ee20f020e586f76900ca5788740ce2164d962de8b4e53340663",
+   "bytes": 2875
+  },
+  "main/drill/main-45deg-NPTH-drl_map.svg": {
+   "sha256": "6e64083ee0b85d17db43d0f0aeb9e0545e20538783ed1ac12a32521b18d2a4d8",
+   "bytes": 53353
+  },
+  "main/drill/main-45deg-NPTH.drl": {
+   "sha256": "45a95c4a5d04890df74e0e64ed278a8e261f887081cf237f73bfe971d6d0c0e9",
+   "bytes": 549
+  },
+  "main/drill/main-45deg-PTH-drl_map.svg": {
+   "sha256": "af7275337d41883815c168f1b82b4239d3042a529830bae1b8974e3753bb87eb",
+   "bytes": 117945
+  },
+  "main/drill/main-45deg-PTH.drl": {
+   "sha256": "6d326337396e33d70edee81f8712f87324e7bb9dad727fe9fc30fb056014ca0b",
+   "bytes": 6042
+  },
+  "main/gerber/main-45deg-B_Cu.gbr": {
+   "sha256": "5bb6a89ab3c2512944db909149d70392ae2331a0b7eaf9993371595906e6748f",
+   "bytes": 81747
+  },
+  "main/gerber/main-45deg-B_Mask.gbr": {
+   "sha256": "b9fa99d7d3c6a02addb009959b8391bbc122d3f127c33206758677ecb73970ff",
+   "bytes": 8112
+  },
+  "main/gerber/main-45deg-B_Silkscreen.gbr": {
+   "sha256": "40ed596cf65a0de2492a2cf65dc1a21849df0ca20994d01d239c46c726bd6015",
+   "bytes": 1258
+  },
+  "main/gerber/main-45deg-Edge_Cuts.gbr": {
+   "sha256": "95f72ff66ef4c05541200ba543a9c81a2d1812acaaa403fb045e9a9fe21f3b3d",
+   "bytes": 5250
+  },
+  "main/gerber/main-45deg-F_Cu.gbr": {
+   "sha256": "b3cf68642a23f1873ca44625ec159c8303fe1835aa6c3f9ad006d49d46b3a910",
+   "bytes": 88860
+  },
+  "main/gerber/main-45deg-F_Mask.gbr": {
+   "sha256": "88c91355a4332538946c593a2ef4bfde58798e9116634a4142223d15ae424559",
+   "bytes": 17565
+  },
+  "main/gerber/main-45deg-F_Silkscreen.gbr": {
+   "sha256": "094f34c26c7abfd2bd4a2bc668f5fd9d9023e18597e32a160262d31ca2d1a8c9",
+   "bytes": 2761
+  },
+  "main/gerber/main-45deg-In1_Cu.gbr": {
+   "sha256": "e31a6c15d8ebc80c3542da3577869fbe40fc7ff70e7b4b604e88797d528664fd",
+   "bytes": 323322
+  },
+  "main/gerber/main-45deg-In2_Cu.gbr": {
+   "sha256": "ad201c53b9e516ae3b7e314c8bf78fe8cb7b32037ab8ed702d2b67d61b37c84f",
+   "bytes": 54490
+  },
+  "main/gerber/main-45deg-job.gbrjob": {
+   "sha256": "d3e0687c51b24f5dae915519e3ca6fb542730f47638485a0e30e45cd60366aca",
+   "bytes": 3685
+  },
+  "main/main-45deg.kicad_pcb": {
+   "sha256": "54822c39eeab34cf7167fa3b20b75db822559016ee9f5c149b93631f5727c2d2",
+   "bytes": 1161777
+  },
+  "main/main-45deg.kicad_prl": {
+   "sha256": "2e8ae20e5f010b78e0f8dad4e72c9653189de56c54fee1f0ce3ab05f47ae575e",
+   "bytes": 2571
+  },
+  "main/main-45deg.kicad_pro": {
+   "sha256": "5b2f68384f61f2bcb3e09c10ce618237f0f505b79aef179ca83acc98b8a0b15b",
+   "bytes": 14681
+  },
+  "main/main-gerber-drill.zip": {
+   "sha256": "a1c7c5f765c702b106fb42e688fa716ecc3e95f86fa62b2300eb8b9726b0afd9",
+   "bytes": 140953
+  },
+  "main/reference/bom-cohdl-original.csv": {
+   "sha256": "1b38e0428a7d487e4094b7a2bb1d0fb44c5f416eb79a4cda408ca7e9e171aada",
+   "bytes": 2790
+  },
+  "main/reference/positions-kicad-all.csv": {
+   "sha256": "138e0dae611ee8bf4d55632f0b550314b0e01d05eaad168973d8644287345cf9",
+   "bytes": 10368
+  },
+  "main/stencil/main-45deg-B_Paste.gbr": {
+   "sha256": "8a6802cd5d1135d55688f5326b1539e997289fc6ca8dc01ed28081a93cecd886",
+   "bytes": 5728
+  },
+  "main/stencil/main-45deg-F_Paste.gbr": {
+   "sha256": "e19aecb8ffc13a029d66b2fe3f55b928d5c1b6e2fe07eaec2c1305eba73db2e7",
+   "bytes": 16574
+  },
+  "main/stencil/main-45deg-job.gbrjob": {
+   "sha256": "fad980917efd3cf7b10ed465dbd11f7b616770515e819d1a9af909ab29c483f3",
+   "bytes": 2822
+  },
+  "main/verification/drill-report.txt": {
+   "sha256": "c4b5806f19a88aa0f25d5f74f8e5d5af16fab0547c6270783d876917c34e2a77",
+   "bytes": 913
+  },
+  "main/verification/main-drc-kicad10-r6-original.rpt": {
+   "sha256": "d87543c2d1d5ad24b10bd48c9c53a2e9f149ca4d96286a76beb36a202a538fd9",
+   "bytes": 493
+  },
+  "main/verification/main-drc-kicad10.rpt": {
+   "sha256": "ac9b6ed892036ac6a30b683445fb49e994199d426abfbea415e5cb7d6d4f1619",
+   "bytes": 493
+  },
+  "models/2450AT18B100E.step": {
+   "sha256": "d2bf02ce7cdd28aa0bdc8987de70150c7eb443f334e1d60cc3dd384562fbf31a",
+   "bytes": 15470
+  },
+  "models/53261-0271.step": {
+   "sha256": "3bf7491460fcd4959169e79d19563cc42d42c4ca298b28f2914f1ae8c8cfda49",
+   "bytes": 213788
+  },
+  "models/8.03A5.031250.step": {
+   "sha256": "f6b39b6f94ed4813da0b710f16d2bccaf1fcd43ca39c4babb29734d9ab5f425f",
+   "bytes": 15501
+  },
+  "models/ATTRIBUTION.md": {
+   "sha256": "7728caca9ec34aa9f1230119f4ae7931d71cc409e3657a331795e0a15f66e7b4",
+   "bytes": 1366
+  },
+  "models/BLM31PG601SN1L.step": {
+   "sha256": "3e8038ccd9c14920187cdf35290a29ded53d48dcd6e263db071f679a64e3dae7",
+   "bytes": 15472
+  },
+  "models/BQ24073RGTR.step": {
+   "sha256": "8af7e38272a02e4789868504c3104565f3cf747a12776989e9c222504348414a",
+   "bytes": 15523
+  },
+  "models/C3216X7R1C106K160AC.step": {
+   "sha256": "0745945dfcc692933b8bfbc4d8c55d7d3a11fa327771aa8fbf66b4bfb391b9d0",
+   "bytes": 15472
+  },
+  "models/CC0402JRNPO9BN102.step": {
+   "sha256": "8fc8489f8192481a4141a9c39397dee4733ad4c278864fd72a077e402aa497bf",
+   "bytes": 15597
+  },
+  "models/CC0402JRNPO9BN331.step": {
+   "sha256": "4b80aa8a6f56a1326dee977268ecf74cdbb39eda6024273365d399f02f612079",
+   "bytes": 15595
+  },
+  "models/CC0402KRX5R6BB474.step": {
+   "sha256": "65890970871dbaeef94505777ec6e89104943bafdbb630bf2d9b0a3d01571b9f",
+   "bytes": 15595
+  },
+  "models/CC0402KRX7R7BB104.step": {
+   "sha256": "a89ec7af5272ecacc6b08d3abe2b05acac61bba74b8e06cb40ec31fa0281309e",
+   "bytes": 15595
+  },
+  "models/CC0603JRNPO9BN152.step": {
+   "sha256": "8a59f15df3f91e54a6e6953ac974820cfda08d72e29e78be7c264f648cd2956a",
+   "bytes": 15522
+  },
+  "models/CC0603KRX5R6BB105.step": {
+   "sha256": "a181a9cc19711cbbd3608185d28272d9ad834aa16d860b464aeea71d868ad9f8",
+   "bytes": 15522
+  },
+  "models/CC0603KRX5R6BB225.step": {
+   "sha256": "eee7cf64716742c5c851b44d6173ef30e363aea1584a40a69a242c836bc8353a",
+   "bytes": 15522
+  },
+  "models/CC0603KRX5R6BB475.step": {
+   "sha256": "c9e47474d0221cff391a6bd9e9f59ff055fbf138864623345c8bf24dfeeb130d",
+   "bytes": 15522
+  },
+  "models/CC0805KRX5R8BB106.step": {
+   "sha256": "29106e8b8a33d51b7939874bf4ac902b3dd98b60c43af25637f7934704d30d40",
+   "bytes": 15539
+  },
+  "models/CC1206JRNPO8BN104.step": {
+   "sha256": "43fb238934d36f800e7b7cf16b31a7fa31f09dc0dea5c07c6b14d298896f05f7",
+   "bytes": 15498
+  },
+  "models/DFE201612E-2R2M_P2.step": {
+   "sha256": "59c65411788612426d85bdcabf6a72d1ed35c07c6bb91f4e664c0c09431eef98",
+   "bytes": 15472
+  },
+  "models/E1SB48E001G00E.step": {
+   "sha256": "5a3962f401d041eb56cb7aa4119947f49f555cb18fa834d05112151ff339bc9c",
+   "bytes": 15537
+  },
+  "models/EC05E1220401.step": {
+   "sha256": "b68a7ad32b5f4c60e8f85b310d644724d8597e1d83f19368aa061a84da6adf3b",
+   "bytes": 2539212
+  },
+  "models/FH34SRJ-4S-0.5SH_99_.step": {
+   "sha256": "9d0b2f56cf5bc6c2e4defc7dba10d228354e5b48b4321b73c4c9f497d95a0cce",
+   "bytes": 15440
+  },
+  "models/MP34DT05TR-A.step": {
+   "sha256": "a75fd6e715621345127bddc5d2528ca46330790f4cb847f3ebee850ce7466eeb",
+   "bytes": 15536
+  },
+  "models/NS4150B.step": {
+   "sha256": "d584ac57a2405f5cac5ea90e10956fe9b87c47b03d51a83c42516cc4917051c2",
+   "bytes": 15524
+  },
+  "models/PTS636SM25SMTRLFS.step": {
+   "sha256": "86f6396c16b6fa888497820d6fc68d0fc2ecb09be81c1a11ff1ceb472dce9c35",
+   "bytes": 886708
+  },
+  "models/RC0402FR-07100KL.step": {
+   "sha256": "14b32b30439fabb87c40196209be94580ff76cfd24da40a36dace7101f4645e4",
+   "bytes": 15584
+  },
+  "models/RC0402FR-0710KL.step": {
+   "sha256": "4dbaa9440d9ffe1ef1215b8d09284b4596626bd559ec10cf6adaca78d0a8eed4",
+   "bytes": 15584
+  },
+  "models/RC0402FR-07180KL.step": {
+   "sha256": "4dbaa9440d9ffe1ef1215b8d09284b4596626bd559ec10cf6adaca78d0a8eed4",
+   "bytes": 15584
+  },
+  "models/RC0402FR-071KL.step": {
+   "sha256": "5c518e53bd2abab087bcd496a14efbb450c243ad7e3b52807f1372a21f4ad8c3",
+   "bytes": 15584
+  },
+  "models/RC0402FR-071ML.step": {
+   "sha256": "23b519fd037eeb4c02b531e86d11c1b2908b4c75c0b6a82b91eebe5901a64a75",
+   "bytes": 15584
+  },
+  "models/RC0402FR-0722KL.step": {
+   "sha256": "a380b76941f0cb24e36db0333ef36f4c6bfea5f955b00fa6e206e8889d866587",
+   "bytes": 15584
+  },
+  "models/RC0402FR-0722RL.step": {
+   "sha256": "7a1cd94144695d000b11e159fa755f8094b658b7f23f1a59a4a0bc82bb148761",
+   "bytes": 15584
+  },
+  "models/RC0402FR-072K55L.step": {
+   "sha256": "3cd4a0cdef2c7eacaff9162891b98d8daec9449f846652774bbddee98e7e5f33",
+   "bytes": 15584
+  },
+  "models/RC0402FR-073K3L.step": {
+   "sha256": "3cd4a0cdef2c7eacaff9162891b98d8daec9449f846652774bbddee98e7e5f33",
+   "bytes": 15584
+  },
+  "models/RC0402FR-07442KL.step": {
+   "sha256": "e58844cbff52b9def8478c9ac0f74c950d3a274888403eacf116df571c2cef94",
+   "bytes": 15584
+  },
+  "models/RC0402FR-075K1L.step": {
+   "sha256": "9f3a781d2c7a64b55a38e8ee48c4cc76b77c750bf7e6ff781be91ec6575ed8a2",
+   "bytes": 15584
+  },
+  "models/RC0402FR-07604KL.step": {
+   "sha256": "45b04537575f4d6606d8f4453676f20271bd500ace938f5f47dca4283b390661",
+   "bytes": 15584
+  },
+  "models/RC0402FR-0786K6L.step": {
+   "sha256": "6c4090676ccb489f74739d4fe3b71f94aa1adb9ed82cb0798179bb1a239cfe55",
+   "bytes": 15584
+  },
+  "models/RC0402FR-0791KL.step": {
+   "sha256": "3cd4a0cdef2c7eacaff9162891b98d8daec9449f846652774bbddee98e7e5f33",
+   "bytes": 15584
+  },
+  "models/RC0402JR-070RL.step": {
+   "sha256": "d6c318ea500cef6b879aa335ea9752fe81eaf02092d5c632bc8f92cceb817329",
+   "bytes": 15584
+  },
+  "models/RT6150B-33GQW.step": {
+   "sha256": "bb70386e2fb827b4a8897cbdd7d03bc7ab97aa67724ca84bd595f15819304ac7",
+   "bytes": 15472
+  },
+  "models/RT6150BGQW.step": {
+   "sha256": "5156d121a0bbd0c718c234625e8a1e48b5a3b8add672ca92986d14ce33ade07f",
+   "bytes": 15472
+  },
+  "models/SF32LB525UC6.step": {
+   "sha256": "feb97dc0682f0f6c232443168d434785054fee027ec7f1866c3ccb21b8685d58",
+   "bytes": 15524
+  },
+  "models/SGM41562SAXTYH10G_TR.step": {
+   "sha256": "9781891ea68e14a1b1367f160a8e19dade323216c5727ec7bc02a9e99be103bd",
+   "bytes": 15524
+  },
+  "models/SKTDLDE010.step": {
+   "sha256": "e01e47a418d4642540cafce343ee9eebb294907ea7b1993047646aae0942e27f",
+   "bytes": 1917328
+  },
+  "models/SPM1423HM4H-B.step": {
+   "sha256": "59bee9c736caa9624a7c0592c8804daf3730a9336def84631cf5989b6900e535",
+   "bytes": 15545
+  },
+  "models/TPS22918DBVR.step": {
+   "sha256": "e4d40fd3aed99a2c298834df0d92c3dfe6bf07eab3273be395f7515c6a25d110",
+   "bytes": 15545
+  },
+  "models/TYPE-C-31-M-12.step": {
+   "sha256": "54d06aa1d86faaacd358e1542fa5c44fb9996d19b725cdcaf4086df1ea4469ae",
+   "bytes": 89993
+  },
+  "models/USBLC6-2SC6.step": {
+   "sha256": "7228f3f32b990a73b751f908214c4c1ed5721ef115ccb0bce0123f64712104e6",
+   "bytes": 15537
+  },
+  "models/W25Q128JVSIQ.step": {
+   "sha256": "bca20ebf4cd8911c1cd9f509ac17990000d5f658e5c650d299e103e1f8285d7e",
+   "bytes": 15541
+  },
+  "models/WPN201610U4R7MT.step": {
+   "sha256": "9659e82a972bd33eb2520a261fdf76d287995d5659fe3aa318ef3865f9482627",
+   "bytes": 15459
+  },
+  "models/_superseded-OK-F302-31115.step": {
+   "sha256": "397e675a1227b7b211bea59b2f11a2f11b55ad0d0da9cd766ff27c4ecdd7ed3f",
+   "bytes": 15472
+  },
+  "models/manifest.json": {
+   "sha256": "3fc7a42fb0951cf63a2b2e93c44d3075d26def55328abd8397247fe7d2dd0db7",
+   "bytes": 32735
+  },
+  "models/registered-model-provenance.json": {
+   "sha256": "99c03bef4f1fd26194610ad02b1fc48d049a73c25c248342be7196b38bca4041",
+   "bytes": 14108
+  },
+  "source/encoder/cohdl.lock": {
+   "sha256": "ba40e982ab132e176e0705f1f2769517226506db6a5a6c2ed5d463414be92325",
+   "bytes": 216
+  },
+  "source/encoder/cohdl.toml": {
+   "sha256": "f4ff10db52fa1509400717264ce96046077ce268aee95fee00ce86f08d8a8ce6",
+   "bytes": 301
+  },
+  "source/encoder/design.lock": {
+   "sha256": "88fba87dd27f95fab6946ad8ef00187f67f3256eb519762d6f45a0cecbfa90d2",
+   "bytes": 115
+  },
+  "source/encoder/mechanical/encoder-mechanical.dxf": {
+   "sha256": "37b596474867c450725763352212aed266b30ccfcc2cb45689619c73c8d8cea3",
+   "bytes": 17729
+  },
+  "source/encoder/mechanical/encoder-outline.dxf": {
+   "sha256": "3805651362e03e83c5a16e82ac1f620110490f6972e213fdad4156e7103cf0fa",
+   "bytes": 16184
+  },
+  "source/encoder/src/encoder_fpc.cohdl": {
+   "sha256": "5e979b49a8ed1abe05846664814866884d3ff1cfda755cf1cb156466226f6552",
+   "bytes": 1618
+  },
+  "source/encoder/src/main.cohdl": {
+   "sha256": "3cfc69502e4e2aa7e1984418d5b46559eb4aa988ee56f8ee2bf83954afdd8dab",
+   "bytes": 1356
+  },
+  "source/encoder/src/parts.cohdl": {
+   "sha256": "a3a424f233c501b36828d612903d8f494f283c0c75727c35ea04ef142ab17e5e",
+   "bytes": 1665
+  },
+  "source/main/cohdl.lock": {
+   "sha256": "4dfb5d87aa5a2bf61ec7625221bdfa79f6a3aaaa8f8645b4e21f538fd5bf729a",
+   "bytes": 2287
+  },
+  "source/main/cohdl.toml": {
+   "sha256": "cada4b03864abbb6a7ca4bd7a4899762dbc9635441b52a65c2e01c01516287a3",
+   "bytes": 583
+  },
+  "source/main/design.lock": {
+   "sha256": "d75cfcfefb626465c7033b4a9000483d3394aaff84ad3e55bcb79667fde1e682",
+   "bytes": 5753
+  },
+  "source/main/docs/charger-qfn-migration.md": {
+   "sha256": "bf22b169144f1f3e99fb4ff4814f3080235a58d4f7c962c84da09ce35fb6ab9f",
+   "bytes": 6609
+  },
+  "source/main/docs/display-fpc-fold.md": {
+   "sha256": "f9f02d45f7bd8754532548c61339e058e55b00f377d22e9916440568bfc24084",
+   "bytes": 8040
+  },
+  "source/main/docs/ocn-entry-pin-resolution.md": {
+   "sha256": "ef0a98341911ecde181417e3617ad14affb532c3329d6153e57854f955f041e3",
+   "bytes": 5348
+  },
+  "source/main/docs/ok-f302-spec-draw.pdf": {
+   "sha256": "ebc73a00c6a5649198b732a27986f3c60f22b84de33d67a612e1c79863c5a069",
+   "bytes": 369106
+  },
+  "source/main/docs/sgm41562sa.pdf": {
+   "sha256": "c6d52d1482329eac81d2978ec283080c1fe4c81d94012589b868d79ff3b2c786",
+   "bytes": 1136891
+  },
+  "source/main/docs/switch-frame-review.md": {
+   "sha256": "f8f4c70437f01e7746ab70db179dd79938c4d9ed7d3b8d90f1d69aa710635e92",
+   "bytes": 3393
+  },
+  "source/main/mechanical/front-battery.json": {
+   "sha256": "6f1e9634a4fa845af9b7d10ef12c262540e43c1159bb3e7b2a70e55370547119",
+   "bytes": 2616
+  },
+  "source/main/mechanical/main-mechanical.dxf": {
+   "sha256": "f2c1300dbdaed36f7c7f23143b5aed0574766c4fbd5a4dbfb8dda6f1aa3276a7",
+   "bytes": 15595
+  },
+  "source/main/mechanical/main-outline.dxf": {
+   "sha256": "01cfb2a2ff16c09792b9ef00af05107a2b67da2024e6e201aaa9b2f08ff9fd5a",
+   "bytes": 17579
+  },
+  "source/main/src/audio.cohdl": {
+   "sha256": "a6008c1595f732e0b18967521484d4472f9c56b831a1692039f446039f25d654",
+   "bytes": 3647
+  },
+  "source/main/src/audio_bindings.cohdl": {
+   "sha256": "f3ab16380d005b5986013429b73dea9ed4f8e86f1a3794906cd962ac35b9db4e",
+   "bytes": 2057
+  },
+  "source/main/src/button_parts.cohdl": {
+   "sha256": "6a4b293f01f8948e982f814bb747589a8b2ecf95506eaac5a95c649bce34144a",
+   "bytes": 2599
+  },
+  "source/main/src/controls.cohdl": {
+   "sha256": "254bf1228060b23c226373d1cbe7d30cf9a3fc9be623a3d149e09ababdec0bcc",
+   "bytes": 3453
+  },
+  "source/main/src/display_parts.cohdl": {
+   "sha256": "b88498067d6f2a764aa213fee90ba99eff6d91339df327af9504fb4e19f45c15",
+   "bytes": 4263
+  },
+  "source/main/src/encoder_fpc.cohdl": {
+   "sha256": "5e979b49a8ed1abe05846664814866884d3ff1cfda755cf1cb156466226f6552",
+   "bytes": 1618
+  },
+  "source/main/src/main.cohdl": {
+   "sha256": "7fa322f3989cdfc1a863fab5727594466a7756b420fb7212540551d741bd7136",
+   "bytes": 19707
+  },
+  "source/main/src/mcu.cohdl": {
+   "sha256": "3fc4cb322515277cf850e1a4505f7d97e35469c4d657844b668b3062b3141e96",
+   "bytes": 3404
+  },
+  "source/main/src/mcu_backside_bypass.cohdl": {
+   "sha256": "8528ad472e819b0aabd8eafa293c049beb30ad1e2151d8fe83c54b102a372c47",
+   "bytes": 7728
+  },
+  "source/main/src/parts.cohdl": {
+   "sha256": "afaff303dbac87300375cae574e37fbfbb7951a78d0cb057f5d927e1cc1e9bae",
+   "bytes": 3227
+  },
+  "source/main/src/power.cohdl": {
+   "sha256": "b5637005ac40f4f512ae3d5d4db09df63e19555fa245c716a839dc31fd9dca7e",
+   "bytes": 3774
+  },
+  "source/main/src/power_bindings.cohdl": {
+   "sha256": "cc2abb86e86d4a6d782daa60dac32ccaa971f06ca641391f3c6b616e2f00e934",
+   "bytes": 4059
+  },
+  "source/main/src/rf.cohdl": {
+   "sha256": "c702f61423bd530a807746f363ef0f4329ecc6faacaa6a03ce138c6aef49bfa8",
+   "bytes": 1992
+  },
+  "verification/bodyv6.13-eco-audit.json": {
+   "sha256": "869f032063a8961670e0a260d149454ca354c25beb57930055279061791167d0",
+   "bytes": 37123
+  },
+  "verification/bodyv6.13-fit-model-report.json": {
+   "sha256": "abfe16d9851802270e50f12def4ca6c7a5f2110495ba8bccb448b35bc18a2af9",
+   "bytes": 9495
+  }
+ },
+ "fab_package": {
+  "folder": "fab-jlcpcb",
+  "notes": "fab-jlcpcb/ORDER-NOTES.md",
+  "format": "JLCPCB: Gerber+drill zip with paste layers, BOM with LCSC Part #, CPL (bottom rotation = 180 - KiCad angle)",
+  "prepared": "2026-09-23",
+  "unmatched_lines": [
+   "Y1 E1SB48E001G00E"
+  ],
+  "updated": "2026-09-23: main BOM/CPL/orientation list, Gerber zip and ORDER-NOTES regenerated for the MK1 change, then again for the U6 charger change, then again for the U7 regulator change (2026-09-24), then the main Gerber zip again for the pin-1 silkscreen dots (2026-09-24), and fab-jlcpcb/encoder-wheel/ added for the alternative encoder-wheel board (2026-09-24)"
+ }
+}

@@ -1,0 +1,19 @@
+/target
+**/*.rs.bk
+.DS_Store
+/native/project/build_*/
+/native/project/openwalkietalkie_hcpu/
+/native/project/.sconsign*
+/native/src/lcpu_img.c
+/native/**/__pycache__/
+/dist
+/host/target
+/native/core/target/
+__pycache__/
+# superseded working snapshots kept next to a release while it settles
+**/_to_delete/
+# local scratch exports from the Claude desktop app
+/Claude outputs/
+
+# KiCad local-history plugin state (an embedded git repo per project)
+.history/

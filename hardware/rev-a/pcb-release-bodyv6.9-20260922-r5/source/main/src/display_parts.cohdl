@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Display supply bindings reuse registry devices and footprints.
+// The display connector below is a local placement footprint (DIANWEI, r4).
+// Adjustable RT6150B for the display's 3.987V VBAT rail. The shared package
+// binds the fixed-output ordering code, while RT6150BGQW exposes FB.
+pub part DISPLAY_RAIL_RT6150B_ADJ: richtek_dcdc::buck_boost::rt6150b::RT6150B {
+    primary { mfr: "Richtek", mpn: "RT6150BGQW", footprint: qfn::QFN10N50P250X250_1EP120X200 }
+}
+
+// RT6150B requires at least 10uF X7R at its input and 20uF at its output.
+pub part C_10U_16V_X7R_1206: passive::MLCC<10uF, 16V, 10%>[C1206] {
+    primary { mfr: "TDK", mpn: "C3216X7R1C106K160AC", footprint: passive::CHIP_1206 }
+}
+
+// The H0216F002AM device models the attached panel's logical 31-pin interface;
+// this part is the actual board receptacle, not the off-board panel MPN.
+// r4 (BodyV6 ECO): the receptacle is DIANWEI 8.03A5.031250 (LCSC C55247264),
+// 0.3 mm pitch 31P dual-contact rear-flip, H 0.9 mm, for 0.2 mm FPC. The row
+// topology is unchanged from the OCN part (front/outer row odd, rear row even,
+// pin 1 at local -x following the FPC), so pad x positions are identical and
+// only pad sizes/rows change: outer row 0.3x0.8 (C=9.00), rear row 0.3x0.65
+// (D=8.40), row gap 2.15, plus two 0.4x0.95 fitting nails on GND.
+// The datasheet FPC width E=10.33 vs the 9.6 mm display flex remains an open
+// check. See docs/display-fpc-fold.md and docs/ocn-entry-pin-resolution.md.
+#[doc("https://www.lcsc.com/product-detail/C55247264.html")]
+pub part DISPLAY_CONNECTOR_DIANWEI_8_03A5_031250: contrib_display::H0216F002AM {
+    primary { mfr: "DIANWEI", mpn: "8.03A5.031250",
+              footprint: FP_DIANWEI_8_03A5_031250 }
+}
+
+pub pad P_DW_031250_FRONT {
+    shape: rect
+    size: (0.3mm, 0.8mm)
+    layer: top_copper
+    plating: smd
+}
+pub pad P_DW_031250_REAR {
+    shape: rect
+    size: (0.3mm, 0.65mm)
+    layer: top_copper
+    plating: smd
+}
+pub pad P_DW_031250_NAIL {
+    shape: rect
+    size: (0.4mm, 0.95mm)
+    layer: top_copper
+    plating: smd
+}
+
+// DIANWEI 8.03A5.031250 31P: body A=10.90, outer row C=9.00 (16 odd lanes),
+// rear row D=8.40 (15 even lanes), row gap 2.15. Origin is the centre of the
+// pad field; local -y is the cable-entry (front) side, as for the OCN part.
+// Pin 1 at -x follows the FPC's stiffener-side view. No pads were renumbered.
+pub footprint FP_DIANWEI_8_03A5_031250 {
+    pad 1: P_DW_031250_FRONT at (-4.5mm, -1.425mm)
+    pad 3: P_DW_031250_FRONT at (-3.9mm, -1.425mm)
+    pad 5: P_DW_031250_FRONT at (-3.3mm, -1.425mm)
+    pad 7: P_DW_031250_FRONT at (-2.7mm, -1.425mm)
+    pad 9: P_DW_031250_FRONT at (-2.1mm, -1.425mm)
+    pad 11: P_DW_031250_FRONT at (-1.5mm, -1.425mm)
+    pad 13: P_DW_031250_FRONT at (-0.9mm, -1.425mm)
+    pad 15: P_DW_031250_FRONT at (-0.3mm, -1.425mm)
+    pad 17: P_DW_031250_FRONT at (0.3mm, -1.425mm)
+    pad 19: P_DW_031250_FRONT at (0.9mm, -1.425mm)
+    pad 21: P_DW_031250_FRONT at (1.5mm, -1.425mm)
+    pad 23: P_DW_031250_FRONT at (2.1mm, -1.425mm)
+    pad 25: P_DW_031250_FRONT at (2.7mm, -1.425mm)
+    pad 27: P_DW_031250_FRONT at (3.3mm, -1.425mm)
+    pad 29: P_DW_031250_FRONT at (3.9mm, -1.425mm)
+    pad 31: P_DW_031250_FRONT at (4.5mm, -1.425mm)
+    pad 2: P_DW_031250_REAR at (-4.2mm, 1.45mm)
+    pad 4: P_DW_031250_REAR at (-3.6mm, 1.45mm)
+    pad 6: P_DW_031250_REAR at (-3mm, 1.45mm)
+    pad 8: P_DW_031250_REAR at (-2.4mm, 1.45mm)
+    pad 10: P_DW_031250_REAR at (-1.8mm, 1.45mm)
+    pad 12: P_DW_031250_REAR at (-1.2mm, 1.45mm)
+    pad 14: P_DW_031250_REAR at (-0.6mm, 1.45mm)
+    pad 16: P_DW_031250_REAR at (0mm, 1.45mm)
+    pad 18: P_DW_031250_REAR at (0.6mm, 1.45mm)
+    pad 20: P_DW_031250_REAR at (1.2mm, 1.45mm)
+    pad 22: P_DW_031250_REAR at (1.8mm, 1.45mm)
+    pad 24: P_DW_031250_REAR at (2.4mm, 1.45mm)
+    pad 26: P_DW_031250_REAR at (3mm, 1.45mm)
+    pad 28: P_DW_031250_REAR at (3.6mm, 1.45mm)
+    pad 30: P_DW_031250_REAR at (4.2mm, 1.45mm)
+    pad MP1: P_DW_031250_NAIL at (-5mm, -1.15mm)
+    pad MP2: P_DW_031250_NAIL at (5mm, -1.15mm)
+    // Conservative placement envelope includes the actuator/cable side.
+    courtyard { shape: rect, at: (0mm, -0.3mm), size: (11.4mm, 5.4mm) }
+    silkscreen_ref { at: (0mm, -3.5mm) }
+}

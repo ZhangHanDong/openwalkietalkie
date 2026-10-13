@@ -1,0 +1,24 @@
+Drill report for encoder-45deg.kicad_pcb
+Created on 2026-09-22T15:47:14
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  B.Cu                      back
+
+
+Drill file 'encoder-45deg-PTH-drl.gbr' contains
+    plated through holes:
+    =============================================================
+    T1  0.200mm  0.0079"  (3 holes))
+
+    Total plated holes count 3
+
+
+Drill file 'encoder-45deg-NPTH-drl.gbr' contains
+    unplated through holes:
+    =============================================================
+    T1  0.620mm  0.0244"  (2 holes))
+    T2  2.600mm  0.1024"  (2 holes))
+
+    Total unplated holes count 4

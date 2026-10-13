@@ -1,0 +1,2040 @@
+{
+ "findings": [
+  {
+   "sev": "WARN",
+   "rule": "PAIR",
+   "msg": "AC_P/AC_N not routed together: P-to-N separation p95 1.13 mm, max 1.13 mm (limit p95 1.0)"
+  },
+  {
+   "sev": "WARN",
+   "rule": "PAIR",
+   "msg": "AMP_VOP/AMP_VON not routed together: P-to-N separation p95 2.81 mm, max 2.85 mm (limit p95 1.0)"
+  },
+  {
+   "sev": "WARN",
+   "rule": "PAIR",
+   "msg": "SPEAKER_PLUS/SPEAKER_MINUS not routed together: P-to-N separation p95 2.27 mm, max 3.11 mm (limit p95 1.0)"
+  },
+  {
+   "sev": "WARN",
+   "rule": "SUPPLY",
+   "msg": "AVDD33_AUD (U5 pin 38) shares net MCU_LDO1 with flash U4 VCC (pin 8): flash read current ripples the audio supply",
+   "victim": "MCU_LDO1"
+  },
+  {
+   "sev": "INFO",
+   "rule": "BUDGET",
+   "msg": "output-referred coupling sum(C_est x Zt) to fast/switching nets = 0.01 fF*Mohm (limit 10.0; r6 = 307.8, i.e. 89.8 dB vs r6)"
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs BT_RF_LINE (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.30",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "rf::BT_RF_LINE",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 45.75,
+   "v": 30.49,
+   "bbox": [
+    45.75,
+    30.36,
+    45.75,
+    30.63
+   ],
+   "gap": -0.148,
+   "length": 0.3,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs PANEL_D1 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.37",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "PANEL_D1",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 45.75,
+   "v": 35.7,
+   "bbox": [
+    45.75,
+    35.53,
+    45.75,
+    35.88
+   ],
+   "gap": -0.132,
+   "length": 0.37,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs PANEL_D3 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.37",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "PANEL_D3",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 45.75,
+   "v": 35.15,
+   "bbox": [
+    45.75,
+    34.98,
+    45.75,
+    35.33
+   ],
+   "gap": -0.132,
+   "length": 0.37,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs PANEL_D1 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.37",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "PANEL_D1",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 45.75,
+   "v": 26.96,
+   "bbox": [
+    45.75,
+    26.78,
+    45.75,
+    27.13
+   ],
+   "gap": -0.129,
+   "length": 0.37,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs PANEL_D3 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.40",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "PANEL_D3",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 45.75,
+   "v": 25.95,
+   "bbox": [
+    45.75,
+    25.76,
+    45.75,
+    26.13
+   ],
+   "gap": -0.129,
+   "length": 0.4,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs MIC_CLOCK (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.39",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "audio::MIC_CLOCK",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 40.26,
+   "v": 64.02,
+   "bbox": [
+    40.13,
+    63.89,
+    40.39,
+    64.15
+   ],
+   "gap": -0.127,
+   "length": 0.39,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_N (S1_analog) vs MIC_PDM_DATA (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.27",
+   "victim": "audio::DAC_FILTER_N",
+   "aggressor": "MIC_PDM_DATA",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 42.3,
+   "v": 61.3,
+   "bbox": [
+    42.22,
+    61.21,
+    42.39,
+    61.39
+   ],
+   "gap": -0.127,
+   "length": 0.27,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs BT_RF_LINE (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.30",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "rf::BT_RF_LINE",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 46.1,
+   "v": 30.5,
+   "bbox": [
+    46.1,
+    30.36,
+    46.1,
+    30.64
+   ],
+   "gap": -0.143,
+   "length": 0.3,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs MIC_PDM_DATA (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.27",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "MIC_PDM_DATA",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 42.55,
+   "v": 61.55,
+   "bbox": [
+    42.46,
+    61.46,
+    42.64,
+    61.64
+   ],
+   "gap": -0.132,
+   "length": 0.27,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs MIC_CLOCK (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.68",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "audio::MIC_CLOCK",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 41.7,
+   "v": 64.3,
+   "bbox": [
+    41.31,
+    63.89,
+    42.12,
+    64.77
+   ],
+   "gap": -0.131,
+   "length": 0.68,
+   "kinds": [
+    "pad",
+    "track"
+   ],
+   "pads": [
+    "C3.1"
+   ]
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs PANEL_D1 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.40",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "PANEL_D1",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 46.1,
+   "v": 27.3,
+   "bbox": [
+    46.1,
+    27.11,
+    46.1,
+    27.49
+   ],
+   "gap": -0.126,
+   "length": 0.4,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs PANEL_D1 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.40",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "PANEL_D1",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 46.1,
+   "v": 35.35,
+   "bbox": [
+    46.1,
+    35.16,
+    46.1,
+    35.54
+   ],
+   "gap": -0.126,
+   "length": 0.4,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs PANEL_D3 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.40",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "PANEL_D3",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 46.1,
+   "v": 26.3,
+   "bbox": [
+    46.1,
+    26.11,
+    46.1,
+    26.49
+   ],
+   "gap": -0.126,
+   "length": 0.4,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  },
+  {
+   "sev": "INFO",
+   "rule": "XT-SHLD",
+   "msg": "DAC_FILTER_P (S1_analog) vs PANEL_D3 (A_fast): crosses F.Cu/B.Cu through GND fill; overlap length 0.40",
+   "victim": "audio::DAC_FILTER_P",
+   "aggressor": "PANEL_D3",
+   "Lv": "F.Cu",
+   "La": "B.Cu",
+   "u": 46.1,
+   "v": 34.8,
+   "bbox": [
+    46.1,
+    34.61,
+    46.1,
+    34.99
+   ],
+   "gap": -0.126,
+   "length": 0.4,
+   "kinds": [
+    "track"
+   ],
+   "pads": []
+  }
+ ],
+ "info": {
+  "stackup_gaps": {
+   "F.Cu-In1.Cu": [
+    0.0994,
+    4.1
+   ],
+   "In1.Cu-In2.Cu": [
+    0.7,
+    4.6
+   ],
+   "In2.Cu-B.Cu": [
+    0.0994,
+    4.1
+   ]
+  },
+  "gnd_fill_layers": [
+   "B.Cu",
+   "F.Cu",
+   "In1.Cu",
+   "In2.Cu"
+  ],
+  "summing": {
+   "audio::AMP_INP": {
+    "len_mm": 1.51,
+    "vias": 0,
+    "layers": [
+     "F.Cu"
+    ],
+    "pads": [
+     "R4.2",
+     "U1.3"
+    ],
+    "rin_to_pin_mm": 1.43
+   },
+   "audio::AMP_INN": {
+    "len_mm": 1.51,
+    "vias": 0,
+    "layers": [
+     "F.Cu"
+    ],
+    "pads": [
+     "U1.4",
+     "R5.2"
+    ],
+    "rin_to_pin_mm": 1.43
+   }
+  },
+  "victims": {
+   "AUDIO_REF": "S1_analog",
+   "MCU_LDO1": "S2_supply",
+   "audio::AC_P": "S1_analog",
+   "audio::AMP_INP": "S0_summing",
+   "audio::AMP_BYPASS": "S1_analog",
+   "audio::AMP_INN": "S0_summing",
+   "audio::AC_N": "S1_analog",
+   "audio::DAC_FILTER_P": "S1_analog",
+   "audio::DAC_FILTER_N": "S1_analog",
+   "DAC_N": "S1_analog",
+   "ADC_REF": "S1_analog",
+   "DAC_P": "S1_analog"
+  },
+  "aggressors": {
+   "USB_VBUS": "A_fast",
+   "DEBUG_TX_SWCLK": "A_slow",
+   "rf::BT_ANT": "A_fast",
+   "ENC_B": "A_slow",
+   "audio::AMP_VOP": "A_classd",
+   "audio::SPEAKER_PLUS": "A_classd",
+   "audio::AMP_VON": "A_classd",
+   "USB_C_P": "A_fast",
+   "USB_C_N": "A_fast",
+   "USB_MCU_N": "A_fast",
+   "USB_MCU_P": "A_fast",
+   "audio::SPEAKER_MINUS": "A_classd",
+   "DEBUG_RX_SWDIO": "A_slow",
+   "rf::BT_RF_LINE": "A_fast",
+   "ENC_A": "A_slow",
+   "audio::MIC_CLOCK": "A_fast",
+   "MIC_PDM_DATA": "A_fast",
+   "BT_RF": "A_fast",
+   "MIC_PDM_CLK": "A_fast",
+   "TOUCH_IRQ": "A_slow",
+   "TOUCH_RESET": "A_slow",
+   "I2C_SDA": "A_slow",
+   "I2C_SCL": "A_slow",
+   "PANEL_RESET": "A_slow",
+   "PANEL_CS": "A_fast",
+   "PANEL_D0": "A_fast",
+   "PANEL_D1": "A_fast",
+   "PANEL_CLK": "A_fast",
+   "PANEL_D3": "A_fast",
+   "PANEL_D2": "A_fast",
+   "PANEL_TE": "A_slow",
+   "XTAL48_XI": "A_fast",
+   "XTAL48_XO": "A_fast",
+   "power::PANEL_LX2": "A_power",
+   "power::PANEL_LX1": "A_power",
+   "FLASH_CS": "A_fast",
+   "FLASH_IO1": "A_fast",
+   "FLASH_IO2": "A_fast",
+   "FLASH_IO0": "A_fast",
+   "FLASH_CLK": "A_fast",
+   "FLASH_IO3": "A_fast",
+   "BUCK_LX": "A_power",
+   "power::IO_LX1": "A_power",
+   "power::IO_LX2": "A_power"
+  },
+  "unshielded_overlap": [],
+  "coupling_table": [
+   {
+    "victim": "ADC_REF",
+    "aggr": "USB_MCU_P",
+    "Lv": "B.Cu",
+    "La": "B.Cu",
+    "same_min": 0.643,
+    "same_par_len": 0.59,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "AUDIO_REF",
+    "aggr": "PANEL_D3",
+    "Lv": "B.Cu",
+    "La": "B.Cu",
+    "same_min": 0.72,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "AUDIO_REF",
+    "aggr": "PANEL_RESET",
+    "Lv": "B.Cu",
+    "La": "B.Cu",
+    "same_min": 0.265,
+    "same_par_len": 0.57,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "AUDIO_REF",
+    "aggr": "PANEL_RESET",
+    "Lv": "F.Cu",
+    "La": "F.Cu",
+    "same_min": 0.365,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "DAC_N",
+    "aggr": "FLASH_CS",
+    "Lv": "B.Cu",
+    "La": "B.Cu",
+    "same_min": 0.688,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_CLK",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_CS",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_IO0",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_IO1",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_IO2",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_IO3",
+    "Lv": "B.Cu",
+    "La": "B.Cu",
+    "same_min": 0.284,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.0
+   },
+   {
+    "victim": "MCU_LDO1",
+    "aggr": "FLASH_IO3",
+    "Lv": "In1.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.5
+   },
+   {
+    "victim": "audio::DAC_FILTER_N",
+    "aggr": "MIC_PDM_DATA",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.27
+   },
+   {
+    "victim": "audio::DAC_FILTER_N",
+    "aggr": "PANEL_D1",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.75
+   },
+   {
+    "victim": "audio::DAC_FILTER_N",
+    "aggr": "PANEL_D3",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.77
+   },
+   {
+    "victim": "audio::DAC_FILTER_N",
+    "aggr": "audio::MIC_CLOCK",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.39
+   },
+   {
+    "victim": "audio::DAC_FILTER_N",
+    "aggr": "rf::BT_RF_LINE",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.3
+   },
+   {
+    "victim": "audio::DAC_FILTER_P",
+    "aggr": "MIC_PDM_DATA",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.27
+   },
+   {
+    "victim": "audio::DAC_FILTER_P",
+    "aggr": "PANEL_D1",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.8
+   },
+   {
+    "victim": "audio::DAC_FILTER_P",
+    "aggr": "PANEL_D3",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.8
+   },
+   {
+    "victim": "audio::DAC_FILTER_P",
+    "aggr": "audio::MIC_CLOCK",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.68
+   },
+   {
+    "victim": "audio::DAC_FILTER_P",
+    "aggr": "rf::BT_RF_LINE",
+    "Lv": "F.Cu",
+    "La": "B.Cu",
+    "same_min": null,
+    "same_par_len": 0.0,
+    "adj_min": null,
+    "adj_len": 0.0,
+    "shld_len": 0.3
+   }
+  ],
+  "reference": {
+   "AUDIO_REF": {
+    "len": 1.96,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "0.45/0.45 mm",
+     "B.Cu": "1.50/1.50 mm"
+    }
+   },
+   "audio::AC_P": {
+    "len": 1.32,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "1.32/1.32 mm"
+    }
+   },
+   "audio::AMP_INP": {
+    "len": 1.51,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "1.51/1.51 mm"
+    }
+   },
+   "audio::AMP_BYPASS": {
+    "len": 2.08,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "2.08/2.08 mm"
+    }
+   },
+   "audio::AMP_INN": {
+    "len": 1.51,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "1.51/1.51 mm"
+    }
+   },
+   "audio::AC_N": {
+    "len": 1.32,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "1.32/1.32 mm"
+    }
+   },
+   "audio::DAC_FILTER_P": {
+    "len": 47.75,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "45.14/45.14 mm",
+     "B.Cu": "2.61/2.61 mm"
+    }
+   },
+   "audio::DAC_FILTER_N": {
+    "len": 51.29,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "F.Cu": "48.19/48.19 mm",
+     "B.Cu": "3.11/3.11 mm"
+    }
+   },
+   "DAC_N": {
+    "len": 3.16,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "B.Cu": "3.16/3.16 mm"
+    }
+   },
+   "ADC_REF": {
+    "len": 1.9,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "B.Cu": "1.90/1.90 mm"
+    }
+   },
+   "DAC_P": {
+    "len": 2.37,
+    "ref_frac": 1.0,
+    "per_layer": {
+     "B.Cu": "2.37/2.37 mm"
+    }
+   }
+  },
+  "pairs": {
+   "DAC_P/DAC_N": {
+    "len_p": 2.37,
+    "len_n": 3.16,
+    "layers_p": [
+     "B.Cu"
+    ],
+    "layers_n": [
+     "B.Cu"
+    ],
+    "vias_p": 0,
+    "vias_n": 0,
+    "sep_p95": 0.54,
+    "sep_max": 0.6
+   },
+   "DAC_FILTER_P/DAC_FILTER_N": {
+    "len_p": 47.75,
+    "len_n": 51.29,
+    "layers_p": [
+     "B.Cu",
+     "F.Cu"
+    ],
+    "layers_n": [
+     "B.Cu",
+     "F.Cu"
+    ],
+    "vias_p": 1,
+    "vias_n": 1,
+    "sep_p95": 0.7,
+    "sep_max": 1.15
+   },
+   "AC_P/AC_N": {
+    "len_p": 1.32,
+    "len_n": 1.32,
+    "layers_p": [
+     "F.Cu"
+    ],
+    "layers_n": [
+     "F.Cu"
+    ],
+    "vias_p": 0,
+    "vias_n": 0,
+    "sep_p95": 1.13,
+    "sep_max": 1.13
+   },
+   "AMP_INP/AMP_INN": {
+    "len_p": 1.51,
+    "len_n": 1.51,
+    "layers_p": [
+     "F.Cu"
+    ],
+    "layers_n": [
+     "F.Cu"
+    ],
+    "vias_p": 0,
+    "vias_n": 0,
+    "sep_p95": 0.78,
+    "sep_max": 0.78
+   },
+   "AMP_VOP/AMP_VON": {
+    "len_p": 3.74,
+    "len_n": 3.74,
+    "layers_p": [
+     "F.Cu"
+    ],
+    "layers_n": [
+     "F.Cu"
+    ],
+    "vias_p": 0,
+    "vias_n": 0,
+    "sep_p95": 2.81,
+    "sep_max": 2.85
+   },
+   "SPEAKER_PLUS/SPEAKER_MINUS": {
+    "len_p": 16.89,
+    "len_n": 15.59,
+    "layers_p": [
+     "F.Cu"
+    ],
+    "layers_n": [
+     "F.Cu"
+    ],
+    "vias_p": 0,
+    "vias_n": 0,
+    "sep_p95": 2.27,
+    "sep_max": 3.11
+   }
+  },
+  "supply": {
+   "AVDD33_AUD": {
+    "pin": "38",
+    "net": "MCU_LDO1",
+    "nearest_cap": {
+     "ref": "C14",
+     "value": "2.2uF",
+     "dist_mm": 1.06,
+     "side": "B.Cu"
+    }
+   },
+   "AUD_VREF": {
+    "pin": "39",
+    "net": "AUDIO_REF",
+    "nearest_cap": {
+     "ref": "C15",
+     "value": "1uF",
+     "dist_mm": 1.09,
+     "side": "F.Cu"
+    }
+   }
+  },
+  "classd": {
+   "AMP_VON": {
+    "pin": "5",
+    "len_mm": 3.74,
+    "to": [
+     {
+      "ref": "L2",
+      "dist": 3.5
+     }
+    ]
+   },
+   "AMP_VOP": {
+    "pin": "8",
+    "len_mm": 3.74,
+    "to": [
+     {
+      "ref": "L1",
+      "dist": 3.5
+     }
+    ]
+   },
+   "orientation": {
+    "rin_to_in_pins": 1.45,
+    "rin_to_out_pins": 5.88
+   }
+  },
+  "amp_power": {
+   "vdd_decap": {
+    "ref": "C11",
+    "value": "1uF",
+    "dist_mm": 1.8,
+    "side": "F.Cu"
+   },
+   "gnd_via_mm": 0.78
+  },
+  "coupling_rows": [
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D1",
+    "aclass": "A_fast",
+    "relation": "unshielded:F.Cu/B.Cu",
+    "min_gap": 1.281,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.88,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.009,
+    "where": ""
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "same:F.Cu",
+    "min_gap": 0.5,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 2.05,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.7,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.007,
+    "where": "u45.8-45.8 v23.1-25.2"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D3",
+    "aclass": "A_fast",
+    "relation": "same:F.Cu",
+    "min_gap": 0.8,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 3.52,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.1,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.001,
+    "where": "u46.1-46.1 v27.2-34.4"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": -0.176,
+    "len_lt0.2": 0.97,
+    "len_lt0.5": 1.69,
+    "len_lt1.0": 2.84,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 81.64,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.3-39.8 v20.5-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_RX_SWDIO",
+    "aclass": "A_slow",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": -0.172,
+    "len_lt0.2": 0.75,
+    "len_lt0.5": 1.35,
+    "len_lt1.0": 2.35,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 68.56,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u38.1-40.4 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": -0.172,
+    "len_lt0.2": 0.75,
+    "len_lt0.5": 1.35,
+    "len_lt1.0": 2.42,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 68.42,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.0-41.4 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "same:In1.Cu",
+    "min_gap": 0.4,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.8,
+    "len_lt1.0": 2.64,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 22.1,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.5-40.0 v20.7-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO0",
+    "aclass": "A_fast",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": 0.565,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 2.02,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 21.54,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.5-41.5 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO1",
+    "aclass": "A_fast",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": 0.565,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 1.95,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 20.73,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u40.3-42.3 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO0",
+    "aclass": "A_fast",
+    "relation": "same:In1.Cu",
+    "min_gap": 0.4,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.8,
+    "len_lt1.0": 2.25,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 16.08,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.3-41.6 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO1",
+    "aclass": "A_fast",
+    "relation": "same:In1.Cu",
+    "min_gap": 0.4,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.8,
+    "len_lt1.0": 2.25,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 10.88,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u40.1-42.4 v21.2-21.2"
+   },
+   {
+    "victim": "ADC_REF",
+    "vclass": "S1_analog",
+    "aggressor": "USB_MCU_P",
+    "aclass": "A_fast",
+    "relation": "unshielded:B.Cu/In2.Cu",
+    "min_gap": 0.57,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.22,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 6.06,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u34.7-35.3 v28.7-29.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO2",
+    "aclass": "A_fast",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": 1.415,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 4.31,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_CLK",
+    "aclass": "A_fast",
+    "relation": "unshielded:In1.Cu/F.Cu",
+    "min_gap": 1.415,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 4.31,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_RX_SWDIO",
+    "aclass": "A_slow",
+    "relation": "same:In1.Cu",
+    "min_gap": 1.25,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 4.27,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "ADC_REF",
+    "vclass": "S1_analog",
+    "aggressor": "USB_MCU_N",
+    "aclass": "A_fast",
+    "relation": "unshielded:B.Cu/In2.Cu",
+    "min_gap": 1.12,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 3.68,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_CLK",
+    "aclass": "A_fast",
+    "relation": "same:In1.Cu",
+    "min_gap": 1.25,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 3.04,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO2",
+    "aclass": "A_fast",
+    "relation": "same:In1.Cu",
+    "min_gap": 1.25,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 2.02,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": ""
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO3",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.284,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.84,
+    "len_lt1.0": 1.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 1.82,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.4-37.3 v15.6-16.4"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "same:F.Cu",
+    "min_gap": 0.103,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.39,
+    "len_lt1.0": 1.03,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 1.23,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u36.7-37.3 v15.6-16.4"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "same:B.Cu",
+    "min_gap": 0.265,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.57,
+    "len_lt1.0": 1.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 1.15,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.0-43.5 v23.0-23.6"
+   },
+   {
+    "victim": "ADC_REF",
+    "vclass": "S1_analog",
+    "aggressor": "USB_MCU_P",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.643,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.99,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.17,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.6-36.3 v27.5-28.4"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "same:F.Cu",
+    "min_gap": 0.365,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.45,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.12,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u43.1-43.7 v23.2-23.6"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D3",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.72,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.83,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.05,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.8-43.5 v23.3-23.6"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "same:F.Cu",
+    "min_gap": 0.85,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 1.2,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.05,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u46.1-46.1 v23.6-24.7"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "same:B.Cu",
+    "min_gap": 0.217,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.59,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.04,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.4-37.3 v15.6-16.4"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.402,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.12,
+    "len_lt1.0": 0.45,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u43.1-43.7 v23.1-23.6"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.515,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 1.03,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.0-43.4 v23.1-23.6"
+   },
+   {
+    "victim": "AUDIO_REF",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D3",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.857,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.17,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u43.4-43.4 v23.4-23.6"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "same:F.Cu",
+    "min_gap": 0.846,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.2-37.2 v20.4-20.4"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.037,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.36,
+    "len_lt1.0": 0.87,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.2-37.7 v20.5-21.5"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.237,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.72,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.7-40.2 v20.9-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "USB_MCU_N",
+    "aclass": "A_fast",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.565,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.4-35.8 v15.8-16.4"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "DEBUG_RX_SWDIO",
+    "aclass": "A_slow",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u38.1-40.6 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.829,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.25,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.2-37.3 v15.6-15.8"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.228,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 1.06,
+    "len_lt1.0": 1.65,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.4-37.3 v15.6-16.4"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "same:In1.Cu",
+    "min_gap": 0.531,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.3-37.3 v15.6-15.6"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "ENC_A",
+    "aclass": "A_slow",
+    "relation": "same:In2.Cu",
+    "min_gap": 0.531,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.3-37.3 v15.6-15.6"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.92,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u43.1-43.6 v23.2-23.3"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "same:B.Cu",
+    "min_gap": 0.82,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u43.1-43.6 v23.1-23.3"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_CS",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u40.2-42.7 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO1",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.9-42.3 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO2",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.237,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.5-42.0 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO0",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.2-41.6 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_CLK",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u38.8-41.3 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO3",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.324,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.12,
+    "len_lt1.0": 2.12,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u36.7-37.5 v15.6-18.6"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "FLASH_IO3",
+    "aclass": "A_fast",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": -0.238,
+    "len_lt0.2": 0.9,
+    "len_lt0.5": 1.5,
+    "len_lt1.0": 2.5,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u38.5-40.9 v21.2-21.2"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "BUCK_LX",
+    "aclass": "A_power",
+    "relation": "same:B.Cu",
+    "min_gap": 0.835,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.13,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.2-37.3 v20.4-20.6"
+   },
+   {
+    "victim": "MCU_LDO1",
+    "vclass": "S2_supply",
+    "aggressor": "BUCK_LX",
+    "aclass": "A_power",
+    "relation": "shielded:In1.Cu/B.Cu",
+    "min_gap": 0.939,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.17,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u37.3-37.4 v20.5-20.6"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "BT_RF_LINE",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.143,
+    "len_lt0.2": 0.7,
+    "len_lt0.5": 1.3,
+    "len_lt1.0": 2.3,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u46.1-46.1 v29.4-31.6"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "MIC_CLOCK",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.131,
+    "len_lt0.2": 1.25,
+    "len_lt0.5": 1.91,
+    "len_lt1.0": 2.48,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u41.0-42.1 v62.9-65.4"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "MIC_PDM_DATA",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.132,
+    "len_lt0.2": 0.67,
+    "len_lt0.5": 1.27,
+    "len_lt1.0": 2.27,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u41.8-43.3 v60.8-62.3"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.405,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 1.15,
+    "len_lt1.0": 2.31,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u46.1-46.5 v22.6-24.7"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D1",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.126,
+    "len_lt0.2": 1.9,
+    "len_lt0.5": 3.6,
+    "len_lt1.0": 6.4,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u46.1-46.1 v25.7-36.9"
+   },
+   {
+    "victim": "DAC_FILTER_P",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D3",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.126,
+    "len_lt0.2": 1.9,
+    "len_lt0.5": 3.6,
+    "len_lt1.0": 6.4,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u46.1-46.1 v24.7-36.4"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "BT_RF_LINE",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.148,
+    "len_lt0.2": 0.7,
+    "len_lt0.5": 1.3,
+    "len_lt1.0": 2.3,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u45.8-45.8 v29.4-31.6"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "MIC_CLOCK",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.127,
+    "len_lt0.2": 0.88,
+    "len_lt0.5": 1.54,
+    "len_lt1.0": 2.43,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u39.6-40.7 v62.9-65.1"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "MIC_PDM_DATA",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.127,
+    "len_lt0.2": 0.67,
+    "len_lt0.5": 1.27,
+    "len_lt1.0": 2.27,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u41.5-43.1 v60.5-62.1"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "BT_RF",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.965,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 1.17,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u45.8-45.8 v28.5-29.6"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_RESET",
+    "aclass": "A_slow",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": 0.055,
+    "len_lt0.2": 1.02,
+    "len_lt0.5": 1.67,
+    "len_lt1.0": 2.82,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u45.8-45.8 v22.1-24.9"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D1",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.132,
+    "len_lt0.2": 1.9,
+    "len_lt0.5": 3.6,
+    "len_lt1.0": 6.42,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u45.8-45.8 v25.4-37.3"
+   },
+   {
+    "victim": "DAC_FILTER_N",
+    "vclass": "S1_analog",
+    "aggressor": "PANEL_D3",
+    "aclass": "A_fast",
+    "relation": "shielded:F.Cu/B.Cu",
+    "min_gap": -0.132,
+    "len_lt0.2": 1.9,
+    "len_lt0.5": 3.6,
+    "len_lt1.0": 6.42,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 10.43,
+    "weight_fF_Mohm": 0.0,
+    "where": "u45.8-45.8 v24.4-36.8"
+   },
+   {
+    "victim": "DAC_N",
+    "vclass": "S1_analog",
+    "aggressor": "FLASH_CS",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.688,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.14,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 1.04,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.0-42.4 v21.9-22.2"
+   },
+   {
+    "victim": "DAC_N",
+    "vclass": "S1_analog",
+    "aggressor": "FLASH_IO1",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.966,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 1.04,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.0-42.1 v21.9-22.0"
+   },
+   {
+    "victim": "ADC_REF",
+    "vclass": "S1_analog",
+    "aggressor": "DEBUG_TX_SWCLK",
+    "aclass": "A_slow",
+    "relation": "shielded:B.Cu/F.Cu",
+    "min_gap": 0.687,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.96,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u35.7-36.3 v27.5-28.4"
+   },
+   {
+    "victim": "ADC_REF",
+    "vclass": "S1_analog",
+    "aggressor": "USB_MCU_N",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.942,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.29,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 0.0,
+    "weight_fF_Mohm": 0.0,
+    "where": "u36.1-36.3 v27.9-28.2"
+   },
+   {
+    "victim": "DAC_P",
+    "vclass": "S1_analog",
+    "aggressor": "FLASH_CS",
+    "aclass": "A_fast",
+    "relation": "same:B.Cu",
+    "min_gap": 0.966,
+    "len_lt0.2": 0.0,
+    "len_lt0.5": 0.0,
+    "len_lt1.0": 0.0,
+    "pad_overlap_mm2": 0.0,
+    "C_est_fF": 0.0,
+    "Zt_kohm": 1.04,
+    "weight_fF_Mohm": 0.0,
+    "where": "u42.0-42.1 v22.3-22.3"
+   }
+  ],
+  "coupling_totals_fF": {
+   "DAC_FILTER_P": {
+    "A_fast": 0.98,
+    "A_slow": 0.05
+   },
+   "DAC_FILTER_N": {
+    "A_slow": 0.7,
+    "A_fast": 0.0
+   },
+   "MCU_LDO1": {
+    "A_slow": 246.26,
+    "A_fast": 84.72999999999999,
+    "A_power": 0.0
+   },
+   "ADC_REF": {
+    "A_fast": 9.91,
+    "A_slow": 0.0
+   },
+   "AUDIO_REF": {
+    "A_slow": 1.27,
+    "A_fast": 0.05
+   },
+   "DAC_N": {
+    "A_fast": 0.0
+   },
+   "DAC_P": {
+    "A_fast": 0.0
+   }
+  },
+  "weighted_total_fF_Mohm": 0.01,
+  "improvement_vs_r6_dB": 89.8
+ }
+}

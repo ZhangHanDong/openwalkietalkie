@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Display supply bindings reuse registry devices and footprints.
+// The display connector below is a provisional local placement footprint.
+// Adjustable RT6150B for the display's 3.987V VBAT rail. The shared package
+// binds the fixed-output ordering code, while RT6150BGQW exposes FB.
+pub part DISPLAY_RAIL_RT6150B_ADJ: richtek_dcdc::buck_boost::rt6150b::RT6150B {
+    primary { mfr: "Richtek", mpn: "RT6150BGQW", footprint: qfn::QFN10N50P250X250_1EP120X200 }
+}
+
+// RT6150B requires at least 10uF X7R at its input and 20uF at its output.
+pub part C_10U_16V_X7R_1206: passive::MLCC<10uF, 16V, 10%>[C1206] {
+    primary { mfr: "TDK", mpn: "C3216X7R1C106K160AC", footprint: passive::CHIP_1206 }
+}
+
+// The H0216F002AM device models the attached panel's logical 31-pin interface;
+// this part is the actual board receptacle, not the off-board panel MPN.
+// The name remains PROVISIONAL for procurement/body-profile qualification.
+// 2026-09-17 drawing review resolves entry and row mapping: the OCN front is
+// C (9.0mm/16 odd lanes); the rear is B (8.4mm/15 even lanes). The user's
+// FPC3-H0175Y003MT006-1 V0 has same-face contacts and a consistent pin-1 edge.
+// See docs/display-fpc-fold.md and docs/ocn-entry-pin-resolution.md.
+#[doc("docs/ok-f302-spec-draw.pdf")]
+pub part DISPLAY_CONNECTOR_OK_F302_31115_PROVISIONAL: contrib_display::H0216F002AM {
+    primary { mfr: "OCN Technology", mpn: "OK-F302-31115",
+              footprint: FP_OCN_OK_F302_31115_PROVISIONAL }
+}
+
+pub pad P_OCN_F302_SHORT {
+    shape: rect
+    size: (0.2mm, 0.55mm)
+    layer: top_copper
+    plating: smd
+}
+pub pad P_OCN_F302_LONG {
+    shape: rect
+    size: (0.2mm, 0.75mm)
+    layer: top_copper
+    plating: smd
+}
+
+// Adapted from cohdl/examples/sf32-miniboard (MIT), checked against OCN
+// OK-F302-**115 A/A1: 31P width A=10.8, row spans B=8.4 and C=9.0.
+// Origin is the center of the 3.4 mm overall copper depth. Local -y is the
+// cable-entry side: the TOP VIEW land pattern is rotated relative to the
+// upper-left package plan. C carries 16 odd contacts; B carries 15 even.
+// Pin 1 at -x follows the FPC's stiffener-side view. No pads were renumbered.
+// The PROVISIONAL footprint name is deliberately emitted into the BOM.
+pub footprint FP_OCN_OK_F302_31115_PROVISIONAL {
+    pad 1: P_OCN_F302_SHORT at (-4.5mm, -1.425mm)
+    pad 3: P_OCN_F302_SHORT at (-3.9mm, -1.425mm)
+    pad 5: P_OCN_F302_SHORT at (-3.3mm, -1.425mm)
+    pad 7: P_OCN_F302_SHORT at (-2.7mm, -1.425mm)
+    pad 9: P_OCN_F302_SHORT at (-2.1mm, -1.425mm)
+    pad 11: P_OCN_F302_SHORT at (-1.5mm, -1.425mm)
+    pad 13: P_OCN_F302_SHORT at (-0.9mm, -1.425mm)
+    pad 15: P_OCN_F302_SHORT at (-0.3mm, -1.425mm)
+    pad 17: P_OCN_F302_SHORT at (0.3mm, -1.425mm)
+    pad 19: P_OCN_F302_SHORT at (0.9mm, -1.425mm)
+    pad 21: P_OCN_F302_SHORT at (1.5mm, -1.425mm)
+    pad 23: P_OCN_F302_SHORT at (2.1mm, -1.425mm)
+    pad 25: P_OCN_F302_SHORT at (2.7mm, -1.425mm)
+    pad 27: P_OCN_F302_SHORT at (3.3mm, -1.425mm)
+    pad 29: P_OCN_F302_SHORT at (3.9mm, -1.425mm)
+    pad 31: P_OCN_F302_SHORT at (4.5mm, -1.425mm)
+    pad 2: P_OCN_F302_LONG at (-4.2mm, 1.325mm)
+    pad 4: P_OCN_F302_LONG at (-3.6mm, 1.325mm)
+    pad 6: P_OCN_F302_LONG at (-3mm, 1.325mm)
+    pad 8: P_OCN_F302_LONG at (-2.4mm, 1.325mm)
+    pad 10: P_OCN_F302_LONG at (-1.8mm, 1.325mm)
+    pad 12: P_OCN_F302_LONG at (-1.2mm, 1.325mm)
+    pad 14: P_OCN_F302_LONG at (-0.6mm, 1.325mm)
+    pad 16: P_OCN_F302_LONG at (0mm, 1.325mm)
+    pad 18: P_OCN_F302_LONG at (0.6mm, 1.325mm)
+    pad 20: P_OCN_F302_LONG at (1.2mm, 1.325mm)
+    pad 22: P_OCN_F302_LONG at (1.8mm, 1.325mm)
+    pad 24: P_OCN_F302_LONG at (2.4mm, 1.325mm)
+    pad 26: P_OCN_F302_LONG at (3mm, 1.325mm)
+    pad 28: P_OCN_F302_LONG at (3.6mm, 1.325mm)
+    pad 30: P_OCN_F302_LONG at (4.2mm, 1.325mm)
+    // Conservative placement envelope includes the actuator/cable side.
+    courtyard { shape: rect, at: (0mm, -0.4mm), size: (11.4mm, 5.2mm) }
+    silkscreen_ref { at: (0mm, -3.4mm) }
+}

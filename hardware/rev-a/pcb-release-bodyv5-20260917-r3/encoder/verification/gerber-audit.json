@@ -1,0 +1,33 @@
+{
+  "board": "encoder",
+  "source_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+  "gerber_file_count": 7,
+  "copper_layers": 2,
+  "file_functions": {
+    "encoder-45deg-B_Cu.gbr": "Copper,L2,Bot",
+    "encoder-45deg-B_Mask.gbr": "Soldermask,Bot",
+    "encoder-45deg-B_Silkscreen.gbr": "Legend,Bot",
+    "encoder-45deg-Edge_Cuts.gbr": "Profile,NP",
+    "encoder-45deg-F_Cu.gbr": "Copper,L1,Top",
+    "encoder-45deg-F_Mask.gbr": "Soldermask,Top",
+    "encoder-45deg-F_Silkscreen.gbr": "Legend,Top"
+  },
+  "coordinate_format": "absolute metric 4.6, same original origin as drill/CPL",
+  "outline_edge_count": 87,
+  "outline_arc_count": 0,
+  "outline_closed_loops": 2,
+  "outline_all_native_edges_matched": true,
+  "outline_endpoint_clustering_tolerance_nm": 50,
+  "outline_maximum_export_rounding_nm": 0,
+  "drc_violations": 0,
+  "drc_unconnected": 0,
+  "file_sha256": {
+    "encoder-45deg-B_Cu.gbr": "43bc32a61b4166b48b33e95a6412d81ef5098808d77a5e398f1486aee5c66d6b",
+    "encoder-45deg-B_Mask.gbr": "ae671b3607c04ec3d385e2f1b0ecce06f04175c359f755de4ee101ca4052ec83",
+    "encoder-45deg-B_Silkscreen.gbr": "4eee0044c3da6e8e5b56415a1ad3889e66f0ac6e39f5cce99cc902ed8277e6ec",
+    "encoder-45deg-Edge_Cuts.gbr": "87e36548e89755a45c34043701cca16ab57009e3f3634719bed5815198d16de9",
+    "encoder-45deg-F_Cu.gbr": "bfac55a526993f450fec5b90e2fe085194dfa2615ac8a7e17920a196e6fbfbef",
+    "encoder-45deg-F_Mask.gbr": "60c96b554e7c39887ed209ad9e6462f67af26467b2ba30a8da4b47953f1b66fa",
+    "encoder-45deg-F_Silkscreen.gbr": "ca8e94ac4a5d2d0cdb2257b62be458675b072a94273fc13b91a0b3e701260ef0"
+  }
+}

@@ -1,0 +1,5 @@
+[designators]
+"OpenMicroDialEncoderRevA::main_fpc" = "J1"
+"OpenMicroDialEncoderRevA::wheel" = "ENC1"
+
+[tombstones]

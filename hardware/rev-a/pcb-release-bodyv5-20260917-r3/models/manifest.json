@@ -1,0 +1,1013 @@
+{
+  "frame": "local physical X=authoringX,Y=-authoringY,Zawayfromseating",
+  "models": {
+    "2450AT18B100E": {
+      "mpn": "2450AT18B100E",
+      "file": "2450AT18B100E.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Johanson2450AT18B0100001E Rev5 p2; legacy/new identity documented by vendor",
+      "bounds_mm": [
+        [
+          -1.7,
+          -0.9,
+          0.0
+        ],
+        [
+          1.7,
+          0.9,
+          1.4
+        ]
+      ],
+      "valid": true,
+      "sha256": "d2bf02ce7cdd28aa0bdc8987de70150c7eb443f334e1d60cc3dd384562fbf31a"
+    },
+    "CC0603KRX5R6BB105": {
+      "mpn": "CC0603KRX5R6BB105",
+      "file": "CC0603KRX5R6BB105.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0603KRX5R6BB105?lang=en",
+      "bounds_mm": [
+        [
+          -0.8500000000000001,
+          -0.45,
+          0.0
+        ],
+        [
+          0.8500000000000001,
+          0.45,
+          0.9
+        ]
+      ],
+      "valid": true,
+      "sha256": "a181a9cc19711cbbd3608185d28272d9ad834aa16d860b464aeea71d868ad9f8"
+    },
+    "CC0402JRNPO9BN331": {
+      "mpn": "CC0402JRNPO9BN331",
+      "file": "CC0402JRNPO9BN331.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0402JRNPO9BN331?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.55
+        ]
+      ],
+      "valid": true,
+      "sha256": "4b80aa8a6f56a1326dee977268ecf74cdbb39eda6024273365d399f02f612079"
+    },
+    "CC0805KRX5R8BB106": {
+      "mpn": "CC0805KRX5R8BB106",
+      "file": "CC0805KRX5R8BB106.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0805KRX5R8BB106?lang=en",
+      "bounds_mm": [
+        [
+          -1.1,
+          -0.725,
+          0.0
+        ],
+        [
+          1.1,
+          0.725,
+          1.45
+        ]
+      ],
+      "valid": true,
+      "sha256": "29106e8b8a33d51b7939874bf4ac902b3dd98b60c43af25637f7934704d30d40"
+    },
+    "CC0603KRX5R6BB475": {
+      "mpn": "CC0603KRX5R6BB475",
+      "file": "CC0603KRX5R6BB475.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0603KRX5R6BB475?lang=en",
+      "bounds_mm": [
+        [
+          -0.8500000000000001,
+          -0.45,
+          0.0
+        ],
+        [
+          0.8500000000000001,
+          0.45,
+          0.9
+        ]
+      ],
+      "valid": true,
+      "sha256": "c9e47474d0221cff391a6bd9e9f59ff055fbf138864623345c8bf24dfeeb130d"
+    },
+    "CC0603KRX5R6BB225": {
+      "mpn": "CC0603KRX5R6BB225",
+      "file": "CC0603KRX5R6BB225.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0603KRX5R6BB225?lang=en",
+      "bounds_mm": [
+        [
+          -0.8500000000000001,
+          -0.45,
+          0.0
+        ],
+        [
+          0.8500000000000001,
+          0.45,
+          0.9
+        ]
+      ],
+      "valid": true,
+      "sha256": "eee7cf64716742c5c851b44d6173ef30e363aea1584a40a69a242c836bc8353a"
+    },
+    "CC0402KRX7R7BB104": {
+      "mpn": "CC0402KRX7R7BB104",
+      "file": "CC0402KRX7R7BB104.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0402KRX7R7BB104?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.55
+        ]
+      ],
+      "valid": true,
+      "sha256": "a89ec7af5272ecacc6b08d3abe2b05acac61bba74b8e06cb40ec31fa0281309e"
+    },
+    "CC0603JRNPO9BN152": {
+      "mpn": "CC0603JRNPO9BN152",
+      "file": "CC0603JRNPO9BN152.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0603JRNPO9BN152?lang=en",
+      "bounds_mm": [
+        [
+          -0.8500000000000001,
+          -0.45,
+          0.0
+        ],
+        [
+          0.8500000000000001,
+          0.45,
+          0.9
+        ]
+      ],
+      "valid": true,
+      "sha256": "8a59f15df3f91e54a6e6953ac974820cfda08d72e29e78be7c264f648cd2956a"
+    },
+    "CC0402KRX5R6BB474": {
+      "mpn": "CC0402KRX5R6BB474",
+      "file": "CC0402KRX5R6BB474.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0402KRX5R6BB474?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.55
+        ]
+      ],
+      "valid": true,
+      "sha256": "65890970871dbaeef94505777ec6e89104943bafdbb630bf2d9b0a3d01571b9f"
+    },
+    "CC0402JRNPO9BN102": {
+      "mpn": "CC0402JRNPO9BN102",
+      "file": "CC0402JRNPO9BN102.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC0402JRNPO9BN102?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.55
+        ]
+      ],
+      "valid": true,
+      "sha256": "8fc8489f8192481a4141a9c39397dee4733ad4c278864fd72a077e402aa497bf"
+    },
+    "C3216X7R1C106K160AC": {
+      "mpn": "C3216X7R1C106K160AC",
+      "file": "C3216X7R1C106K160AC.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "TDK exact part dimensions:3.2\u00b1.2\u00d71.6\u00b1.2\u00d71.6\u00b1.2",
+      "bounds_mm": [
+        [
+          -1.7,
+          -0.9,
+          0.0
+        ],
+        [
+          1.7,
+          0.9,
+          1.8
+        ]
+      ],
+      "valid": true,
+      "sha256": "0745945dfcc692933b8bfbc4d8c55d7d3a11fa327771aa8fbf66b4bfb391b9d0"
+    },
+    "CC1206JRNPO8BN104": {
+      "mpn": "CC1206JRNPO8BN104",
+      "file": "CC1206JRNPO8BN104.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/CC1206JRNPO8BN104?lang=en",
+      "bounds_mm": [
+        [
+          -1.75,
+          -0.9,
+          0.0
+        ],
+        [
+          1.75,
+          0.9,
+          1.8
+        ]
+      ],
+      "valid": true,
+      "sha256": "43fb238934d36f800e7b7cf16b31a7fa31f09dc0dea5c07c6b14d298896f05f7"
+    },
+    "53261-0271": {
+      "mpn": "53261-0271",
+      "file": "53261-0271.step",
+      "kind": "nominal source CAD, rigidly registered",
+      "evidence": "/Applications/KiCad/KiCad.app/Contents/SharedSupport/3dmodels/Connector_Molex.3dshapes/Molex_PicoBlade_53261-0271_1x02-1MP_P1.25mm_Horizontal.step",
+      "bounds_mm": [
+        [
+          -3.825,
+          -2.6,
+          -1.665334536938e-16
+        ],
+        [
+          3.825,
+          2.6,
+          3.4
+        ]
+      ],
+      "valid": true,
+      "sha256": "3bf7491460fcd4959169e79d19563cc42d42c4ca298b28f2914f1ae8c8cfda49"
+    },
+    "FH34SRJ-4S-0.5SH_99_": {
+      "mpn": "FH34SRJ-4S-0.5SH(99)",
+      "file": "FH34SRJ-4S-0.5SH_99_.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Hirose exact four-pin CL0580-1238-7-99: nominal XY body4.0x3.8; maximum closed height1.1mm. Simplified closed envelope, not vendor CAD. Pin1 local+x, cable mouth physical-Y. https://www.hirose.com/en/product/p/CL0580-1238-7-99",
+      "bounds_mm": [
+        [
+          -2.0,
+          -1.9,
+          0.0
+        ],
+        [
+          2.0,
+          1.9,
+          1.1
+        ]
+      ],
+      "valid": true,
+      "sha256": "9d0b2f56cf5bc6c2e4defc7dba10d228354e5b48b4321b73c4c9f497d95a0cce"
+    },
+    "TYPE-C-31-M-12": {
+      "mpn": "TYPE-C-31-M-12",
+      "file": "TYPE-C-31-M-12.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "HRO family drawing p4 M-12:8.94\u00b1.15\u00d77.35\u00b1.15\u00d73.26\u00b1.1 envelope; general5\u201310mm tolerance\u00b1.15. Shell legs nominal; rear tips conservative. Actual rounded mouth profile omitted because corner radius is undimensioned; USB/case corner clearance requires physical fit or supplier CAD.",
+      "bounds_mm": [
+        [
+          -4.545,
+          -3.725,
+          -1.0
+        ],
+        [
+          4.545,
+          4.35,
+          3.36
+        ]
+      ],
+      "valid": true,
+      "sha256": "54d06aa1d86faaacd358e1542fa5c44fb9996d19b725cdcaf4086df1ea4469ae"
+    },
+    "BLM31PG601SN1L": {
+      "mpn": "BLM31PG601SN1L",
+      "file": "BLM31PG601SN1L.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Murata JENF243A_0006AC-01 maximum dimensions",
+      "bounds_mm": [
+        [
+          -1.7,
+          -0.9,
+          0.0
+        ],
+        [
+          1.7,
+          0.9,
+          1.3
+        ]
+      ],
+      "valid": true,
+      "sha256": "3e8038ccd9c14920187cdf35290a29ded53d48dcd6e263db071f679a64e3dae7"
+    },
+    "WPN201610U4R7MT": {
+      "mpn": "WPN201610U4R7MT",
+      "file": "WPN201610U4R7MT.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Sunlord WPN series p2 Fig3; maximum envelope",
+      "bounds_mm": [
+        [
+          -1.1,
+          -0.9,
+          0.0
+        ],
+        [
+          1.1,
+          0.9,
+          1.0
+        ]
+      ],
+      "valid": true,
+      "sha256": "9659e82a972bd33eb2520a261fdf76d287995d5659fe3aa318ef3865f9482627"
+    },
+    "DFE201612E-2R2M_P2": {
+      "mpn": "DFE201612E-2R2M=P2",
+      "file": "DFE201612E-2R2M_P2.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Murata exact part:2\u00b1.2\u00d71.6\u00b1.2\u00d71.2; height tolerance not separately established",
+      "bounds_mm": [
+        [
+          -1.1,
+          -0.9,
+          0.0
+        ],
+        [
+          1.1,
+          0.9,
+          1.2
+        ]
+      ],
+      "valid": true,
+      "sha256": "59c65411788612426d85bdcabf6a72d1ed35c07c6bb91f4e664c0c09431eef98"
+    },
+    "SPM1423HM4H-B": {
+      "mpn": "SPM1423HM4H-B",
+      "file": "SPM1423HM4H-B.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Knowles RevD p7 maximum rectangular substrate envelope",
+      "bounds_mm": [
+        [
+          -1.93,
+          -2.41,
+          0.0
+        ],
+        [
+          1.93,
+          2.41,
+          1.35
+        ]
+      ],
+      "valid": true,
+      "sha256": "59bee9c736caa9624a7c0592c8804daf3730a9336def84631cf5989b6900e535"
+    },
+    "RC0402FR-071KL": {
+      "mpn": "RC0402FR-071KL",
+      "file": "RC0402FR-071KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "5c518e53bd2abab087bcd496a14efbb450c243ad7e3b52807f1372a21f4ad8c3"
+    },
+    "RC0402FR-075K1L": {
+      "mpn": "RC0402FR-075K1L",
+      "file": "RC0402FR-075K1L.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "9f3a781d2c7a64b55a38e8ee48c4cc76b77c750bf7e6ff781be91ec6575ed8a2"
+    },
+    "RC0402FR-07100KL": {
+      "mpn": "RC0402FR-07100KL",
+      "file": "RC0402FR-07100KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "14b32b30439fabb87c40196209be94580ff76cfd24da40a36dace7101f4645e4"
+    },
+    "RC0402FR-0710KL": {
+      "mpn": "RC0402FR-0710KL",
+      "file": "RC0402FR-0710KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "4dbaa9440d9ffe1ef1215b8d09284b4596626bd559ec10cf6adaca78d0a8eed4"
+    },
+    "RC0402FR-0786K6L": {
+      "mpn": "RC0402FR-0786K6L",
+      "file": "RC0402FR-0786K6L.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "6c4090676ccb489f74739d4fe3b71f94aa1adb9ed82cb0798179bb1a239cfe55"
+    },
+    "RC0402FR-07604KL": {
+      "mpn": "RC0402FR-07604KL",
+      "file": "RC0402FR-07604KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "45b04537575f4d6606d8f4453676f20271bd500ace938f5f47dca4283b390661"
+    },
+    "RC0402FR-071ML": {
+      "mpn": "RC0402FR-071ML",
+      "file": "RC0402FR-071ML.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "23b519fd037eeb4c02b531e86d11c1b2908b4c75c0b6a82b91eebe5901a64a75"
+    },
+    "RC0402FR-0791KL": {
+      "mpn": "RC0402FR-0791KL",
+      "file": "RC0402FR-0791KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "3cd4a0cdef2c7eacaff9162891b98d8daec9449f846652774bbddee98e7e5f33"
+    },
+    "RC0402FR-07442KL": {
+      "mpn": "RC0402FR-07442KL",
+      "file": "RC0402FR-07442KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "e58844cbff52b9def8478c9ac0f74c950d3a274888403eacf116df571c2cef94"
+    },
+    "RC0402FR-0722KL": {
+      "mpn": "RC0402FR-0722KL",
+      "file": "RC0402FR-0722KL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "a380b76941f0cb24e36db0333ef36f4c6bfea5f955b00fa6e206e8889d866587"
+    },
+    "RC0402JR-070RL": {
+      "mpn": "RC0402JR-070RL",
+      "file": "RC0402JR-070RL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "d6c318ea500cef6b879aa335ea9752fe81eaf02092d5c632bc8f92cceb817329"
+    },
+    "RC0402FR-0722RL": {
+      "mpn": "RC0402FR-0722RL",
+      "file": "RC0402FR-0722RL.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
+      "bounds_mm": [
+        [
+          -0.525,
+          -0.275,
+          0.0
+        ],
+        [
+          0.525,
+          0.275,
+          0.39999999999999997
+        ]
+      ],
+      "valid": true,
+      "sha256": "7a1cd94144695d000b11e159fa755f8094b658b7f23f1a59a4a0bc82bb148761"
+    },
+    "SKTDLDE010": {
+      "mpn": "SKTDLDE010",
+      "file": "SKTDLDE010.step",
+      "kind": "nominal source CAD, rigidly registered",
+      "evidence": "/private/tmp/bodyv5-model-datums.2cpqLa/SKTDLDE010-seated.step",
+      "bounds_mm": [
+        [
+          -1.9500001,
+          -1.5000001,
+          -0.4500000000000466
+        ],
+        [
+          1.9500001,
+          1.5349960185620002,
+          1.5500001000000005
+        ]
+      ],
+      "valid": true,
+      "sha256": "e01e47a418d4642540cafce343ee9eebb294907ea7b1993047646aae0942e27f"
+    },
+    "PTS636SM25SMTRLFS": {
+      "mpn": "PTS636SM25SMTRLFS",
+      "file": "PTS636SM25SMTRLFS.step",
+      "kind": "nominal source CAD, rigidly registered",
+      "evidence": "/private/tmp/bodyv5-model-datums.2cpqLa/PTS636SM25SMTRLFS-seated.step",
+      "bounds_mm": [
+        [
+          -4.0,
+          -1.8500000000000025,
+          0.0
+        ],
+        [
+          4.0,
+          1.8500000000000005,
+          2.5500000000000003
+        ]
+      ],
+      "valid": true,
+      "sha256": "86f6396c16b6fa888497820d6fc68d0fc2ecb09be81c1a11ff1ceb472dce9c35"
+    },
+    "NS4150B": {
+      "mpn": "NS4150B",
+      "file": "NS4150B.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Nsiway NS4150 p13 MSOP8; rectangular overall body+lead span envelope",
+      "bounds_mm": [
+        [
+          -2.55,
+          -1.55,
+          0.0
+        ],
+        [
+          2.55,
+          1.55,
+          1.1
+        ]
+      ],
+      "valid": true,
+      "sha256": "d584ac57a2405f5cac5ea90e10956fe9b87c47b03d51a83c42516cc4917051c2"
+    },
+    "TPS22918DBVR": {
+      "mpn": "TPS22918DBVR",
+      "file": "TPS22918DBVR.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "TI TPS22918 DBV package; conservative3.04sq overall package span,1.45max",
+      "bounds_mm": [
+        [
+          -1.52,
+          -1.52,
+          0.0
+        ],
+        [
+          1.52,
+          1.52,
+          1.45
+        ]
+      ],
+      "valid": true,
+      "sha256": "e4d40fd3aed99a2c298834df0d92c3dfe6bf07eab3273be395f7515c6a25d110"
+    },
+    "USBLC6-2SC6": {
+      "mpn": "USBLC6-2SC6",
+      "file": "USBLC6-2SC6.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "ST DS4260 Rev7 p12 SOT23-6L; overall lead span envelope",
+      "bounds_mm": [
+        [
+          -1.5,
+          -1.525,
+          0.0
+        ],
+        [
+          1.5,
+          1.525,
+          1.45
+        ]
+      ],
+      "valid": true,
+      "sha256": "7228f3f32b990a73b751f908214c4c1ed5721ef115ccb0bce0123f64712104e6"
+    },
+    "OK-F302-31115": {
+      "mpn": "OK-F302-31115",
+      "file": "OK-F302-31115.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "OCN **115 n31 nominal10.8\u00d73.38,1\u00b1.1; XY padded conservative centred envelope, body registration provisional; entry CAD+Y",
+      "bounds_mm": [
+        [
+          -5.5,
+          -1.9,
+          0.0
+        ],
+        [
+          5.5,
+          1.9,
+          1.1
+        ]
+      ],
+      "valid": true,
+      "sha256": "397e675a1227b7b211bea59b2f11a2f11b55ad0d0da9cd766ff27c4ecdd7ed3f"
+    },
+    "W25Q128JVSIQ": {
+      "mpn": "W25Q128JVSIQ",
+      "file": "W25Q128JVSIQ.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Winbond W25Q128JV p68 SOIC208mil S; overall lead span envelope",
+      "bounds_mm": [
+        [
+          -4.05,
+          -2.69,
+          0.0
+        ],
+        [
+          4.05,
+          2.69,
+          2.16
+        ]
+      ],
+      "valid": true,
+      "sha256": "bca20ebf4cd8911c1cd9f509ac17990000d5f658e5c650d299e103e1f8285d7e"
+    },
+    "SF32LB525UC6": {
+      "mpn": "SF32LB525UC6",
+      "file": "SF32LB525UC6.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "SiFli DS0052-CN p58:7BSC body,.9maxheight; XY7.1 is explicit+.1 modelling allowance, not vendor maximum",
+      "bounds_mm": [
+        [
+          -3.55,
+          -3.55,
+          0.0
+        ],
+        [
+          3.55,
+          3.55,
+          0.9
+        ]
+      ],
+      "valid": true,
+      "sha256": "feb97dc0682f0f6c232443168d434785054fee027ec7f1866c3ccb21b8685d58"
+    },
+    "SGM41562SAXTYH10G_TR": {
+      "mpn": "SGM41562SAXTYH10G/TR",
+      "file": "SGM41562SAXTYH10G_TR.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "SGMicro TQFN2x2-10DL package TX00663.000 p33 maximum",
+      "bounds_mm": [
+        [
+          -1.05,
+          -1.05,
+          0.0
+        ],
+        [
+          1.05,
+          1.05,
+          0.8
+        ]
+      ],
+      "valid": true,
+      "sha256": "9781891ea68e14a1b1367f160a8e19dade323216c5727ec7bc02a9e99be103bd"
+    },
+    "RT6150B-33GQW": {
+      "mpn": "RT6150B-33GQW",
+      "file": "RT6150B-33GQW.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Richtek DS6150A/B-06 p13 WDFN2.5sq maximum",
+      "bounds_mm": [
+        [
+          -1.3,
+          -1.3,
+          0.0
+        ],
+        [
+          1.3,
+          1.3,
+          0.8
+        ]
+      ],
+      "valid": true,
+      "sha256": "bb70386e2fb827b4a8897cbdd7d03bc7ab97aa67724ca84bd595f15819304ac7"
+    },
+    "RT6150BGQW": {
+      "mpn": "RT6150BGQW",
+      "file": "RT6150BGQW.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Richtek DS6150A/B-06 p13 WDFN2.5sq maximum",
+      "bounds_mm": [
+        [
+          -1.3,
+          -1.3,
+          0.0
+        ],
+        [
+          1.3,
+          1.3,
+          0.8
+        ]
+      ],
+      "valid": true,
+      "sha256": "5156d121a0bbd0c718c234625e8a1e48b5a3b8add672ca92986d14ce33ade07f"
+    },
+    "E1SB48E001G00E": {
+      "mpn": "E1SB48E001G00E",
+      "file": "E1SB48E001G00E.step",
+      "kind": "conservative simplified envelope, NOT vendor CAD",
+      "evidence": "Hosonic E1SB mechanical drawing:2\u00b1.1\u00d71.6\u00b1.1\u00d7.45\u00b1.1",
+      "bounds_mm": [
+        [
+          -1.05,
+          -0.85,
+          0.0
+        ],
+        [
+          1.05,
+          0.85,
+          0.55
+        ]
+      ],
+      "valid": true,
+      "sha256": "5a3962f401d041eb56cb7aa4119947f49f555cb18fa834d05112151ff339bc9c"
+    },
+    "EC05E1220401": {
+      "mpn": "EC05E1220401",
+      "file": "EC05E1220401.step",
+      "kind": "nominal source CAD, rigidly registered",
+      "evidence": "/private/tmp/bodyv5-model-datums.2cpqLa/EC05E1220401-seated.step",
+      "bounds_mm": [
+        [
+          -3.835624458002105,
+          -4.400000100000028,
+          -0.3000000000898781
+        ],
+        [
+          3.835624458,
+          2.51672286119,
+          2.8600000000374
+        ]
+      ],
+      "valid": true,
+      "sha256": "b68a7ad32b5f4c60e8f85b310d644724d8597e1d83f19368aa061a84da6adf3b"
+    }
+  },
+  "reference_models": {
+    "main": {
+      "AE1": "2450AT18B100E",
+      "C1": "CC0603KRX5R6BB105",
+      "C10": "CC0402JRNPO9BN331",
+      "C11": "CC0603KRX5R6BB105",
+      "C12": "CC0805KRX5R8BB106",
+      "C13": "CC0603KRX5R6BB475",
+      "C14": "CC0603KRX5R6BB225",
+      "C15": "CC0603KRX5R6BB105",
+      "C16": "CC0603KRX5R6BB225",
+      "C17": "CC0603KRX5R6BB475",
+      "C18": "CC0603KRX5R6BB475",
+      "C19": "CC0402KRX7R7BB104",
+      "C2": "CC0603JRNPO9BN152",
+      "C20": "CC0402KRX7R7BB104",
+      "C21": "CC0603KRX5R6BB105",
+      "C22": "CC0402KRX7R7BB104",
+      "C23": "CC0603KRX5R6BB225",
+      "C24": "CC0603KRX5R6BB225",
+      "C25": "CC0402KRX5R6BB474",
+      "C26": "CC0603KRX5R6BB105",
+      "C27": "CC0603KRX5R6BB225",
+      "C28": "CC0603KRX5R6BB475",
+      "C29": "CC0603KRX5R6BB475",
+      "C3": "CC0603KRX5R6BB105",
+      "C30": "CC0603KRX5R6BB475",
+      "C31": "CC0603KRX5R6BB225",
+      "C32": "CC0402JRNPO9BN102",
+      "C33": "CC0402JRNPO9BN102",
+      "C34": "CC0402JRNPO9BN102",
+      "C35": "CC0402JRNPO9BN102",
+      "C36": "CC0402JRNPO9BN102",
+      "C37": "CC0402JRNPO9BN102",
+      "C38": "CC0402JRNPO9BN102",
+      "C39": "CC0402JRNPO9BN102",
+      "C4": "CC0603KRX5R6BB105",
+      "C40": "CC0603KRX5R6BB475",
+      "C41": "CC0603KRX5R6BB475",
+      "C42": "C3216X7R1C106K160AC",
+      "C43": "C3216X7R1C106K160AC",
+      "C44": "C3216X7R1C106K160AC",
+      "C45": "C3216X7R1C106K160AC",
+      "C46": "C3216X7R1C106K160AC",
+      "C47": "C3216X7R1C106K160AC",
+      "C48": "CC0603KRX5R6BB475",
+      "C49": "CC0603KRX5R6BB105",
+      "C5": "CC0603KRX5R6BB105",
+      "C50": "CC0402JRNPO9BN102",
+      "C51": "CC0402KRX7R7BB104",
+      "C6": "CC0402JRNPO9BN102",
+      "C7": "CC1206JRNPO8BN104",
+      "C8": "CC0402JRNPO9BN331",
+      "C9": "CC0402JRNPO9BN331",
+      "J1": "53261-0271",
+      "J2": "FH34SRJ-4S-0.5SH_99_",
+      "J3": "53261-0271",
+      "J5": "TYPE-C-31-M-12",
+      "L1": "BLM31PG601SN1L",
+      "L2": "BLM31PG601SN1L",
+      "L3": "WPN201610U4R7MT",
+      "L4": "DFE201612E-2R2M_P2",
+      "L5": "DFE201612E-2R2M_P2",
+      "MK1": "SPM1423HM4H-B",
+      "R1": "RC0402FR-071KL",
+      "R10": "RC0402FR-075K1L",
+      "R11": "RC0402FR-075K1L",
+      "R12": "RC0402FR-07100KL",
+      "R13": "RC0402FR-07100KL",
+      "R14": "RC0402FR-07100KL",
+      "R15": "RC0402FR-07100KL",
+      "R16": "RC0402FR-07100KL",
+      "R17": "RC0402FR-07100KL",
+      "R18": "RC0402FR-07100KL",
+      "R19": "RC0402FR-07100KL",
+      "R2": "RC0402FR-071KL",
+      "R20": "RC0402FR-071KL",
+      "R21": "RC0402FR-071KL",
+      "R22": "RC0402FR-071KL",
+      "R23": "RC0402FR-071KL",
+      "R24": "RC0402FR-071KL",
+      "R25": "RC0402FR-071KL",
+      "R26": "RC0402FR-071KL",
+      "R27": "RC0402FR-071KL",
+      "R28": "RC0402FR-0710KL",
+      "R29": "RC0402FR-0710KL",
+      "R3": "RC0402FR-07100KL",
+      "R30": "RC0402FR-07100KL",
+      "R31": "RC0402FR-0786K6L",
+      "R32": "RC0402FR-07604KL",
+      "R33": "RC0402FR-07100KL",
+      "R34": "RC0402FR-071ML",
+      "R35": "RC0402FR-071KL",
+      "R36": "RC0402FR-071ML",
+      "R37": "RC0402FR-0791KL",
+      "R38": "RC0402FR-07442KL",
+      "R39": "RC0402FR-071ML",
+      "R4": "RC0402FR-0722KL",
+      "R40": "RC0402JR-070RL",
+      "R41": "RC0402FR-07100KL",
+      "R5": "RC0402FR-0722KL",
+      "R6": "RC0402FR-0722RL",
+      "R7": "RC0402FR-07100KL",
+      "R8": "RC0402FR-071KL",
+      "R9": "RC0402FR-071ML",
+      "SW1": "SKTDLDE010",
+      "SW2": "SKTDLDE010",
+      "SW3": "PTS636SM25SMTRLFS",
+      "SW4": "PTS636SM25SMTRLFS",
+      "SW5": "SKTDLDE010",
+      "SW6": "SKTDLDE010",
+      "U1": "NS4150B",
+      "U10": "TPS22918DBVR",
+      "U2": "TPS22918DBVR",
+      "U20": "USBLC6-2SC6",
+      "U3": "OK-F302-31115",
+      "U4": "W25Q128JVSIQ",
+      "U5": "SF32LB525UC6",
+      "U6": "SGM41562SAXTYH10G_TR",
+      "U7": "RT6150B-33GQW",
+      "U8": "RT6150BGQW",
+      "Y1": "E1SB48E001G00E"
+    },
+    "encoder": {
+      "ENC1": "EC05E1220401",
+      "J1": "FH34SRJ-4S-0.5SH_99_"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "revb-jig")(type "KiCad")(uri "${KIPRJMOD}/revb-jig.pretty")(options "")(descr "Rev B flash jig parts"))
+)

@@ -1,0 +1,155 @@
+{
+  "status": "Assembly routing concept; not a released flexible PCB drawing or supplier bend qualification. r4: encoder J1 moved 0.5 mm in -u (48.5 -> 48.0); mouth gap and straight lengths below are re-derived by subtracting 0.5 mm, the bend geometry is unchanged. Re-run the cable fit model before ordering cable.",
+  "main_pose_native": [
+    32.5,
+    16.8,
+    270,
+    "F.Cu"
+  ],
+  "encoder_pose_native": [
+    48.0,
+    16.8,
+    270,
+    "F.Cu"
+  ],
+  "nominal_mouth_centers_world": [
+    [
+      2.6000000000000014,
+      7.710559999999999,
+      30.7
+    ],
+    [
+      18.1,
+      1.96524,
+      30.7
+    ]
+  ],
+  "mouth_height_offset_mm": 5.7453199999999995,
+  "mouth_horizontal_gap_mm": 15.5,
+  "bend_centerline_radius_mm": 2.8726599999999998,
+  "straight_outside_main_mouth_mm": 2.0,
+  "straight_outside_encoder_mouth_mm": 17.5,
+  "vertical_tangent_mm": 0,
+  "developed_external_centerline_mm": 28.524727552261254,
+  "provisional_seated_end_length_mm": 1.3,
+  "developed_tip_to_tip_centerline_mm": 31.124727552261255,
+  "max_stiffener_mm": 2.8,
+  "straight_end_including_seated_end_mm": 3.3,
+  "flex_envelope_thickness_mm": 0.3,
+  "width_guard_mm": 2.6,
+  "nominal_width_mm": 2.5,
+  "nominal_end_thickness_mm": 0.3,
+  "end_thickness_tolerance_mm": 0.03,
+  "physical_pin_map": {
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4
+  },
+  "encoder_nets": {
+    "1": "GND",
+    "2": "ENC_A_CONTACT",
+    "3": "ENC_B_CONTACT",
+    "4": "GND"
+  },
+  "connector_mpn": "FH34SRJ-4S-0.5SH(99)",
+  "connector_body_nominal_mm": [
+    4.0,
+    3.8,
+    1.0
+  ],
+  "connector_body_guard_mm": [
+    4.15,
+    3.8,
+    1.1
+  ],
+  "board_section_projections": {
+    "main": {
+      "centre_slice_native_y_mm": 16.8,
+      "guard_native_y_range_mm": [
+        15.5,
+        18.1
+      ],
+      "centre_slice_world_x_intervals_mm": [
+        [
+          -25.490323917525775,
+          16.086607246015227
+        ]
+      ],
+      "guard_projection_world_x_bounds_mm": [
+        -25.49045793814433,
+        18.088344324203575
+      ]
+    },
+    "encoder": {
+      "centre_slice_native_y_mm": 16.8,
+      "guard_native_y_range_mm": [
+        15.5,
+        18.1
+      ],
+      "centre_slice_world_x_intervals_mm": [
+        [
+          9.246799116997792,
+          26.172034258210644
+        ]
+      ],
+      "guard_projection_world_x_bounds_mm": [
+        5.48905707978556,
+        26.33278595696489
+      ]
+    }
+  },
+  "geometry_sources": {
+    "main": {
+      "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/main-45deg.kicad_pcb",
+      "sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7"
+    },
+    "encoder": {
+      "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/encoder-45deg.kicad_pcb",
+      "sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be"
+    }
+  },
+  "cable_to_static_solids_intersections": [],
+  "body_cases": [
+    {
+      "board": "main",
+      "bounds_mm": [
+        [
+          2.6000000000000005,
+          7.110559999999997,
+          28.625
+        ],
+        [
+          6.400000000000001,
+          8.210559999999997,
+          32.775
+        ]
+      ],
+      "clashes": []
+    },
+    {
+      "board": "encoder",
+      "bounds_mm": [
+        [
+          18.6,
+          1.3652399999999978,
+          28.625
+        ],
+        [
+          22.400000000000002,
+          2.4652399999999983,
+          32.775
+        ]
+      ],
+      "clashes": []
+    }
+  ],
+  "limitations": [
+    "Nominal positions; no tolerance stack or cover/fastener/mating process simulation.",
+    "Bend radius is an allocated design clearance, NOT a manufacturer cable endurance specification.",
+    "FFC/FPC supplier must confirm cable length, exact stiffeners, bend performance and physical continuity.",
+    "Fit model cable is .3mm everywhere (nominal end thickness), conservative for a thinner bend region but not the .33mm maximum-tolerance end.",
+    "Do not fold or crease near connector. Straight end remains parallel to PCB."
+  ],
+  "source": "Hirose EDC3-159714-05, pages1,2,4,5-9, FH34SRJ-4S-0.5SH(99)"
+}

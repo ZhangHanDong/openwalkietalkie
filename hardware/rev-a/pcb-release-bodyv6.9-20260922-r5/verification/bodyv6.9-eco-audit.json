@@ -1,0 +1,265 @@
+{
+ "revision": "BodyV6.9 ECO r5",
+ "date": "2026-09-23",
+ "inputs": {
+  "r4_main_sha256": "d07edce15128b787e0ee17e90b9a001f45a9b1c3971d8a0c0c59cae16669b42e",
+  "r4_encoder_sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+  "r3_main_sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+  "bodyv6_9_step": "mechanical-source/case/BodyV6.9.step",
+  "bodyv6_9_step_sha256": "611e17d9e32ad40e57e45c5deaf02b7145864df91d573b9ae2b64143d0faa895"
+ },
+ "boards": {
+  "main": {
+   "file": "main/main-45deg.kicad_pcb",
+   "sha256": "9557372946eb6312b47ea35e3d8bae7c8ed6b97967e3743cc4c340db4f393af6",
+   "bytes": 1164834,
+   "footprints": 135,
+   "tracks": 2776,
+   "vias": 367,
+   "drc_lite_issues": 0,
+   "split_signal_nets": [],
+   "non_45_degree_segments": 0,
+   "component_changes_vs_r4": [
+    [
+     "C11",
+     [
+      44.5,
+      68.5,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      44.6,
+      66.43,
+      180.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "C12",
+     [
+      44.9,
+      66.43,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      42.8,
+      61.4,
+      0.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "R7",
+     [
+      47.1,
+      67.5,
+      90.0,
+      "B.Cu"
+     ],
+     [
+      43.4,
+      68.6,
+      90.0,
+      "B.Cu"
+     ]
+    ]
+   ],
+   "component_changes_vs_r3": [
+    [
+     "C11",
+     [
+      44.5,
+      68.5,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      44.6,
+      66.43,
+      180.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "C12",
+     [
+      44.9,
+      66.43,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      42.8,
+      61.4,
+      0.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "J1",
+     [
+      33.2,
+      69.0,
+      90.0,
+      "B.Cu"
+     ],
+     [
+      33.0,
+      84.9,
+      90.0,
+      "F.Cu"
+     ]
+    ],
+    [
+     "MH3",
+     "removed"
+    ],
+    [
+     "MH4",
+     [
+      35.2,
+      91.2,
+      0.0,
+      "F.Cu"
+     ],
+     [
+      34.229,
+      91.2,
+      0.0,
+      "F.Cu"
+     ]
+    ],
+    [
+     "R39",
+     [
+      52.7,
+      87.0,
+      -90.0,
+      "B.Cu"
+     ],
+     [
+      52.8,
+      86.8,
+      0.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "R7",
+     [
+      47.1,
+      67.5,
+      90.0,
+      "B.Cu"
+     ],
+     [
+      43.4,
+      68.6,
+      90.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "TP10",
+     [
+      33.5,
+      83.0,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      34.15,
+      83.0,
+      180.0,
+      "B.Cu"
+     ]
+    ],
+    [
+     "TP3",
+     [
+      33.5,
+      85.0,
+      180.0,
+      "B.Cu"
+     ],
+     [
+      34.15,
+      85.0,
+      180.0,
+      "B.Cu"
+     ]
+    ]
+   ],
+   "nets_with_changed_copper_vs_r4": [
+    "GND",
+    "MIC_PDM_DATA",
+    "SYSTEM_SUPPLY",
+    "audio::SPEAKER_MINUS"
+   ],
+   "nets_with_changed_copper_vs_r3": [
+    "CAL",
+    "CELL",
+    "DEBUG_RX_SWDIO",
+    "DEBUG_TX_SWCLK",
+    "ENC_A",
+    "ENC_B",
+    "ENTER",
+    "ESC",
+    "FLASH_CLK",
+    "FLASH_CS",
+    "FLASH_IO1",
+    "FLASH_IO2",
+    "FLASH_IO3",
+    "GND",
+    "I2C_SCL",
+    "I2C_SDA",
+    "IO_3V3",
+    "MACRO_LEFT",
+    "MACRO_RIGHT",
+    "MIC_PDM_DATA",
+    "PANEL_4V",
+    "PANEL_CLK",
+    "PANEL_D0",
+    "PANEL_D1",
+    "PANEL_D2",
+    "PANEL_D3",
+    "PANEL_RESET",
+    "PANEL_TE",
+    "PTT",
+    "RESET_ACTIVE_HIGH",
+    "SHIFT",
+    "SYSTEM_SUPPLY",
+    "TOUCH_IRQ",
+    "TOUCH_RESET",
+    "audio::SPEAKER_MINUS",
+    "audio::SPEAKER_PLUS"
+   ]
+  },
+  "encoder": {
+   "file": "encoder/encoder-45deg.kicad_pcb",
+   "sha256": "748a49c15106286227c0a98ac4d4bfe43062a7feaf941f3e72ba40685684e3c4",
+   "bytes": 84826,
+   "note": "unchanged from r4 (748a49c1...)"
+  }
+ },
+ "drc_lite_rules": "copper clearance 0.10, copper-to-edge 0.30, hole clearance 0.20, courtyard overlap, keepout zones; zone fills not modelled",
+ "native_kicad_drc": {
+  "main": "main/verification/main-drc-kicad10.rpt (0 violations, 0 unconnected, 0 footprint errors, zones refilled); run1 (before removing the orphaned GND via at (44.175,69.8)) kept as main-drc-kicad10-run1.rpt",
+  "encoder": "encoder/verification/encoder-drc-kicad10.rpt (r4 run, board unchanged)"
+ },
+ "outline_changes_vs_r4": [
+  "top edge: notch for the V6.9 case seat block (u 33.58-41.4, v 1.0-6.67, round bottom r3.07 at (36.65,3.6)): board edge now u=33.339 from v 1.311 to 3.6 then r3.311 arc (centre (36.65,3.6)) to (35.894,6.824) on the existing wheel-cutout diagonal; clearance to the block 0.24 mm",
+  "right edge: the dia-4.0 notch at (52.2,52.0) removed (the V6.9 case has no pillar there any more; a B-side ring seat r2.0-2.4 sits on the board instead); straight r3 edge u=54.69 restored between v 48.992 and 86.499"
+ ],
+ "placement_changes_vs_r4": [
+  "C11 (1uF) (44.5,68.5) -> (44.6,66.43) rot 180 B, its pads land on the existing SYSTEM_SUPPLY/GND copper",
+  "C12 (10uF) (44.9,66.43) rot 180 -> (42.8,61.4) rot 0 B, pads on the SYSTEM_SUPPLY via (41.495,61.78) and GND via (43.1375,61.0)",
+  "R7 (100k) (47.1,67.5) -> (43.4,68.6) rot 90 B; MIC_PDM_DATA B.Cu re-routed (46.89,72.22)->(46.89,69.2)->(43.51,69.2)->pad; GND pad on the existing GND track"
+ ],
+ "copper_changes_vs_r4": [
+  "SPEAKER_MINUS B.Cu run L2.2 -> C10.2 straightened at u=42.75 (was 43.025 with a jog) to clear C11 pad 2",
+  "old C11/R7 stubs and the GND vias (47.4,66.49) and (44.175,69.8) removed"
+ ]
+}

@@ -1,0 +1,133 @@
+{
+  "board": "encoder",
+  "source_sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+  "copper_layers": 2,
+  "thickness_mm": 1.0,
+  "footprints": [
+    {
+      "reference": "MH1",
+      "value": "Mounting hole",
+      "footprint": "",
+      "x_nm": 36458714,
+      "y_nm": 3800000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 0,
+      "pad_types": {
+        "3": 1
+      }
+    },
+    {
+      "reference": "MH2",
+      "value": "Mounting hole",
+      "footprint": "",
+      "x_nm": 52200000,
+      "y_nm": 19541286,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 0,
+      "pad_types": {
+        "3": 1
+      }
+    },
+    {
+      "reference": "J1",
+      "value": "FH34SRJ-4S-0.5SH(99)",
+      "footprint": "openmicrodial_encoder_rev_a-FP_HIROSE_FH34SRJ_4S",
+      "x_nm": 48500000,
+      "y_nm": 16800000,
+      "rotation": -90.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "1": 10
+      }
+    },
+    {
+      "reference": "ENC1",
+      "value": "EC05E1220401",
+      "footprint": "openmicrodial_encoder_rev_a-FP_ALPS_EC05E1220401",
+      "x_nm": 47500000,
+      "y_nm": 8500000,
+      "rotation": 0.0,
+      "side": "top",
+      "attributes": 2,
+      "pad_types": {
+        "3": 2,
+        "1": 5
+      }
+    }
+  ],
+  "holes": [
+    {
+      "reference": "MH1",
+      "pad": "",
+      "x_nm": 36458714,
+      "y_nm": 3800000,
+      "dx_nm": 2000000,
+      "dy_nm": 2000000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "MH2",
+      "pad": "",
+      "x_nm": 52200000,
+      "y_nm": 19541286,
+      "dx_nm": 2000000,
+      "dy_nm": 2000000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "ENC1",
+      "pad": "",
+      "x_nm": 46300000,
+      "y_nm": 11200000,
+      "dx_nm": 620000,
+      "dy_nm": 620000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "ENC1",
+      "pad": "",
+      "x_nm": 48700000,
+      "y_nm": 11200000,
+      "dx_nm": 620000,
+      "dy_nm": 620000,
+      "rotation": 0.0,
+      "plated": false
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 47500000,
+      "y_nm": 13700000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48800000,
+      "y_nm": 16050000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    },
+    {
+      "reference": "via",
+      "pad": "",
+      "x_nm": 48800000,
+      "y_nm": 17550000,
+      "dx_nm": 200000,
+      "dy_nm": 200000,
+      "rotation": 0,
+      "plated": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+** Drc report for main-45deg.kicad_pcb **
+** Created on 2026-09-23T07:15:48 **
+** Report includes: Errors, Warnings **
+
+** Found 1 DRC violations **
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(44.1750 mm, 69.8000 mm): Via [GND] on F.Cu - B.Cu
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

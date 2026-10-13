@@ -1,0 +1,9 @@
+{
+  "session_id": "01a0bca9-1344-7d20-a793-10903639be67",
+  "transcript_path": "/tmp/codex-home/sessions/2026/09/20/rollout-2026-09-20T10-33-12-01a0bca9-1344-7d20-a793-10903639be67.jsonl",
+  "cwd": "/tmp/projects/cohdl-api",
+  "hook_event_name": "SessionEnd",
+  "model": "gpt-6-astra",
+  "permission_mode": "default",
+  "reason": "other"
+}

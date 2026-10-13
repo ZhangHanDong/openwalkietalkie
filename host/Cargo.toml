@@ -1,0 +1,155 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+# Exact pins: the gate builds with --locked and every crate shares these.
+[workspace.dependencies]
+deck-proto = { path = "crates/deck-proto" }
+deck-model = { path = "crates/deck-model" }
+deck-client = { path = "crates/deck-client" }
+deck-gui-core = { path = "crates/deck-gui-core" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+schemars = "=1.2.2"
+hidapi = "=2.6.7"
+crossbeam-channel = "=0.5.17"
+tokio = { version = "=1.53.1", features = ["rt-multi-thread", "macros", "sync", "time", "net", "io-util", "signal"] }
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "fmt"] }
+tracing-appender = "=0.2.5"
+clap = { version = "=4.6.7", features = ["derive"] }
+toml = "=1.1.6"
+# `config.set` edits the operator's own `config.toml` in place (§4.11), and
+# a serde round trip through `toml` cannot: it would write back every
+# documented default as an explicit key and drop every comment and blank
+# line the operator put there. `toml_edit` changes the one key and returns
+# the rest of the file byte for byte. It is already in this tree (0.25.15,
+# under `proc-macro-crate`), so the pin adds a name and no build.
+toml_edit = "=0.25.15"
+directories = "=6.0.0"
+blake3 = "=1.8.7"
+thiserror = "=2.0.20"
+proptest = "=1.11.0"
+libc = "=0.2.189"
+# Week 2 (HOST-CONTRACT-W2 §2): the API doors, the client, hot reload, trust, tokens.
+axum = { version = "=0.8.9", features = ["ws", "json"] }
+tokio-tungstenite = "=0.30.0"
+futures-util = "=0.3.34"
+notify = "=8.2.0"
+arc-swap = "=1.9.2"
+security-framework = "=3.7.0"
+getrandom = "=0.4.3"
+# The local recogniser (`deckd::audio::whisper`, 2026-10-11): whisper.cpp
+# through its Rust binding, built with the Metal backend. macOS-only in this
+# workspace, declared under the deckd crate's `[target.'cfg(target_os =
+# "macos")'.dependencies]` like every other audio library below. The model
+# weights are not in the build: they are downloaded when the operator opts
+# in (`deckd stt install`, or the app's first-start prompt).
+whisper-rs = { version = "=0.16.0", features = ["metal"] }
+# The local synthesiser (`deckd::audio::kokoro`, 2026-10-11): Kokoro through
+# the official sherpa-onnx binding, which links a prebuilt static library
+# (fetched once at build time, `SHERPA_ONNX_ARCHIVE_DIR` to point at a copy)
+# and carries the Chinese and English text front ends. macOS-only here, like
+# whisper-rs; the model package is downloaded on opt-in.
+sherpa-onnx = "=1.13.8"
+# Week 4 (HOST-CONTRACT-W4 §3 B11): the voice pipeline's libraries. Every one
+# of them is macOS-only in this workspace and is declared under
+# `[target.'cfg(target_os = "macos")'.dependencies]` by the crate that uses
+# it, the way `security-framework` already is — a `cargo check` on Linux must
+# not try to build CoreAudio.
+#
+# The pins are the ones `facts-crates.md` resolved together, and two of them
+# are traps (W4 §2 V20):
+#   * `rtrb` — 0.4.0 is the latest stable even though 0.3.5 was published
+#     *after* it (a backport on the 0.3 line). "Newest published" is not
+#     "latest"; `=0.4.0` is deliberate.
+#   * `rubato` — 5.0.0 is a total API break from 0.x (`Fft::new(...,
+#     FixedSync::…)`, buffers through the separate `audioadapter` crates,
+#     `process_into_buffer` for the allocation-free path). Code written
+#     against a 0.x example will not compile, and must not be "fixed" by
+#     loosening the pin.
+cpal = "=0.18.2"
+rubato = "=5.0.0"
+rtrb = "=0.4.0"
+objc2 = "=0.6.4"
+block2 = "=0.6.2"
+objc2-foundation = "=0.3.2"
+objc2-core-audio = "=0.3.2"
+objc2-core-foundation = "=0.3.2"
+objc2-speech = "=0.3.2"
+# The BLE audio link (`deckd::ble`): CoreBluetooth's central runs on a private
+# serial dispatch queue, so none of its callbacks lands on the main run loop
+# the speech engines own. 0.3.1 is already in this lock (under objc2-core-*),
+# with exactly these features: `objc2` is what lets a queue be passed through
+# `msg_send!`, and block2/libc stay off because nothing here needs them.
+dispatch2 = { version = "=0.3.1", default-features = false, features = ["std", "objc2"] }
+# The usage strings the bare dev `deckd` needs before it may touch
+# CoreBluetooth, embedded in its own `__TEXT,__info_plist` (see
+# crates/deckd/src/main.rs). no_std, no dependencies, one macro.
+embed_plist = "=1.2.2"
+# The objc2 framework crates gate every class behind a feature; AVSpeech's
+# writeUtterance chain needs the synthesiser, the buffer/format types it hands
+# back (V16: the format varies per voice, so it is read per buffer) and
+# `block2` for the callback itself.
+objc2-avf-audio = { version = "=0.3.2", features = ["AVSpeechSynthesis", "AVAudioBuffer", "AVAudioFormat", "AVAudioTypes", "block2"] }
+# Week 5 (HOST-CONTRACT-W5 §4): the GUI's event bus. `try_send` on an
+# unbounded `async_channel::Sender` is executor-agnostic, which is the whole
+# reason the design names this crate — the same `post` call has to work from
+# a tokio worker and from gpui's foreground executor, and neither runtime
+# may ever be asked to block the UI thread to deliver an event.
+async-channel = "=2.5.0"
+# Week 5 (HOST-CONTRACT-W5 §3): `deckd::desktop`. `NSAppleScript` is already
+# in `objc2-foundation`'s default features, so the scripting seam needs no
+# new crate; the **focus fallback** does. AppKit is the biggest framework
+# crate in the tree, so it is taken with `default-features = false` and the
+# two classes §5.5 names — `NSWorkspace` to activate Ghostty by bundle id
+# `com.mitchellh.ghostty`, `NSRunningApplication` to find it — and nothing
+# else. With those features its only extra dependency is `bitflags`.
+objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["NSWorkspace", "NSRunningApplication"] }
+# The GUI's pin, and it is a pin for measured reasons (HOST-CONTRACT-W5 §1):
+#   * `default-features = false` -- with them gpui's build script shells out
+#     to Xcode's `metal`, and the Metal Toolchain is an uninstalled Xcode 27
+#     component here (`cannot execute tool 'metal'`, after ~504 crates).
+#     `runtime_shaders` moves shader compilation past build time, which is
+#     what makes the window open at all on this machine (M1).
+#   * `gpui-component` stays on 0.5.1 -- 0.6.x wants `gpui ^0.3.x` and no
+#     0.3.x is published, so the pair is unresolvable from the registry (M2).
+gpui = { version = "=0.2.2", default-features = false, features = ["runtime_shaders", "macos-blade"] }
+gpui-component = "=0.5.1"
+# Week 6 (HOST-CONTRACT-W6 §1 M1/M2): the tray and the login item.
+#
+#   * `tray-icon` is **0.25.1 and not the design's 0.19**. 0.19 wants
+#     `objc2 ^0.5.2` while this workspace pins `objc2 =0.6.4` and
+#     `objc2-* =0.3.2` for the voice and desktop stacks, and cargo resolves
+#     that by taking *both* -- five objc2 crates at two major versions each,
+#     two Objective-C binding layers in one process, for a menu. 0.25.1
+#     resolves to a single version of every one, matching the pins exactly,
+#     and was built and run against gpui 0.2.2 (M1). openmicrokbd runs 0.19
+#     happily because it has no audio stack and so never pins objc2 0.6;
+#     that precedent does not transfer.
+#   * `objc2-service-management` is the login item (`SMAppService.mainApp`),
+#     and the `SMAppService` feature is what declares the class. It works
+#     unbundled -- but `register()` returning `Ok` is **not** evidence that
+#     anything was registered (M2), so the wrapper always re-reads
+#     `status()` and reports that.
+tray-icon = "=0.25.1"
+objc2-service-management = { version = "=0.3.2", features = ["SMAppService"] }
+
+[profile.release]
+opt-level = 2
+strip = true
+
+# Proc macros and build scripts must NOT be stripped. They are dylibs rustc
+# loads by symbol, so a stripped one is one rustc cannot find: a release build
+# fails with `can't find crate for tokio_macros` (and serde_derive, and
+# thiserror_impl, …) nowhere near the real cause. Nothing built release until
+# week 7's packaging, which is why this sat here unnoticed — `strip` only
+# reached the host artifacts when somebody finally asked for a release binary.
+[profile.release.build-override]
+strip = false

@@ -1,0 +1,414 @@
+//! `deckd::codexd` against a fake Codex app-server daemon: a WebSocket on a
+//! Unix socket that answers `initialize`, lists one loaded thread, raises an
+//! approval and watches what comes back. The daemon under test is the
+//! in-process one (`common::Daemon`); the client is run against its `Api`
+//! exactly as `deckd run` runs it.
+//!
+//! Three promises (design §5.2 after the daemon client):
+//!
+//! 1. A thread that was already loaded when the client connected is on the
+//!    roster as `codex:<thread id>`, with the daemon's name and state.
+//! 2. A server approval request is a permission card, and the operator's
+//!    answer is the JSON-RPC response the server was blocked on.
+//! 3. An order becomes `turn/steer` while a turn runs and `turn/start`
+//!    otherwise — and the hook door answers `{}` for a thread the client
+//!    owns, so the two paths never fight.
+mod common;
+
+use common::{Daemon, Options};
+use deck_model::{AgentState, CardStatus, Deliver, Kind, OriginKind};
+use futures_util::{SinkExt, StreamExt};
+use serde_json::{json, Value};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::sync::mpsc;
+
+const PATIENCE: Duration = Duration::from_secs(10);
+
+/// What the fake received from the client, in order.
+#[derive(Debug)]
+enum Seen {
+    Request {
+        id: Value,
+        method: String,
+        params: Value,
+    },
+    #[allow(dead_code)]
+    Notification { method: String },
+    Response {
+        id: Value,
+        result: Option<Value>,
+        error: Option<Value>,
+    },
+}
+
+/// The fake daemon: one connection, scripted.
+struct Fake {
+    seen: mpsc::UnboundedReceiver<Seen>,
+    /// Push a server→client message (a notification or a request).
+    push: mpsc::UnboundedSender<Value>,
+    account: Arc<Mutex<Option<(String, u8)>>>,
+}
+
+fn socket_path(tag: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("dk-codexd-{}-{tag}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir.join("ctl.sock")
+}
+
+/// Accept one WebSocket client on `path` and script the app-server surface:
+/// `initialize` → ok, `thread/loaded/list` → `[t1]`, `thread/resume t1` →
+/// an idle thread named "Refactor UI", everything else → `{}`. Every
+/// message the client sends is reported on `seen`; `push` injects
+/// server-side messages.
+async fn fake_daemon(path: PathBuf) -> Fake {
+    let listener = tokio::net::UnixListener::bind(&path).unwrap();
+    let (seen_tx, seen_rx) = mpsc::unbounded_channel();
+    let (push_tx, mut push_rx) = mpsc::unbounded_channel::<Value>();
+    let account: Arc<Mutex<Option<(String, u8)>>> = Arc::default();
+    let current_account = account.clone();
+    tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.unwrap();
+        let ws = match tokio_tungstenite::accept_async(stream).await {
+            Ok(ws) => ws,
+            Err(_) => return,
+        };
+        let (mut sink, mut source) = ws.split();
+        loop {
+            tokio::select! {
+                pushed = push_rx.recv() => {
+                    let Some(value) = pushed else { break };
+                    if sink.send(tokio_tungstenite::tungstenite::Message::Text(value.to_string().into())).await.is_err() {
+                        break;
+                    }
+                }
+                msg = source.next() => {
+                    let Some(Ok(tokio_tungstenite::tungstenite::Message::Text(text))) = msg else { break };
+                    let value: Value = serde_json::from_str(&text).unwrap();
+                    let method = value["method"].as_str().map(str::to_string);
+                    let id = value.get("id").cloned();
+                    match (method, id) {
+                        (Some(method), Some(id)) => {
+                            let params = value.get("params").cloned().unwrap_or(Value::Null);
+                            let reply = match method.as_str() {
+                                "initialize" => json!({"userAgent": "fake codex"}),
+                                "account/read" => match current_account.lock().unwrap().as_ref() {
+                                    Some((email, _)) => json!({"account": {"type": "chatgpt", "email": email, "planType": "pro"}}),
+                                    None => json!({"account": null}),
+                                },
+                                "account/rateLimits/read" => match current_account.lock().unwrap().as_ref() {
+                                    Some((_, percent)) => json!({"rateLimits": {"primary": {"usedPercent": percent, "windowDurationMins": 300}}}),
+                                    None => json!({}),
+                                },
+                                "thread/loaded/list" => json!({"data": ["t1"], "nextCursor": null}),
+                                "thread/resume" => json!({"thread": {
+                                    "id": params["threadId"], "name": "Refactor UI",
+                                    "cwd": "/Users/t/code/api", "status": {"type": "idle"},
+                                }}),
+                                _ => json!({}),
+                            };
+                            let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
+                            let _ = sink.send(tokio_tungstenite::tungstenite::Message::Text(
+                                json!({"id": id, "result": reply}).to_string().into(),
+                            )).await;
+                        }
+                        (Some(method), None) => {
+                            let _ = seen_tx.send(Seen::Notification { method });
+                        }
+                        (None, Some(id)) => {
+                            let _ = seen_tx.send(Seen::Response {
+                                id,
+                                result: value.get("result").cloned(),
+                                error: value.get("error").cloned(),
+                            });
+                        }
+                        (None, None) => {}
+                    }
+                }
+            }
+        }
+    });
+    Fake {
+        seen: seen_rx,
+        push: push_tx,
+        account,
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn usage_follows_the_active_account_and_clears_on_logout() {
+    let path = socket_path("usage-accounts");
+    let mut fake = fake_daemon(path.clone()).await;
+    *fake.account.lock().unwrap() = Some(("personal@example.com".into(), 12));
+    let daemon = Daemon::with(Options { codex_socket: Some(path), ..Options::default() }).await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+    let (_, params) = fake.request("account/read").await;
+    assert_eq!(params, json!({"refreshToken": false}));
+    daemon.until("personal usage", |s| s.usage.as_ref().is_some_and(|u|
+        u.items.len() == 1 && u.items[0].account.as_deref() == Some("personal@example.com") && u.items[0].percent == 12
+    )).await;
+
+    // Switch inside the normal refresh gap: the account notification must
+    // fetch both fields again, without applying the new label to 12%.
+    *fake.account.lock().unwrap() = Some(("work@company.example".into(), 78));
+    fake.push.send(json!({"method": "account/updated", "params": {"authMode": "chatgpt", "planType": "pro"}})).unwrap();
+    fake.request("account/read").await;
+    daemon.until("work usage", |s| s.usage.as_ref().is_some_and(|u|
+        u.items.len() == 1 && u.items[0].account.as_deref() == Some("work@company.example") && u.items[0].percent == 78
+    )).await;
+
+    *fake.account.lock().unwrap() = None;
+    fake.push.send(json!({"method": "account/updated", "params": {"authMode": null, "planType": null}})).unwrap();
+    fake.request("account/rateLimits/read").await;
+    daemon.until("cleared usage", |s| s.usage.as_ref().is_some_and(|u| u.items.is_empty())).await;
+    stop.send(true).unwrap();
+    client.await.unwrap();
+    daemon.shutdown().await;
+}
+
+impl Fake {
+    /// The next thing the client sent, within `PATIENCE`.
+    async fn next(&mut self) -> Seen {
+        tokio::time::timeout(PATIENCE, self.seen.recv())
+            .await
+            .expect("the client said something in time")
+            .expect("the fake is still up")
+    }
+
+    /// Skip ahead to the next request of this method.
+    async fn request(&mut self, want: &str) -> (Value, Value) {
+        loop {
+            match self.next().await {
+                Seen::Request { id, method, params } if method == want => return (id, params),
+                _ => {}
+            }
+        }
+    }
+
+    /// Skip ahead to the next response to server request `want`.
+    async fn response(&mut self, want: &Value) -> (Option<Value>, Option<Value>) {
+        loop {
+            match self.next().await {
+                Seen::Response { id, result, error } if &id == want => return (result, error),
+                _ => {}
+            }
+        }
+    }
+}
+
+/// Wait until the roster has an agent with this key.
+async fn agent_with_key(daemon: &Daemon, key: &str) -> deck_model::Agent {
+    let deadline = tokio::time::Instant::now() + PATIENCE;
+    loop {
+        if let Some(agent) = daemon
+            .api
+            .bus
+            .snapshot()
+            .agents
+            .values()
+            .find(|a| a.session.key.as_deref() == Some(key))
+        {
+            return agent.clone();
+        }
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "no agent {key} on the roster"
+        );
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_loaded_thread_is_an_agent_its_approval_a_card_and_an_order_a_steer() {
+    let path = socket_path("e2e");
+    let mut fake = fake_daemon(path.clone()).await;
+    let daemon = Daemon::with(Options {
+        codex_socket: Some(path.clone()),
+        // An allow is a guarded operation: the peer below is trusted, as
+        // the deck itself is.
+        verifier: deckd::trust::FakeVerifier {
+            trusted: true,
+            capped: false,
+        },
+        ..Options::default()
+    })
+    .await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+
+    // 1. The handshake and the roster.
+    let (_, params) = fake.request("initialize").await;
+    assert_eq!(params["capabilities"]["experimentalApi"], true);
+    assert_eq!(params["clientInfo"]["name"], "openwalkietalkie-deckd");
+    fake.request("thread/loaded/list").await;
+    let (_, params) = fake.request("thread/resume").await;
+    assert_eq!(params["threadId"], "t1");
+    let agent = agent_with_key(&daemon, "codex:t1").await;
+    assert_eq!(agent.kind, Kind::Codex);
+    assert_eq!(agent.name, "Refactor UI");
+    assert_eq!(agent.caps.answer, deck_model::AnswerCap::Poll);
+    assert_eq!(agent.caps.order, deck_model::OrderCap::Poll);
+    assert_eq!(agent.session.cwd.as_deref(), Some("/Users/t/code/api"));
+    assert_eq!(agent.meta["via"], "app-server");
+
+    // 2. A turn: working, titled from the user message, then an approval.
+    fake.push
+        .send(json!({"method": "turn/started", "params": {"threadId": "t1", "turn": {"id": "turn-1"}}}))
+        .unwrap();
+    fake.push
+        .send(json!({"method": "item/started", "params": {"threadId": "t1", "item": {
+            "id": "u1", "type": "userMessage", "content": [{"type": "text", "text": "run the migration against staging"}]
+        }}}))
+        .unwrap();
+    daemon
+        .until("working + titled", |s| {
+            s.agents.get(&agent.id).is_some_and(|a| {
+                a.state == AgentState::Working
+                    && a.title.as_deref() == Some("run the migration against staging")
+            })
+        })
+        .await;
+    fake.push
+        .send(
+            json!({"id": 41, "method": "item/commandExecution/requestApproval", "params": {
+                "threadId": "t1", "turnId": "turn-1", "itemId": "c1",
+                "command": ["psql", "-f", "migrate.sql", "staging"], "cwd": "/Users/t/code/api"
+            }}),
+        )
+        .unwrap();
+    daemon
+        .until("a permission card", |s| {
+            s.agents.get(&agent.id).is_some_and(|a| a.card.is_some())
+        })
+        .await;
+    let card = daemon.api.bus.snapshot().agents[&agent.id]
+        .card
+        .clone()
+        .unwrap();
+    assert_eq!(card.origin.kind, OriginKind::Permission);
+    assert_eq!(card.deliver, Deliver::Poll);
+    assert_eq!(
+        card.text.as_deref(),
+        Some("Run: psql -f migrate.sql staging")
+    );
+    assert_eq!(
+        card.choices
+            .iter()
+            .map(|c| c.label.as_str())
+            .collect::<Vec<_>>(),
+        ["Allow", "Allow for session", "Deny"]
+    );
+    assert_eq!(card.status, CardStatus::Pending);
+
+    // 3. The hook door stays out of a thread the client owns: a hook for
+    //    the same thread is answered `{}` and raises nothing.
+    let mut peer = daemon.connect().await;
+    peer.call(
+        "session.hello",
+        json!({"client": {"name": "gui"}, "scopes": ["observe", "operate", "hooks:ingest"]}),
+    )
+    .await;
+    let hook = peer
+        .call(
+            "hooks.codex",
+            json!({"payload": {
+                "session_id": "t1", "hook_event_name": "PermissionRequest",
+                "tool_name": "Bash", "tool_input": {"command": "rm -rf /"}, "cwd": "/w"
+            }}),
+        )
+        .await;
+    assert_eq!(hook, json!({}), "the hook path yields to the daemon client");
+
+    // 4. The operator allows it: the fake receives the decision as the
+    //    response to request 41.
+    let answer = peer
+        .call(
+            "op.answer",
+            json!({"agent": agent.id, "card": card.id, "choice": 0}),
+        )
+        .await;
+    assert_eq!(answer["delivered"], true, "{answer}");
+    let (result, error) = fake.response(&json!(41)).await;
+    assert_eq!(error, None);
+    assert_eq!(result, Some(json!({"decision": "accept"})));
+    daemon
+        .until("the card off the deck", |s| {
+            s.agents.get(&agent.id).is_some_and(|a| {
+                a.card.as_ref().is_none_or(|c| {
+                    !matches!(c.status, CardStatus::Pending | CardStatus::Answering { .. })
+                })
+            })
+        })
+        .await;
+
+    // 5. An order mid-turn steers; after the turn, it starts one.
+    let order = peer
+        .call(
+            "op.order",
+            json!({"agent": agent.id, "text": "also update the README", "ctx": "talk", "source": "ptt"}),
+        )
+        .await;
+    assert_eq!(order["via"], "poll", "{order}");
+    let (_, params) = fake.request("turn/steer").await;
+    assert_eq!(params["threadId"], "t1");
+    assert_eq!(params["expectedTurnId"], "turn-1");
+    assert_eq!(params["input"][0]["text"], "also update the README");
+    fake.push.send(json!({"method":"item/started","params":{"threadId":"t1","item":{"id":"tool1","type":"commandExecution","command":"cargo test","status":"inProgress"}}})).unwrap();
+    daemon.until("live tool activity", |s| s.agents[&agent.id].messages.iter().any(|m| m.message.id == "tool1" && m.message.streaming && m.message.role == deck_model::ChatRole::Tool)).await;
+    fake.push.send(json!({"method":"item/completed","params":{"threadId":"t1","item":{"id":"tool1","type":"commandExecution","command":"cargo test","status":"completed","aggregatedOutput":"All tests passed"}}})).unwrap();
+    fake.push.send(json!({"method":"item/started","params":{"threadId":"t1","item":{"id":"a1","type":"agentMessage","text":""}}})).unwrap();
+    for delta in ["Migration applied; ", "README updated"] {
+        fake.push.send(json!({"method":"item/agentMessage/delta","params":{"threadId":"t1","itemId":"a1","delta":delta}})).unwrap();
+    }
+    daemon.until("streaming text before turn completion", |s| s.agents[&agent.id].messages.iter().any(|m| m.message.id == "a1" && m.message.streaming && m.text == "Migration applied; README updated")).await;
+    fake.push
+        .send(
+            json!({"method": "item/completed", "params": {"threadId": "t1", "item": {
+                "id": "a1", "type": "agentMessage", "text": "Migration applied; README updated."
+            }}}),
+        )
+        .unwrap();
+    fake.push
+        .send(json!({"method": "turn/completed", "params": {"threadId": "t1", "turn": {"id": "turn-1", "status": "completed"}}}))
+        .unwrap();
+    daemon
+        .until("ready with the reply", |s| {
+            s.agents.get(&agent.id).is_some_and(|a| {
+                a.state == AgentState::Ready
+                    && a.reply.as_ref().and_then(|r| r.text.as_deref())
+                        == Some("Migration applied; README updated.")
+            })
+        })
+        .await;
+    let order = peer
+        .call(
+            "op.order",
+            json!({"agent": agent.id, "text": "now run the tests", "ctx": "talk", "source": "gui"}),
+        )
+        .await;
+    assert_eq!(order["via"], "poll", "{order}");
+    let (_, params) = fake.request("turn/start").await;
+    assert_eq!(params["threadId"], "t1");
+    assert_eq!(params["input"][0]["text"], "now run the tests");
+
+    let history = &daemon.api.bus.snapshot().agents[&agent.id].messages;
+    assert_eq!(history.iter().filter(|m| m.message.role == deck_model::ChatRole::Assistant).count(), 1, "final notification must update the streamed message");
+    assert!(history.iter().any(|m| m.message.id == "tool1" && !m.message.streaming && m.text.contains("All tests passed")));
+
+    // 6. The thread unloads: the agent goes, and the hooks path has it back.
+    fake.push
+        .send(json!({"method": "thread/closed", "params": {"threadId": "t1"}}))
+        .unwrap();
+    daemon
+        .until("the agent released", |s| !s.agents.contains_key(&agent.id))
+        .await;
+    assert!(!daemon.api.core.adapters().daemon_owns("codex:t1"));
+
+    let _ = stop.send(true);
+    let _ = tokio::time::timeout(PATIENCE, client).await;
+    daemon.shutdown().await;
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
+}

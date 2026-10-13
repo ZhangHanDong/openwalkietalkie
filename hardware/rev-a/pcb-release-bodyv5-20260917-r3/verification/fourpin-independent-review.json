@@ -1,0 +1,135 @@
+{
+  "scope": "Independent read-only audit of source, final native boards, model bindings and preservation of published r2.",
+  "boards": {
+    "main": {
+      "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/main/main-45deg.kicad_pcb",
+      "sha256": "d8b4f25115181c00c8141aa95e5949f73f12ae3513c103f863039cee044cf2a7",
+      "compiled_references": 133,
+      "footprint_count": 136,
+      "unrelated_footprints_serialized_identically": 135,
+      "changed_connector": "J2",
+      "connector_pose_unchanged": true,
+      "numbered_pad_map": {
+        "1": "GND",
+        "2": "controls::ENC_A_CONTACT",
+        "3": "controls::ENC_B_CONTACT",
+        "4": "GND"
+      },
+      "copper_contact_mm": [
+        0.3,
+        0.8
+      ],
+      "contact_paste_mm": [
+        0.25,
+        0.65
+      ],
+      "contact_pitch_mm": 0.5,
+      "mp_copper_and_paste_mm": [
+        0.4,
+        0.8
+      ],
+      "mp_centres_local_x_mm": [
+        -1.75,
+        1.75
+      ],
+      "courtyard_local_size_mm": [
+        4.65,
+        4.4
+      ],
+      "outline_and_project_rules_unchanged": true,
+      "removed_copper": 7,
+      "added_copper": 4,
+      "retained_copper_geometry_identical": 3548,
+      "unrelated_model_attachments_unchanged": true,
+      "compiled_pad_net_map_matches_final": true
+    },
+    "encoder": {
+      "board": "/private/tmp/bodyv5-fourpin-r3.kHsVWF/release/encoder/encoder-45deg.kicad_pcb",
+      "sha256": "9251d429fa3e4326dd65bb7d5d12a19d11b5f0bc782f4bf0432cc3801ddc24be",
+      "compiled_references": 2,
+      "footprint_count": 4,
+      "unrelated_footprints_serialized_identically": 3,
+      "changed_connector": "J1",
+      "connector_pose_unchanged": true,
+      "numbered_pad_map": {
+        "1": "GND",
+        "2": "ENC_A_CONTACT",
+        "3": "ENC_B_CONTACT",
+        "4": "GND"
+      },
+      "copper_contact_mm": [
+        0.3,
+        0.8
+      ],
+      "contact_paste_mm": [
+        0.25,
+        0.65
+      ],
+      "contact_pitch_mm": 0.5,
+      "mp_copper_and_paste_mm": [
+        0.4,
+        0.8
+      ],
+      "mp_centres_local_x_mm": [
+        -1.75,
+        1.75
+      ],
+      "courtyard_local_size_mm": [
+        4.65,
+        4.4
+      ],
+      "outline_and_project_rules_unchanged": true,
+      "removed_copper": 10,
+      "added_copper": 5,
+      "retained_copper_geometry_identical": 7,
+      "unrelated_model_attachments_unchanged": true,
+      "compiled_pad_net_map_matches_final": true
+    }
+  },
+  "passed": true,
+  "published_r2_assets_preserved": 168,
+  "source_changed_files": [
+    "encoder/src/encoder_fpc.cohdl",
+    "encoder/src/main.cohdl",
+    "main/src/controls.cohdl",
+    "main/src/encoder_fpc.cohdl"
+  ],
+  "source_unchanged_files": 29,
+  "source_lock_files": {
+    "encoder/design.lock": {
+      "sha256": "88fba87dd27f95fab6946ad8ef00187f67f3256eb519762d6f45a0cecbfa90d2",
+      "unchanged": true
+    },
+    "encoder/cohdl.lock": {
+      "sha256": "ba40e982ab132e176e0705f1f2769517226506db6a5a6c2ed5d463414be92325",
+      "unchanged": true
+    },
+    "main/design.lock": {
+      "sha256": "d75cfcfefb626465c7033b4a9000483d3394aaff84ad3e55bcb79667fde1e682",
+      "unchanged": true
+    },
+    "main/cohdl.lock": {
+      "sha256": "4dfb5d87aa5a2bf61ec7625221bdfa79f6a3aaaa8f8645b4e21f538fd5bf729a",
+      "unchanged": true
+    }
+  },
+  "source_semantic_diff_exactly_expected": true,
+  "models": {
+    "unchanged_model_files_byte_verified": 43,
+    "unchanged_reference_mappings": 120,
+    "replacement_key": "FH34SRJ-4S-0.5SH_99_",
+    "replacement_bounds_mm": [
+      [
+        -2,
+        -1.9,
+        0
+      ],
+      [
+        2,
+        1.9,
+        1.1
+      ]
+    ],
+    "classification": "Nominal XY / maximum height dimensional envelope; not vendor CAD."
+  }
+}

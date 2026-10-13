@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+subdesign Power {
+    ports {
+        required VBUS: Pin
+        required GND: Pin
+        required BAT: Pin
+        required SYS: Pin
+        required VIO: Pin
+        required VPANEL: Pin
+        required VCI: Pin
+        required PANEL_EN: Pin
+        required VCI_EN: Pin
+        required SDA: Pin
+        required SCL: Pin
+    }
+    inst charger: CHARGER_SGM41562SAXTYH10G_TR
+    #[placement_hint("Molex 53261-0271 on USB/battery-facing F side; accessible PicoBlade 1.25mm cable; 1S cell pin1 CELL, pin2 GND; verify actual battery lead polarity. Battery is opposite display, never between panel and PCB.")]
+    inst battery: CONN_PICOBLADE_53261_0271
+    nc: battery.MP_LEFT, battery.MP_RIGHT
+    inst c_in: passive::C_4u7_10V_X5R_0603
+    inst c_sys: passive::C_4u7_10V_X5R_0603
+    inst c_bat: passive::C_4u7_10V_X5R_0603
+    inst c_vdd: passive::C_100n_16V_X7R_0402
+    // Remote Murata NXFT15WF104FA2B050 contacts the cell; the PCB contains
+    // only two wire terminations. See docs/offboard-bom.csv and NTC analysis.
+    inst ntc_harness: CELL_NTC_WIRE_INTERFACE
+    // Provisional ~5..40C window; real cell limits and R/T curve need qualification.
+    inst rt1: passive::R_91K_F_0402
+    inst rt2: passive::R_442K_F_0402
+    inst r_nint: passive::R_100K_F_0402
+    // nINT is BAT-domain, not a direct 3.3V GPIO. Fixture may only pull low.
+    #[designator("TP1")]
+    inst tp_nint: misc::TEST_POINT_ROUND_1MM
+
+    // External LCD supply: never load the SF32's internal LDO with the panel.
+    // VIO is retained for inputs and touch; VPANEL and VCI have separate enables.
+    inst io_reg: richtek_dcdc::buck_boost::rt6150b::BUCKBOOST_RT6150B
+    inst panel_reg: DISPLAY_RAIL_RT6150B_ADJ
+    inst vci_sw: load_switch::LOADSW_TPS22918DBVR
+    inst c_vci_slew: passive::C_1n_50V_C0G_0402
+    inst r_vci_discharge: passive::R_1K_F_0402
+    inst l_io: passive::IND_2U2
+    inst l_panel: passive::IND_2U2
+    inst c_io_in: C_10U_16V_X7R_1206
+    inst c_io_out: [C_10U_16V_X7R_1206; 2]
+    inst c_panel_in: C_10U_16V_X7R_1206
+    inst c_panel_out: [C_10U_16V_X7R_1206; 2]
+    inst c_vci_in: passive::C_1u_10V_X5R_0603
+    inst r_fb_top: passive::R_604K_F_0402
+    inst r_fb_bottom: passive::R_86K6_F_0402
+    inst r_panel_pd: passive::R_1M_F_0402
+    inst r_vci_pd: passive::R_1M_F_0402
+
+    net _: VBUS, charger.IN, c_in.A
+    net _: BAT, battery.P1, charger.BAT, c_bat.A, r_nint.A
+    net CHG_NINT_BAT_DOMAIN: charger.NINT, r_nint.B, tp_nint.SIGNAL
+    net CHG_VDD: charger.VDD, c_vdd.A, rt1.A
+    net CELL_TEMPERATURE: charger.NTC, ntc_harness.SENSE, rt1.B, rt2.A
+    net _: SDA, charger.SDA
+    net _: SCL, charger.SCL
+    net _: SYS, charger.SYS, c_sys.A, io_reg.VIN, io_reg.EN, panel_reg.VIN, c_io_in.A, c_panel_in.A
+    net IO_LX1: io_reg.LX1, l_io.A
+    net IO_LX2: io_reg.LX2, l_io.B
+    net _: VIO, io_reg.VOUT, io_reg.FB, c_io_out[0..=1].A, vci_sw.VIN, c_vci_in.A
+    net PANEL_LX1: panel_reg.LX1, l_panel.A
+    net PANEL_LX2: panel_reg.LX2, l_panel.B
+    net _: VPANEL, panel_reg.VOUT, c_panel_out[0..=1].A, r_fb_top.A
+    net PANEL_FB: panel_reg.FB, r_fb_top.B, r_fb_bottom.A
+    net _: PANEL_EN, panel_reg.EN, r_panel_pd.A
+    net _: VCI_EN, vci_sw.ON, r_vci_pd.A
+    // CT=1nF gives approximately 580us/V slew; QOD discharges via 1k.
+    net VCI_SLEW: vci_sw.CT, c_vci_slew.A
+    net VCI_DISCHARGE: vci_sw.QOD, r_vci_discharge.B
+    net _: VCI, vci_sw.VOUT, r_vci_discharge.A
+    net _: GND, battery.P2, charger.GND, c_in.B, c_sys.B, c_bat.B, c_vdd.B, ntc_harness.RETURN,
+           rt2.B, io_reg.GND, io_reg.PS, panel_reg.GND, panel_reg.PS, vci_sw.GND, c_vci_slew.B,
+           c_io_in.B, c_io_out[0..=1].B, c_panel_in.B, c_panel_out[0..=1].B, c_vci_in.B,
+           r_fb_bottom.B, r_panel_pd.B, r_vci_pd.B
+}

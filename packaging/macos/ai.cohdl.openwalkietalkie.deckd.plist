@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The bundled LaunchAgent (docs/host-service.md §10.1), copied verbatim to
+  OpenWalkieTalkie.app/Contents/Library/LaunchAgents/ and registered by the GUI
+  with SMAppService.agent(plistName:) — which is why the path is a
+  BundleProgram relative to the app and not an absolute one.
+
+  It must stay in step with tools/install-host.sh, which installs the same
+  label for a dev build; the one key they deliberately differ on is
+  ProcessType (Interactive here for the audio latency §10.1 asks for,
+  Background there, where the dev agent is not carrying PTT).
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ai.cohdl.openwalkietalkie.deckd</string>
+    <!-- Relative to the .app. SMAppService resolves it, so the agent moves
+         with the bundle instead of pinning an absolute path that a drag to
+         /Applications or a Sparkle update would invalidate. -->
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/deckd</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>deckd</string>
+        <string>run</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <!-- NOT `KeepAlive: true`. That restarts on *every* exit and so makes
+         both of deckd's exit codes meaningless: `service.stop` (0) comes
+         straight back, and a second instance standing down (0) loops.
+         `{SuccessfulExit: false}` is what those exit codes are written
+         against — a clean 0 stays stopped, and everything else (the 75 of
+         `service.restart` after a Sparkle update §10.3, a crash, a signal)
+         is run again. Week 6 fixed tools/install-host.sh to this; the
+         bundle's copy agrees with it. -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <!-- Audio latency: the PTT render callback is RT-sensitive (§7.3). -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+    <key>ExitTimeOut</key>
+    <integer>5</integer>
+    <!-- No StandardOutPath/StandardErrorPath on purpose: launchd does not
+         expand `~`, and this plist is per-bundle rather than per-user, so
+         there is no correct absolute path to write here. `deckd run` dup2s
+         ~/Library/Logs/OpenWalkieTalkie/deckd.launchd.log onto fds 1/2 (§9). -->
+</dict>
+</plist>

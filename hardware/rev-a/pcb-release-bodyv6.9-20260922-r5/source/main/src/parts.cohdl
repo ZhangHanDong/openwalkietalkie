@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// Schematic-stage devices without a verified land pattern remain unbound.
+// SKTDLDE010 is bound by the manufacturer land pattern in button_parts.cohdl.
+// CoHDL check validates connectivity; build rejects remaining unbound devices.
+// See docs/open-items.md before adding production part bindings.
+
+pub trait Thermistor {
+    designator_prefix: "TH"
+}
+pub trait UnselectedResistance {
+    designator_prefix: "R"
+}
+
+#[doc("docs/alps-sktd.pdf")]
+pub device SKTDLDE010 {
+    pins {
+        required A: 1 [passive]
+        required B: 2 [passive]
+        // Local names for the three unnumbered metal-frame solder lands.
+        // Keep them independent and NC; the supplier specifies no ground tie.
+        optional MP_LEFT: ML [passive]
+        optional MP_CENTER: MC [passive]
+        optional MP_RIGHT: MR [passive]
+    }
+}
+impl switches::Switch for SKTDLDE010 {}
+
+// These numbers define DRAFT harness polarity, not a qualified footprint.
+// MX1.25 pitch alone does not identify a connector family or mating polarity.
+pub device BatteryMX125 {
+    pins {
+        required POS: 1 [bidirectional]
+        required NEG: 2 [passive]
+    }
+}
+impl Connector for BatteryMX125 {}
+pub device SpeakerMX125 {
+    pins {
+        required MINUS: 1 [passive]
+        required PLUS: 2 [passive]
+    }
+}
+impl Connector for SpeakerMX125 {}
+
+// Knowles Rev D, section 6; also T-Watch S3 schematic U18.
+// Exact device is absent from registry; footprint/binding still require review.
+#[doc("docs/spm1423hm4h-b.pdf")]
+pub device SPM1423HM4H_B {
+    pins {
+        required GND: 1, 3 [power_in]
+        required SELECT: 2 [input]
+        required CLK: 4 [input]
+        required DATA: 5 [output]
+        required VDD: 6 [power_in]
+    }
+}
+impl mic::Microphone for SPM1423HM4H_B {}
+
+// 600 ohm at 100MHz, >=1.3A RMS provisional speaker-output bead requirement.
+// No exact component is claimed until its DC resistance/current are verified.
+pub device SpeakerFerrite600R {
+    pins {
+        required A: 1 [passive]
+        required B: 2 [passive]
+    }
+}
+impl passive::FerriteBead for SpeakerFerrite600R {}
+
+// A separate thermistor must contact the two-wire battery; MPN/Beta/tolerance
+// and divider values remain open. Do not treat a PCB ambient sensor as cell NTC.
+pub device BatteryNTC {
+    pins {
+        required A: 1 [passive]
+        required B: 2 [passive]
+    }
+}
+impl Thermistor for BatteryNTC {}
+pub device NtcDividerResistor {
+    pins {
+        required A: 1 [passive]
+        required B: 2 [passive]
+    }
+}
+impl UnselectedResistance for NtcDividerResistor {}
+
+// SGM41562SA July 2026 Rev. A.1, TQFN 2x2-10DL, pin table p3.
+// Same writable register map as S, but device ID is 0x00, not 0x09.
+// See docs/charger-qfn-migration.md for the recovery contract.
+#[doc("docs/sgm41562sa.pdf")]
+pub device SGM41562SA {
+    pins {
+        required IN: 1 [power_in]
+        required SYS: 10 [power_out]
+        required BAT: 8, 9 [bidirectional]
+        required NTC: 2 [input]
+        required NINT: 3 [bidirectional]
+        required VDD: 4 [power_out]
+        required SDA: 7 [bidirectional]
+        required SCL: 6 [input]
+        required GND: 5 [power_in]
+    }
+}
+impl IC for SGM41562SA {}

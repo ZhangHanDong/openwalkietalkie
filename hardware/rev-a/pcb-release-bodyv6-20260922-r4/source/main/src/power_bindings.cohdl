@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: CERN-OHL-P-2.0
+// SGM41562SA July 2026 Rev. A.1, pin table p3; package TX00663.000 p33.
+// Exact TQFN ordering code and vendor land, not a generic QFN or WLCSP land.
+#[doc("docs/sgm41562sa.pdf")]
+pub part CHARGER_SGM41562SAXTYH10G_TR: SGM41562SA {
+    primary { mfr: "SG Micro", mpn: "SGM41562SAXTYH10G/TR", footprint: FP_SGM41562SA_TQFN10DL }
+}
+
+pub pad P_SGM41562SA_LEAD {
+    shape: rect
+    size: (0.7mm, 0.25mm)
+    layer: top_copper
+    plating: smd
+}
+
+pub pad P_SGM41562SA_PIN1 {
+    shape: rect
+    size: (0.75mm, 0.25mm)
+    layer: top_copper
+    plating: smd
+}
+
+pub footprint FP_SGM41562SA_TQFN10DL {
+    // Component-side top view, +y down. Normal opposite-row centers are
+    // 1.90mm apart. Pin 1's outer edge aligns with pins 2..4; its extra
+    // 0.05mm extends inward, placing its center 0.025mm inward of that row.
+    // There is no exposed center pad. Both BAT lands must be connected.
+    pad 1: P_SGM41562SA_PIN1 at (-0.925mm, -0.75mm)
+    pad 2: P_SGM41562SA_LEAD at (-0.95mm, -0.25mm)
+    pad 3: P_SGM41562SA_LEAD at (-0.95mm, 0.25mm)
+    pad 4: P_SGM41562SA_LEAD at (-0.95mm, 0.75mm)
+    pad 5: P_SGM41562SA_LEAD at (0mm, 0.95mm) rotate 90
+    pad 6: P_SGM41562SA_LEAD at (0.95mm, 0.75mm)
+    pad 7: P_SGM41562SA_LEAD at (0.95mm, 0.25mm)
+    pad 8: P_SGM41562SA_LEAD at (0.95mm, -0.25mm)
+    pad 9: P_SGM41562SA_LEAD at (0.95mm, -0.75mm)
+    pad 10: P_SGM41562SA_LEAD at (0mm, -0.95mm) rotate 90
+    // Board assembly allowance: 0.25mm beyond the 2.6mm copper envelope.
+    courtyard { shape: rect, at: (0mm, 0mm), size: (3.1mm, 3.1mm) }
+    silkscreen_ref { at: (0mm, -1.8mm) }
+    silkscreen { pin_1_marker near pad 1 shape dot }
+}
+
+// Provisional, purchasable 1.25 mm connector. Matching the pitch does not
+// qualify a generic MX1.25 harness: mate and cable polarity must be checked.
+pub device PicoBlade2Pin {
+    pins {
+        required P1: 1 [passive]
+        required P2: 2 [passive]
+        optional MP_LEFT: ML [passive]
+        optional MP_RIGHT: MR [passive]
+    }
+}
+impl Connector for PicoBlade2Pin {}
+pub part CONN_PICOBLADE_53261_0271: PicoBlade2Pin {
+    primary { mfr: "Molex", mpn: "53261-0271", footprint: FP_MOLEX_53261_0271 }
+}
+
+pub pad P_PICOBLADE_125_CONTACT {
+    shape: rect
+    size: (0.8mm, 1.6mm)
+    layer: top_copper
+    plating: smd
+}
+pub pad P_PICOBLADE_125_ANCHOR {
+    shape: rect
+    size: (2.1mm, 3mm)
+    layer: top_copper
+    plating: smd
+}
+
+// Pad geometry follows KiCad's Molex_PicoBlade_53261-0271_1x02-1MP_
+// P1.25mm_Horizontal, citing Molex 532610271_sd.pdf. Rectangular lands
+// preserve its copper envelope; two independent metal anchors remain NC.
+// Component-side +y points toward mating cable. See docs/power-part-bindings.md.
+pub footprint FP_MOLEX_53261_0271 {
+    pad 1: P_PICOBLADE_125_CONTACT at (-0.625mm, -2.4mm)
+    pad 2: P_PICOBLADE_125_CONTACT at (0.625mm, -2.4mm)
+    pad ML: P_PICOBLADE_125_ANCHOR at (-3.175mm, 0.5mm)
+    pad MR: P_PICOBLADE_125_ANCHOR at (3.175mm, 0.5mm)
+    // Conservative rectangular enclosure of the KiCad stepped courtyard.
+    courtyard { shape: rect, at: (0mm, -0.3mm), size: (9.46mm, 6.8mm) }
+    silkscreen_ref { at: (0mm, -4.4mm) }
+}
+
+// This is the actual PCB termination for a remote, wired cell thermistor.
+// The Murata sensor itself is an off-board assembly item, never a PCB SMD.
+pub device CellNtcWireInterface {
+    pins {
+        required SENSE: 1 [passive]
+        required RETURN: 2 [passive]
+    }
+}
+impl Connector for CellNtcWireInterface {}
+
+pub pad P_NTC_WIRE_PTH {
+    shape: circle
+    size: (1.2mm)
+    layer: through_all
+    plating: plated_through_hole
+    drill: 0.6mm
+}
+pub footprint FP_CELL_NTC_WIRE_INTERFACE {
+    pad 1: P_NTC_WIRE_PTH at (-1mm, 0mm)
+    pad 2: P_NTC_WIRE_PTH at (1mm, 0mm)
+    courtyard { shape: rect, at: (0mm, 0mm), size: (3.7mm, 1.7mm) }
+    silkscreen_ref { at: (0mm, -1.4mm) }
+}
+pub part CELL_NTC_WIRE_INTERFACE: CellNtcWireInterface {
+    primary { mfr: "PCB Fabrication", mpn: "CELL-NTC-WIRE-2P-PTH-0.6MM",
+              footprint: FP_CELL_NTC_WIRE_INTERFACE }
+}

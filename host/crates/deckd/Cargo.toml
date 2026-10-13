@@ -11,6 +11,7 @@ name = "deckd"
 path = "src/main.rs"
 
 [dependencies]
+chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
 deck-proto = { workspace = true }
 deck-model = { workspace = true }
 deck-client = { workspace = true }

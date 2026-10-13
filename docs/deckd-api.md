@@ -158,7 +158,7 @@ From the hid thread (§6.2, §6.3): what happened to the link.
 
 ## Types
 
-The 76 named types the schemas above refer to.
+The 77 named types the schemas above refer to.
 
 ### `ActivityStatus`
 
@@ -191,6 +191,7 @@ One of: `running`, `completed`, `failed`, `stopped`.
 | `title_source` | [`TitleSource`](#titlesource) | yes |  |  |
 | `voice` | string? | no |  |  |
 | `workflow` | [`Plan`](#plan)? | no |  |  |
+| `workflow_runs` | [`Run`](#run)[] | no |  |  |
 
 ### `AgentId`
 
@@ -312,6 +313,7 @@ One of: `q`, `r`.
 | `id` | string | yes |  |  |
 | `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
+| `runs` | array? | no |  | Public background workflow counters, independent of the parent turn. |
 | `streaming` | boolean | no | `false` |  |
 | `text` | string | yes |  |  |
 
@@ -449,6 +451,7 @@ Who holds the TCP port when the daemon could not take it (§4.1's `lsof -nP -iTC
 | `id` | string | yes |  |  |
 | `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
+| `runs` | array? | no |  | Public background workflow counters, independent of the parent turn. |
 | `streaming` | boolean | no | `false` |  |
 
 ### `OpAnswer`
@@ -601,6 +604,20 @@ One of: `talk`, `answer`, `name`.
 - string — The BLE voice link (`[voice] transport = "ble"`): the deck's speaker characteristic is open, at 16 kHz, and stays open. The settled state of that transport, as `A2dp` is of a Classic deck.
 - string — Our own PTT capture over the BLE voice link: the deck's speaker is closed for the press (half-duplex: no echo cancellation, V5) and reopens on the release. The BLE transport's `ScoOurs`.
 
+
+### `Run`
+
+A provider-reported background run. Counts are workers, not guessed plan steps.
+
+| field | type | required | default | description |
+|---|---|---|---|---|
+| `completed` | uint32 | yes |  |  |
+| `elapsed_ms` | uint64 | yes |  |  |
+| `id` | string | yes |  |  |
+| `name` | string | yes |  |  |
+| `status` | [`ActivityStatus`](#activitystatus) | yes |  |  |
+| `tokens` | uint64 | yes |  |  |
+| `total` | uint32 | yes |  |  |
 
 ### `ServiceState`
 

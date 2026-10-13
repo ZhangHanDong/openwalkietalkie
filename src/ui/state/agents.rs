@@ -507,7 +507,7 @@ fn scroll_reply(ui: &mut UiState, step: i32, at_ms: u32, out: &mut Update) {
     let total = faces::agents::reply_lines(ui, agent);
     let (windowed, id, first, end) = (
         agent.reply.windowed(),
-        agent.reply.id,
+        agent.reply_rev,
         faces::agents::reply_first(agent),
         faces::agents::reply_end(ui, agent),
     );
@@ -724,7 +724,7 @@ pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target>
                 if faces::agents::WORKFLOW_TOGGLE.contains(x, y) {
                     return Some(Target::tap(faces::agents::WORKFLOW_TOGGLE, 2));
                 }
-                if let Some(agent) = ui.deck.agent(ui.agents.agent).filter(|a| a.reply.font.rich()) {
+                if let Some(agent) = ui.deck.agent(ui.agents.agent).filter(|a| a.reply.font.rich() && a.reply.id == a.reply_rev) {
                     let lane = faces::agents::reply_rect(ui, agent);
                     let lh = crate::ui::font::line_height(faces::agents::doc_face(agent.reply.font));
                     if lane.contains(x, y) {
@@ -979,7 +979,8 @@ pub(super) fn on_tick(ui: &mut UiState, now_ms: u32, out: &mut Update) {
     // A dropped or revision-stale mode request must not leave an empty view.
     if ui.agents.view == AgentsView::Channel {
         if let Some(agent) = ui.deck.agent(ui.agents.agent) {
-            if !agent.reply.windowed() && (agent.reply_kind == DocKind::Workflow || ui.agents.lines_asked.is_some()) {
+            if (!agent.reply.windowed() || agent.reply.id != agent.reply_rev)
+                && (agent.reply_kind == DocKind::Workflow || ui.agents.lines_asked.is_some()) {
                 let (slot, doc, id) = (agent.id, agent.reply_kind, agent.reply_rev);
                 ask_doc_lines(ui, slot, doc, id, ui.agents.reply_top, now_ms, out);
             }
@@ -1858,6 +1859,45 @@ mod tests {
         assert_eq!(ui.agents.view, AgentsView::Channel);
         host(&mut ui, &window, 350);
         assert!(!ui.deck.agent(3).unwrap().reply.windowed(), "late workflow must not paint chat");
+    }
+
+    #[test]
+    fn workflow_refresh_keeps_the_page_until_its_replacement_arrives() {
+        let mut ui = hosted();
+        show_channel(&mut ui, 3, 100);
+        host(&mut ui, &HostMsg::Reply { agent: 3, text: Text::from_str("Workflow"), rev: 1 }, 110);
+        toggle_workflow(&mut ui, 200, &mut Update::new());
+        let window = |rev| {
+            let mut msg = reply_window(3, rev, 0, 20);
+            if let HostMsg::DocText { doc, font, lines, .. } = &mut msg {
+                *doc = DocKind::Workflow;
+                *font = crate::deck::msg::DocFont::RichRow;
+                lines[2].set("t040Full plan");
+            }
+            msg
+        };
+        host(&mut ui, &window(1), 250);
+        ui.agents.reply_top = 2;
+        for rev in 2..=4 {
+            let at = u32::from(rev) * 3000;
+            let old = ui.deck.agent(3).unwrap().reply;
+            host(&mut ui, &HostMsg::Reply { agent: 3, text: Text::from_str("Workflow"), rev }, at);
+            assert_eq!(ui.deck.agent(3).unwrap().reply, old, "an envelope must not blank the page");
+            assert_eq!(ui.agents.reply_top, 2);
+            let lane = faces::agents::reply_rect(&ui, ui.deck.agent(3).unwrap());
+            assert!(hit(&ui, 0, lane.left() + 30, lane.top() + 10).is_none(), "old disclosure indices are disabled");
+            host(&mut ui, &window(rev - 1), at + 50);
+            assert_eq!(ui.deck.agent(3).unwrap().reply, old, "late old windows stay rejected");
+            let mut out = Update::new();
+            on_tick(&mut ui, at + 100, &mut out);
+            assert!(events(&out).iter().any(|e| matches!(e, Event::DocLines { doc: DocKind::Workflow, id, .. } if *id == rev)), "retry uses the announced revision");
+            assert_eq!(ui.deck.agent(3).unwrap().reply, old);
+            host(&mut ui, &window(rev), at + 200);
+            assert_eq!(ui.deck.agent(3).unwrap().reply.id, rev);
+            assert!(ui.deck.agent(3).unwrap().reply.windowed());
+            assert_eq!(ui.agents.reply_top, 2);
+            assert!(hit(&ui, 0, lane.left() + 30, lane.top() + 10).is_some(), "current disclosures work again");
+        }
     }
 
     #[test]

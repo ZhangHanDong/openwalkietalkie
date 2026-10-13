@@ -856,8 +856,9 @@ impl Core {
                 let _ = reply.send(id);
             }
             CoreMsg::CloseSession(id) => self.close_session(id, now),
-            CoreMsg::Usage { provider, windows, account } => {
-                self.usage.set(provider, windows, account);
+            CoreMsg::Usage { provider, windows, account, partial } => {
+                if partial { self.usage.set_partial(provider, windows, account, crate::usage::unix_now()); }
+                else { self.usage.set(provider, windows, account); }
                 self.push_usage(now);
             }
             CoreMsg::Config(config) => {

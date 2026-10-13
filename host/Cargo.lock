@@ -1806,6 +1806,7 @@ dependencies = [
  "axum",
  "blake3",
  "block2",
+ "chrono",
  "clap",
  "cpal",
  "crossbeam-channel",

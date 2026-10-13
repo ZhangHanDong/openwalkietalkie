@@ -762,6 +762,15 @@ pub async fn roster_tick(api: &Api, probe: &Probe, misses: &mut Misses, seed: bo
         seed,
     );
     apply(api, acts).await;
+    if let Some((principal, session)) = owner {
+        let current = api.bus.snapshot();
+        if let Ok(mut watches) = api.adapters.transcripts.lock() {
+            watches.retain(|id, _| current.agents.contains_key(id));
+        }
+        for agent in current.agents.values().filter(|a| a.owner.principal == principal && a.owner.session == session) {
+            crate::chat::seed(&api.adapters, &api.core, session, agent);
+        }
+    }
     tick
 }
 
@@ -898,7 +907,7 @@ mod tests {
             card: None,
             reply: None,
             messages: Vec::new(),
-            workflow: None,
+            workflow_runs: Vec::new(), workflow: None,
             chat_rev: 0,
             reply_rev: 0,
             voice: None,

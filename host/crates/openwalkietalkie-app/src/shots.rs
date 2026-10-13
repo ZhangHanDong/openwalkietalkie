@@ -35,7 +35,7 @@ impl Shots {
     pub fn synthetic_only(&self) -> bool {
         std::env::var("OPENWALKIETALKIE_SHOTS_ONLY").ok().is_some_and(|list| {
             !list.is_empty() && list.split(',').all(|scene| matches!(scene.trim(),
-                "workflow" | "workflow-expanded" | "workflow-complete"))
+                "usage-fable" | "workflow" | "workflow-runs" | "workflow-expanded" | "workflow-complete"))
         })
     }
 
@@ -57,6 +57,8 @@ impl Shots {
 pub enum Scene {
     Deck,
     Workflow,
+    WorkflowRuns,
+    UsageFable,
     WorkflowExpanded,
     WorkflowComplete,
     Confirm,
@@ -75,9 +77,11 @@ pub enum Scene {
 }
 
 /// Every scene, with the name its file gets.
-pub const SCENES: [(Scene, &str); 18] = [
+pub const SCENES: [(Scene, &str); 20] = [
     (Scene::Deck, "deck"),
     (Scene::Workflow, "workflow"),
+    (Scene::WorkflowRuns, "workflow-runs"),
+    (Scene::UsageFable, "usage-fable"),
     (Scene::WorkflowExpanded, "workflow-expanded"),
     (Scene::WorkflowComplete, "workflow-complete"),
     (Scene::Confirm, "confirm"),
@@ -188,11 +192,20 @@ impl Shell {
         self.integrations.stage_token(None);
         self.cancel_plan(cx);
         match scene {
+            Scene::UsageFable => {
+                use deck_gui_core::{ApiEvent, AppEvent};
+                let snapshot = deck_model::Snapshot { usage: Some(deck_model::Usage { period: "5h / 7d".into(), at: Some(crate::present::now()),
+                    items: [("Claude session", 40), ("Claude week", 52), ("Claude Fable week", 100), ("Codex session", 17), ("Codex week", 30)]
+                        .into_iter().map(|(name, percent)| deck_model::UsageItem { name: name.into(), percent,
+                            account: Some("work@example.com".into()), reset: "resets in 2d 4h".into(), tone: None }).collect() }), ..Default::default() };
+                self.state.handle_event(AppEvent::Api(ApiEvent::Connected { snapshot }));
+                self.go(Screen::Usage, window, cx);
+            }
             Scene::Deck => {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
             }
-            Scene::Workflow | Scene::WorkflowExpanded | Scene::WorkflowComplete => {
+            Scene::Workflow | Scene::WorkflowRuns | Scene::WorkflowExpanded | Scene::WorkflowComplete => {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
                 self.stage_workflow(scene);
@@ -274,7 +287,7 @@ impl Shell {
             source: deck_model::Source::Api,
             owner: deck_model::Owner { principal: Principal::Uid(0), session: deck_model::SessionId(1), lease_expires: None },
             session: deck_model::SessionInfo { key: None, cwd: Some("/demo/openwalkietalkie".into()), pid: None, pid_kind: None, terminal: None },
-            caps: deck_model::Caps::default(), card: None, reply: None, messages: Vec::new(), workflow: None,
+            caps: deck_model::Caps::default(), card: None, reply: None, messages: Vec::new(), workflow_runs: Vec::new(), workflow: None,
             chat_rev: 1, reply_rev: 0, voice: None, pinned: false, meta: serde_json::Value::Null, redacted: false,
         };
         let complete = scene == Scene::WorkflowComplete;
@@ -299,9 +312,22 @@ impl Shell {
             .into_iter().enumerate().map(|(i, (name, input, output))| {
                 let running = !complete && i == 2;
                 ChatMessage { message: MessageMeta { id: format!("preview-tool-{i}"), role: ChatRole::Tool, streaming: running,
-                    activity: Some(if running { ActivityStatus::Running } else { ActivityStatus::Completed }), plan: None },
+                    activity: Some(if running { ActivityStatus::Running } else { ActivityStatus::Completed }), runs: None, plan: None },
                     text: format!("**{name}**\n\n```json\n{input}\n```\n\n{output}"), at: crate::present::now() }
             }).collect();
+        if scene == Scene::WorkflowRuns {
+            agent.kind = deck_model::Kind::Claude;
+            agent.name = "Parallel workflows".into();
+            agent.title = Some("Background workflows are running".into());
+            agent.state = AgentState::Idle; // parent may be idle while workers run
+            agent.workflow = None;
+            agent.messages.clear();
+            agent.workflow_runs = [("fixup-constraints-and-truth", 9, 488_100), ("design-navigation-panel", 4, 1_100_000)]
+                .into_iter().enumerate().map(|(i, (name, total, tokens))| deck_model::workflow::Run {
+                    id: format!("wf_preview_{i}"), name: name.into(), status: ActivityStatus::Running,
+                    completed: 0, total, elapsed_ms: 76_000, tokens,
+                }).collect();
+        }
         self.deck.workflow = Default::default();
         if scene == Scene::WorkflowExpanded {
             self.deck.workflow.toggle_tool(&agent.id, "preview-tool-2");

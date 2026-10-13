@@ -335,6 +335,9 @@ pub struct MessageMeta {
     /// Explicit public plan updates; absent on ordinary chat/tool messages.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plan: Option<crate::workflow::Plan>,
+    /// Public background workflow counters, independent of the parent turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runs: Option<Vec<crate::workflow::Run>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activity: Option<crate::workflow::ActivityStatus>,
 }
@@ -371,6 +374,8 @@ pub struct Agent {
     pub messages: Vec<ChatMessage>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub workflow: Option<crate::workflow::Plan>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub workflow_runs: Vec<crate::workflow::Run>,
     /// Stable while messages grow; changes when retained history is pruned.
     #[serde(default)]
     pub chat_rev: u16,

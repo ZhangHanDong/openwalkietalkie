@@ -73,6 +73,7 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                 &mut messages,
                 MessageMeta {
                     activity: None,
+                    runs: None,
                     plan: None,
                     id: uuid.into(),
                     role,
@@ -93,7 +94,10 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                         &mut messages,
                         MessageMeta {
                             activity: Some(deck_model::workflow::ActivityStatus::Running),
-                            plan: (name == "TodoWrite").then(|| deck_model::workflow::Plan::claude(&block["input"])).flatten(),
+                            runs: None,
+                            plan: (name == "TodoWrite")
+                                .then(|| deck_model::workflow::Plan::claude(&block["input"]))
+                                .flatten(),
                             id: format!("tool:{id}"),
                             role: ChatRole::Tool,
                             streaming: true,
@@ -112,14 +116,31 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                     };
                     let text = text_blocks(&block["content"]);
                     let key = format!("tool:{id}");
-                    let plan = messages.iter().find(|(m, _)| m.id == key).and_then(|(meta, _)| meta.plan.clone());
-                    let previous = messages.iter().find(|(m, _)| m.id == key).map(|(_, text)| text.as_str());
-                    let (name, input) = previous.and_then(|s| s.split_once("\n\n")).map_or(("Tool", ""), |(name, input)| (name.trim_matches('*'), input));
-                    let body = format!("**{name} · {status}**\n\n{input}\n\n{}", deck_model::sanitize::cut(&text, 8192));
+                    let plan = messages
+                        .iter()
+                        .find(|(m, _)| m.id == key)
+                        .and_then(|(meta, _)| meta.plan.clone());
+                    let previous = messages
+                        .iter()
+                        .find(|(m, _)| m.id == key)
+                        .map(|(_, text)| text.as_str());
+                    let (name, input) = previous
+                        .and_then(|s| s.split_once("\n\n"))
+                        .map_or(("Tool", ""), |(name, input)| {
+                            (name.trim_matches('*'), input)
+                        });
+                    let body = format!(
+                        "**{name} · {status}**\n\n{input}\n\n{}",
+                        deck_model::sanitize::cut(&text, 8192)
+                    );
                     upsert(
                         &mut messages,
                         MessageMeta {
-                            activity: Some(deck_model::workflow::ActivityStatus::provider(Some(status), false)),
+                            activity: Some(deck_model::workflow::ActivityStatus::provider(
+                                Some(status),
+                                false,
+                            )),
+                            runs: None,
                             plan,
                             id: key,
                             role: ChatRole::Tool,
@@ -217,17 +238,36 @@ pub(crate) async fn observe(
             } else {
                 "completed"
             };
-            let input = payload.get("tool_input").map(Value::to_string).unwrap_or_default();
-            let result = (!live).then(|| payload.get("tool_response").or_else(|| payload.get("error")))
-                .flatten().map(Value::to_string).unwrap_or_default();
-            let details = format!("{}\n```\n\n{}", deck_model::sanitize::cut(&input, 2048),
-                deck_model::sanitize::cut(&result, 8192));
+            let input = payload
+                .get("tool_input")
+                .map(Value::to_string)
+                .unwrap_or_default();
+            let result = (!live)
+                .then(|| {
+                    payload
+                        .get("tool_response")
+                        .or_else(|| payload.get("error"))
+                })
+                .flatten()
+                .map(Value::to_string)
+                .unwrap_or_default();
+            let details = format!(
+                "{}\n```\n\n{}",
+                deck_model::sanitize::cut(&input, 2048),
+                deck_model::sanitize::cut(&result, 8192)
+            );
             let req = ReplySet {
                 agent: agent.clone(),
                 text: format!("**{name} · {status}**\n\n```json\n{details}"),
                 message: Some(MessageMeta {
-                    activity: Some(deck_model::workflow::ActivityStatus::provider(Some(status), live)),
-                    plan: (name == "TodoWrite").then(|| deck_model::workflow::Plan::claude(&payload.0["tool_input"])).flatten(),
+                    activity: Some(deck_model::workflow::ActivityStatus::provider(
+                        Some(status),
+                        live,
+                    )),
+                    runs: None,
+                    plan: (name == "TodoWrite")
+                        .then(|| deck_model::workflow::Plan::claude(&payload.0["tool_input"]))
+                        .flatten(),
                     id: format!("tool:{id}"),
                     role: ChatRole::Tool,
                     streaming: live,
@@ -254,13 +294,63 @@ pub(crate) async fn observe(
     else {
         return;
     };
+    start_watch(
+        adapters,
+        core,
+        session,
+        agent,
+        cli_session,
+        path,
+        matches!(event, "Stop" | "UserPromptSubmit" | "PreToolUse").then_some(event == "Stop"),
+    );
+}
+
+/// Recover already-running background workflows when deckd starts between hooks.
+pub(crate) fn seed(
+    adapters: &Adapters,
+    core: &CoreHandle,
+    session: SessionId,
+    agent: &deck_model::Agent,
+) {
+    let Some(id) = agent
+        .session
+        .key
+        .as_deref()
+        .and_then(|k| k.strip_prefix("claude:"))
+    else {
+        return;
+    };
+    let Some(cwd) = agent.session.cwd.as_deref() else {
+        return;
+    };
+    let Some(dir) = crate::liveness::claude_dir() else {
+        return;
+    };
+    let candidate = crate::liveness::transcript_path(&dir, cwd, id);
+    let Some(path) = candidate.to_str().and_then(|p| permitted_path(p, id)) else {
+        return;
+    };
+    start_watch(adapters, core, session, &agent.id, id, path, None);
+}
+
+#[allow(clippy::too_many_arguments)]
+fn start_watch(
+    adapters: &Adapters,
+    core: &CoreHandle,
+    session: SessionId,
+    agent: &AgentId,
+    cli_session: &str,
+    path: PathBuf,
+    finished_update: Option<bool>,
+) {
+    let principal = adapters.claude.principal();
     let Ok(mut watches) = adapters.transcripts.lock() else {
         return;
     };
     watches.retain(|_, w| !w.handle.is_finished());
     if let Some(watch) = watches.get(agent).filter(|w| w.path == path) {
-        if matches!(event, "Stop" | "UserPromptSubmit" | "PreToolUse") {
-            watch.finished.store(event == "Stop", Ordering::Relaxed);
+        if let Some(done) = finished_update {
+            watch.finished.store(done, Ordering::Relaxed);
         }
         return;
     }
@@ -273,12 +363,17 @@ pub(crate) async fn observe(
     let session_name = cli_session.to_string();
     let watched = path.clone();
     let config = adapters.config.clone();
-    let finished = Arc::new(AtomicBool::new(event == "Stop"));
+    let finished = Arc::new(AtomicBool::new(finished_update.unwrap_or(false)));
     let turn_finished = finished.clone();
     let task = tokio::spawn(async move {
         let mut previous = BTreeMap::new();
         let mut stamp = None;
-        let mut quiet = 0;
+        let mut workflows = Some(crate::claude_workflows::Tracker::new(
+            &watched,
+            &session_name,
+        ));
+        let mut previous_runs = Vec::new();
+        let mut poll = 0u8;
         loop {
             tokio::time::sleep(Duration::from_millis(500)).await;
             if !config.load().hooks.enabled {
@@ -289,19 +384,54 @@ pub(crate) async fn observe(
             };
             let done = turn_finished.load(Ordering::Relaxed);
             let current = (meta.len(), meta.modified().ok(), done);
-            if stamp == Some(current) {
-                quiet += 1;
-                if quiet > 240 {
+            let mut updates = Vec::new();
+            if stamp != Some(current) {
+                stamp = Some(current);
+                let Ok(bytes) = tail(&watched).await else {
                     return;
-                }
-                continue;
+                };
+                updates = transcript_messages(&bytes, &session_name);
             }
-            quiet = 0;
-            stamp = Some(current);
-            let Ok(bytes) = tail(&watched).await else {
-                return;
-            };
-            for (mut message, text) in transcript_messages(&bytes, &session_name) {
+            if poll == 0 {
+                let mut tracker = workflows.take().unwrap();
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64;
+                let Ok((tracker, runs)) = tokio::task::spawn_blocking(move || {
+                    let runs = tracker.poll(now);
+                    (tracker, runs)
+                })
+                .await
+                else {
+                    return;
+                };
+                workflows = Some(tracker);
+                if runs != previous_runs {
+                    let text = if runs.is_empty() {
+                        "Workflow runs finished".into()
+                    } else {
+                        runs.iter()
+                            .map(|r| format!("{} · {} · {}", r.name, r.status.label(), r.metrics()))
+                            .collect::<Vec<_>>()
+                            .join("\n")
+                    };
+                    updates.push((
+                        MessageMeta {
+                            id: "workflow:runs".into(),
+                            role: ChatRole::Tool,
+                            streaming: false,
+                            plan: None,
+                            activity: None,
+                            runs: Some(runs.clone()),
+                        },
+                        text,
+                    ));
+                    previous_runs = runs;
+                }
+            }
+            poll = (poll + 1) % 4;
+            for (mut message, text) in updates {
                 if done {
                     message.streaming = false;
                     if message.activity == Some(deck_model::workflow::ActivityStatus::Running) {
@@ -329,6 +459,15 @@ pub(crate) async fn observe(
                 .await
                 {
                     Some(Ok(_)) => {
+                        if let Some(runs) = message
+                            .runs
+                            .as_ref()
+                            .filter(|_| !previous.contains_key(&message.id))
+                        {
+                            tracing::info!(agent = %agent_id, runs = runs.len(),
+                                running = runs.iter().filter(|r| r.status == deck_model::workflow::ActivityStatus::Running).count(),
+                                "Recovered background workflow counters");
+                        }
                         previous.insert(message.id, value);
                     }
                     _ => return,
@@ -369,10 +508,21 @@ mod tests {
         ].map(|v| v.to_string()).join("\n");
         let messages = transcript_messages(lines.as_bytes(), "s");
         assert_eq!(messages.len(), 2);
-        assert_eq!(messages[0].0.plan.as_ref().unwrap().steps[0].step, "Test the fix");
-        assert_eq!(messages[0].0.activity, Some(deck_model::workflow::ActivityStatus::Completed));
-        assert_eq!(messages[1].0.activity, Some(deck_model::workflow::ActivityStatus::Failed));
-        assert!(!messages.iter().any(|(_, text)| text.contains("private reasoning")));
+        assert_eq!(
+            messages[0].0.plan.as_ref().unwrap().steps[0].step,
+            "Test the fix"
+        );
+        assert_eq!(
+            messages[0].0.activity,
+            Some(deck_model::workflow::ActivityStatus::Completed)
+        );
+        assert_eq!(
+            messages[1].0.activity,
+            Some(deck_model::workflow::ActivityStatus::Failed)
+        );
+        assert!(!messages
+            .iter()
+            .any(|(_, text)| text.contains("private reasoning")));
     }
 
     #[test]
@@ -392,6 +542,9 @@ mod tests {
         assert!(!messages[2].0.streaming);
         assert!(messages[2].1.contains("/project"));
         assert!(messages[2].1.starts_with("**Bash · completed**"));
-        assert!(messages[2].1.contains("pwd"), "expansion keeps the input and result together");
+        assert!(
+            messages[2].1.contains("pwd"),
+            "expansion keeps the input and result together"
+        );
     }
 }

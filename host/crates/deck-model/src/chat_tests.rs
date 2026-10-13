@@ -12,7 +12,7 @@ fn send(sim: &mut Sim, agent: &AgentId, id: &str, role: ChatRole, streaming: boo
             text: text.into(),
             message: Some(MessageMeta {
                 activity: None,
-                plan: None,
+                runs: None, plan: None,
                 id: id.into(),
                 role,
                 streaming,
@@ -205,7 +205,7 @@ fn plan_message(sim: &mut Sim, agent: &AgentId, id: &str, status: &str) {
     let plan = workflow::Plan::codex(&serde_json::json!({"plan":[{"step":"Inspect the input", "status":status}]})).unwrap();
     sim.api(UID, SessionId(1), Request::Reply(ReplySet {
         agent: agent.clone(), text: plan.text(),
-        message: Some(MessageMeta { id: id.into(), role: ChatRole::Tool, streaming: false, plan: Some(plan), activity: None }),
+        message: Some(MessageMeta { id: id.into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
         speak: false, announce: None, lane: None,
     })).unwrap();
 }
@@ -277,7 +277,7 @@ fn device_workflow_disclosures_keep_outputs_collapsed_and_reject_stale_taps() {
     let plan = workflow::Plan::codex(&serde_json::json!({"plan":(0..8).map(|i|
         serde_json::json!({"step":format!("Step {i}"), "status":if i < 5 {"completed"} else if i == 5 {"inProgress"} else {"pending"}})).collect::<Vec<_>>()})).unwrap();
     sim.api(UID, SessionId(1), Request::Reply(ReplySet { agent: agent.clone(), text: plan.text(),
-        message: Some(MessageMeta { id: "p".into(), role: ChatRole::Tool, streaming: false, plan: Some(plan), activity: None }),
+        message: Some(MessageMeta { id: "p".into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
         speak: false, announce: None, lane: None })).unwrap();
     send(&mut sim, &agent, "t1", ChatRole::Tool, false, "**Bash · failed**\n\n```\ncargo test\n```\n\nprivate output");
     let rev = sim.store.snapshot().agents[&agent].chat_rev;
@@ -301,4 +301,37 @@ fn device_workflow_disclosures_keep_outputs_collapsed_and_reject_stale_taps() {
     sim.apply(Command::Device(DeviceLine::Tool { slot: 1, id: new_rev, index: 1 }));
     let (_, lines) = workflow::device_lines(&sim.store.snapshot().agents[&agent], 0, Some(&sim.store.aux[&agent].expanded_tools));
     assert!(lines.join(" ").contains("private output"));
+}
+
+#[test]
+fn background_workflow_runs_survive_new_turns_update_the_device_and_are_redacted() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    let runs = vec![workflow::Run { id: "wf_test".into(), name: "Parallel design checks".into(),
+        status: workflow::ActivityStatus::Running, completed: 0, total: 9,
+        elapsed_ms: 76_000, tokens: 488_100 }];
+    let meta = MessageMeta { id: "workflow:runs".into(), role: ChatRole::Tool, streaming: false,
+        plan: None, activity: None, runs: Some(runs.clone()) };
+    sim.api(UID, SessionId(1), Request::Reply(ReplySet {
+        agent: agent.clone(), text: "Workflow runs".into(), message: Some(meta.clone()),
+        speak: false, announce: None, lane: None,
+    })).unwrap();
+    send(&mut sim, &agent, "u1", ChatRole::User, false, "Another request");
+    let snapshot = sim.store.snapshot();
+    assert_eq!(snapshot.agents[&agent].workflow_runs, runs);
+    assert!(workflow::activity(&snapshot.agents[&agent]).is_empty());
+    for size in 0..=2 {
+        let (_, lines) = workflow::device_lines(&snapshot.agents[&agent], size, None);
+        assert!(lines.iter().any(|l| l == "w00009"));
+        assert!(lines.iter().all(|l| l.len() <= deck_proto::caps().doc_line));
+        assert!(!lines.join(" ").contains("Waiting for plan"));
+    }
+    assert_eq!(runs[0].metrics(), "0/9 · 1m16s · 488.1k tokens");
+    assert!(redact(snapshot, &[Scope::Observe]).agents[&agent].workflow_runs.is_empty());
+    assert_eq!(redact(snapshot, &[Scope::ObserveContent]).agents[&agent].workflow_runs, runs);
+    let event = Event { rev: 1, ts: Ts::from_millis(1), kind: EventKind::ReplySet, principal: UID,
+        data: serde_json::json!({"agent":agent,"text":"Workflow runs","message":meta}) };
+    let filtered = redact_event(&event, &[Scope::Observe], false).unwrap();
+    assert!(filtered.data["message"]["runs"].is_null());
+    assert!(!serde_json::to_string(&filtered).unwrap().contains("Parallel design"));
 }

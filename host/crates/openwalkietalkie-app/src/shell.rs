@@ -99,6 +99,7 @@ pub const TITLEBAR_HEIGHT: f32 = 38.;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Screen {
     Deck,
+    Usage,
     Integrations,
     Voice,
     Service,
@@ -106,8 +107,9 @@ pub enum Screen {
 }
 
 impl Screen {
-    pub const ALL: [Screen; 5] = [
+    pub const ALL: [Screen; 6] = [
         Screen::Deck,
+        Screen::Usage,
         Screen::Integrations,
         Screen::Voice,
         Screen::Service,
@@ -117,6 +119,7 @@ impl Screen {
     pub const fn label(self) -> &'static str {
         match self {
             Screen::Deck => "Deck",
+            Screen::Usage => "Usage",
             Screen::Integrations => "Integrations",
             Screen::Voice => "Voice",
             Screen::Service => "Service",
@@ -128,6 +131,7 @@ impl Screen {
     pub const fn id(self) -> &'static str {
         match self {
             Screen::Deck => "nav-deck",
+            Screen::Usage => "nav-usage",
             Screen::Integrations => "nav-integrations",
             Screen::Voice => "nav-voice",
             Screen::Service => "nav-service",
@@ -139,6 +143,7 @@ impl Screen {
     pub const fn icon(self) -> &'static str {
         match self {
             Screen::Deck => ic::DIAL,
+            Screen::Usage => ic::CLOCK,
             Screen::Integrations => ic::PLUG,
             Screen::Voice => ic::MICROPHONE,
             Screen::Service => ic::SERVER,
@@ -354,7 +359,7 @@ impl Shell {
             self.restart_updated_service(window, cx);
             self.refresh_firmware(false, window, cx);
             match self.screen {
-                Screen::Deck => {}
+                Screen::Deck | Screen::Usage => {}
                 Screen::Integrations => self.refresh_integrations(true, window, cx),
                 Screen::Voice => self.refresh_voice(true, window, cx),
                 Screen::Service => self.refresh_service(true, window, cx),
@@ -953,6 +958,7 @@ impl Shell {
                     .pt(px(6.))
                     .gap(px(2.))
                     .child(row(Screen::Deck, count))
+                    .child(row(Screen::Usage, None))
                     .child(row(Screen::Integrations, warn(hijacked)))
                     .child(row(Screen::Voice, None))
                     .child(row(Screen::Service, warn(degraded && !hijacked)))
@@ -1060,7 +1066,7 @@ impl Shell {
         }
         self.screen = screen;
         match screen {
-            Screen::Deck => {}
+            Screen::Deck | Screen::Usage => {}
             Screen::Integrations => self.refresh_integrations(false, window, cx),
             Screen::Voice => self.refresh_voice(false, window, cx),
             Screen::Service => self.refresh_service(false, window, cx),
@@ -1164,6 +1170,7 @@ impl Render for Shell {
         // `Stateful<Div>`), so they meet here as `AnyElement`.
         let pane = match self.screen {
             Screen::Deck => self.render_deck(dim, cx).into_any_element(),
+            Screen::Usage => self.render_usage(dim, cx).into_any_element(),
             Screen::Integrations => self.render_integrations(dim, cx).into_any_element(),
             Screen::Voice => self.render_voice(dim, cx).into_any_element(),
             Screen::Service => self.render_service(dim, cx).into_any_element(),
@@ -1366,7 +1373,7 @@ mod tests {
         let labels: Vec<&str> = Screen::ALL.iter().map(|s| s.label()).collect();
         assert_eq!(
             labels,
-            vec!["Deck", "Integrations", "Voice", "Service", "Welcome"]
+            vec!["Deck", "Usage", "Integrations", "Voice", "Service", "Welcome"]
         );
         // §8.2 asks for a Welcome that is re-openable, and this is what
         // re-opens it: a row, like every other screen.

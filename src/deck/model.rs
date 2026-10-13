@@ -956,7 +956,13 @@ impl Deck {
                 // a resync of the same one keeps it, so the reply does not
                 // flicker back to four lines and out again.
                 if owner.reply_rev != *rev {
-                    owner.reply.forget();
+                    // Workflow counters refresh continuously. Keep the old
+                    // page visible until the matching DocText replaces it in
+                    // one merge; clearing on the envelope flashes a loading
+                    // page between every pair of USB/BLE messages.
+                    if owner.reply_kind != DocKind::Workflow {
+                        owner.reply.forget();
+                    }
                     owner.reply_rev = *rev;
                 }
                 owner.last_reply = *text;

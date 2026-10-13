@@ -68,9 +68,15 @@ pub fn visible_steps(plan: &Plan, expanded: bool, limit: usize) -> Range<usize> 
 impl Shell {
     pub(crate) fn render_workflow(&self, agent: &Agent, dim: bool, cx: &Context<Self>) -> Div {
         let p = *palette(cx);
-        let live = !dim && matches!(agent.state, AgentState::Working);
+        let runs_live = agent
+            .workflow_runs
+            .iter()
+            .any(|r| r.status == ActivityStatus::Running);
+        let live = !dim && (matches!(agent.state, AgentState::Working) || runs_live);
         let status = if dim {
             "Disconnected"
+        } else if runs_live && agent.state != AgentState::Question {
+            "In progress"
         } else {
             match agent.state {
                 AgentState::Working => "In progress",
@@ -89,6 +95,76 @@ impl Shell {
                     .child(crate::present::REDACTED),
             );
         } else {
+            for run in &agent.workflow_runs {
+                let running = run.status == ActivityStatus::Running;
+                let color = match run.status {
+                    ActivityStatus::Running => p.accent,
+                    ActivityStatus::Completed => p.success,
+                    ActivityStatus::Failed => p.danger,
+                    ActivityStatus::Stopped => p.muted,
+                };
+                let mark = if running && !dim {
+                    ui::spinner(13., color).into_any_element()
+                } else {
+                    ui::icon(
+                        match run.status {
+                            ActivityStatus::Completed => ic::CHECK,
+                            ActivityStatus::Failed => ic::CLOSE_CIRCLE,
+                            ActivityStatus::Stopped => ic::STOP,
+                            ActivityStatus::Running => ic::CLOCK,
+                        },
+                        13.,
+                        color,
+                    )
+                    .into_any_element()
+                };
+                body = body.child(
+                    v_flex()
+                        .gap(px(6.))
+                        .child(
+                            h_flex()
+                                .gap(px(8.))
+                                .child(mark)
+                                .child(
+                                    div()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .truncate()
+                                        .ts(12., 18.)
+                                        .medium()
+                                        .child(run.name.clone()),
+                                )
+                                .when(!running, |d| {
+                                    d.child(
+                                        div()
+                                            .ts(10., 14.)
+                                            .text_color(color)
+                                            .child(run.status.label()),
+                                    )
+                                }),
+                        )
+                        .child(
+                            div().w_full().h(px(3.)).rounded_full().bg(p.border).child(
+                                div()
+                                    .h_full()
+                                    .w(relative(if run.total == 0 {
+                                        0.
+                                    } else {
+                                        run.completed as f32 / run.total as f32
+                                    }))
+                                    .rounded_full()
+                                    .bg(color),
+                            ),
+                        )
+                        .child(
+                            div()
+                                .pl(px(21.))
+                                .ts(11., 16.)
+                                .text_color(p.muted)
+                                .child(run.metrics()),
+                        ),
+                );
+            }
             if let Some(plan) = &agent.workflow {
                 let completed = plan.completed();
                 body = body.child(
@@ -339,7 +415,7 @@ impl Shell {
                         })),
                     );
                 }
-            } else if agent.workflow.is_none() {
+            } else if agent.workflow.is_none() && agent.workflow_runs.is_empty() {
                 body = body.child(div().ts(12., 18.).text_color(p.muted).child(if live {
                     "Waiting for the agent’s next step…"
                 } else {

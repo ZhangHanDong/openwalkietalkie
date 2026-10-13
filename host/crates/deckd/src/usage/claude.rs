@@ -245,6 +245,7 @@ async fn feed(api: &Api, windows: Vec<Window>, account: Option<String>) -> Outco
     match api
         .core
         .send(CoreMsg::Usage {
+            partial: false,
             provider: Provider::Claude,
             windows,
             account,

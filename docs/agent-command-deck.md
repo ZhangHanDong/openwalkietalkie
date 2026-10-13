@@ -95,7 +95,10 @@ walkie-talkie channel; one is active at a time.
   the end is visible. Scrolling away holds the reading position; scrolling
   back to the end or SHIFT+ENTER resumes following.
 - **Workflow.** Tap **Workflow** in the channel's state row to see live plan
-  progress and recent tool activity. The compact plan shows three steps around
+  progress and recent tool activity. Claude background workflows appear first,
+  with the run name, successful/started workers, progress bar, elapsed time,
+  and tokens; these continue updating while the parent chat is idle.
+  The compact plan shows three steps around
   the current step; tap **Full plan** for all steps and the explanation.
   The latest three tools, running tools and expanded tools stay visible;
   tap a tool for its input/output, including syntax-highlighted code, or

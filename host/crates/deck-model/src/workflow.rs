@@ -6,6 +6,50 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub const MAX_STEPS: usize = 64;
+pub const MAX_RUNS: usize = 16;
+
+/// A provider-reported background run. Counts are workers, not guessed plan steps.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct Run {
+    pub id: String,
+    pub name: String,
+    pub status: ActivityStatus,
+    pub completed: u32,
+    pub total: u32,
+    pub elapsed_ms: u64,
+    pub tokens: u64,
+}
+
+impl Run {
+    pub fn bounded(mut self) -> Self {
+        self.id = sanitize::cut(&sanitize::collapse(&self.id), 128);
+        self.name = sanitize::cut(&sanitize::collapse(&self.name), 160);
+        self.completed = self.completed.min(self.total);
+        self
+    }
+
+    pub fn metrics(&self) -> String {
+        let seconds = self.elapsed_ms / 1000;
+        let elapsed = if seconds >= 3600 {
+            format!("{}h{}m", seconds / 3600, seconds % 3600 / 60)
+        } else if seconds >= 60 {
+            format!("{}m{}s", seconds / 60, seconds % 60)
+        } else {
+            format!("{seconds}s")
+        };
+        let tokens = if self.tokens >= 1_000_000 {
+            format!("{:.1}m", self.tokens as f64 / 1_000_000.)
+        } else if self.tokens >= 1000 {
+            format!("{:.1}k", self.tokens as f64 / 1000.)
+        } else {
+            self.tokens.to_string()
+        };
+        format!(
+            "{}/{} · {elapsed} · {tokens} tokens",
+            self.completed, self.total
+        )
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -101,6 +145,16 @@ impl Plan {
 /// Called before the message is upserted, by both the store and GUI mirror.
 /// Retain the latest plan even after its chat item leaves the bounded tail.
 pub fn observe(agent: &mut Agent, message: &MessageMeta) {
+    if message.role == ChatRole::Tool {
+        if let Some(runs) = &message.runs {
+            agent.workflow_runs = runs
+                .iter()
+                .take(MAX_RUNS)
+                .cloned()
+                .map(Run::bounded)
+                .collect();
+        }
+    }
     let position = agent
         .messages
         .iter()
@@ -176,7 +230,11 @@ pub fn activity(agent: &Agent) -> Vec<Activity<'_>> {
         .map_or(0, |index| index + 1);
     agent.messages[start..]
         .iter()
-        .filter(|entry| entry.message.role == ChatRole::Tool && entry.message.plan.is_none())
+        .filter(|entry| {
+            entry.message.role == ChatRole::Tool
+                && entry.message.plan.is_none()
+                && entry.message.runs.is_none()
+        })
         .map(|message| {
             let heading = message
                 .text
@@ -325,20 +383,34 @@ pub fn device_lines(
 ) -> (deck_proto::DocFont, Vec<String>) {
     let open = |key: &str| expanded.is_some_and(|set| set.contains(key));
     let (font, mut lines) = deck_wrap::wrap_rich_reply("## Workflow", size);
+    for run in &agent.workflow_runs {
+        lines.extend(deck_wrap::wrap_rich_reply(&format!("### {}", run.name), size).1);
+        lines.extend(deck_wrap::wrap_rich_reply(&run.metrics(), size).1);
+        if run.total > 0 {
+            let total = run.total.min(64);
+            let done = u64::from(run.completed) * u64::from(total) / u64::from(run.total);
+            lines.push(format!("w0{done:02x}{total:02x}"));
+        }
+        if run.status != ActivityStatus::Running {
+            lines.extend(deck_wrap::wrap_rich_reply(run.status.label(), size).1);
+        }
+    }
     if let Some(plan) = agent
         .workflow
         .as_ref()
         .filter(|plan| !plan.steps.is_empty())
     {
-        lines = deck_wrap::wrap_rich_reply(
-            &format!(
-                "## Plan · {}/{} complete",
-                plan.completed(),
-                plan.steps.len()
-            ),
-            size,
-        )
-        .1;
+        lines.extend(
+            deck_wrap::wrap_rich_reply(
+                &format!(
+                    "## Plan · {}/{} complete",
+                    plan.completed(),
+                    plan.steps.len()
+                ),
+                size,
+            )
+            .1,
+        );
         lines.push(format!(
             "w0{:02x}{:02x}",
             plan.completed(),
@@ -449,7 +521,7 @@ pub fn device_lines(
                 lines.extend(deck_wrap::wrap_rich_reply(&tool.message.text, size).1);
             }
         }
-    } else if agent.workflow.is_none() {
+    } else if agent.workflow.is_none() && agent.workflow_runs.is_empty() {
         lines.extend(deck_wrap::wrap_rich_reply("Waiting for plan or tool activity.", size).1);
     }
     (font, lines)
@@ -498,6 +570,7 @@ mod tests {
                 role,
                 streaming: activity == Some(ActivityStatus::Running),
                 activity,
+                runs: None,
                 plan: None,
             },
             text: "**Bash**\n\n```json\n{\"command\":\"cargo test\"}\n```".into(),

@@ -189,7 +189,7 @@ impl Store {
             card: None,
             reply: None,
             messages: Vec::new(),
-            workflow: None,
+            workflow_runs: Vec::new(), workflow: None,
             chat_rev: 0,
             reply_rev: 0,
             voice,
@@ -636,12 +636,13 @@ impl Store {
         };
         let mut meta = r.message.clone().unwrap_or_else(|| crate::MessageMeta {
             activity: None,
-            plan: None,
+            runs: None, plan: None,
             id: format!("reply-{}-{}", ts.0, agent.reply_rev),
             role: crate::ChatRole::Assistant,
             streaming: false,
         });
         meta.plan = meta.plan.map(crate::workflow::Plan::bounded);
+        meta.runs = meta.runs.map(|runs| runs.into_iter().take(crate::workflow::MAX_RUNS).map(crate::workflow::Run::bounded).collect());
         crate::workflow::observe(agent, &meta);
         let duplicate = r.message.is_none() && agent.messages.last().is_some_and(|m|
             m.message.role == crate::ChatRole::Assistant && m.text == r.text);

@@ -274,7 +274,7 @@ impl Model {
                     id: format!("plan:{turn}"),
                     role: deck_model::ChatRole::Tool,
                     streaming: false,
-                    plan: Some(plan),
+                    runs: None, plan: Some(plan),
                 }, text);
             }
         } else if matches!(method, "item/started" | "item/completed") {
@@ -287,7 +287,7 @@ impl Model {
             let previous = self.threads.get(thread).and_then(|t| t.messages.iter().find(|(m, _)| m.id == id)).cloned();
             let (meta, mut text) = previous.unwrap_or_else(|| (deck_model::MessageMeta {
                 activity: None,
-                plan: None,
+                runs: None, plan: None,
                 id: id.into(), role: if method == "item/agentMessage/delta" { deck_model::ChatRole::Assistant } else { deck_model::ChatRole::Tool }, streaming: true,
             }, String::new()));
             if text == "Working…" { text.clear(); }
@@ -833,7 +833,7 @@ fn chat_item(item: &Value, streaming: bool) -> Option<(deck_model::MessageMeta, 
         _ => return None,
     };
     let activity = (role == ChatRole::Tool).then(|| deck_model::workflow::ActivityStatus::provider(item["status"].as_str(), streaming));
-    Some((deck_model::MessageMeta { activity, plan: None, id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
+    Some((deck_model::MessageMeta { activity, runs: None, plan: None, id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
 }
 
 /// One row of the daemon's loaded-thread list, as [`Model::loaded`] takes it.
@@ -1565,6 +1565,7 @@ async fn feed_usage(api: &Arc<Api>, windows: Vec<crate::usage::Window>, account:
     if let Err(e) = api
         .core
         .send(crate::core::handle::CoreMsg::Usage {
+            partial: false,
             provider: crate::usage::Provider::Codex,
             windows,
             account,

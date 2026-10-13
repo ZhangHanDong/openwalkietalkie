@@ -114,19 +114,31 @@ pub fn claude_oauth_windows(v: &Value) -> Vec<Window> {
     ] {
         out.extend(window(&v[key], label, &["utilization", "used_percentage", "percent"]));
     }
-    if out.is_empty() {
-        for limit in v["limits"].as_array().into_iter().flatten() {
-            let kind = limit["kind"].as_str().unwrap_or_default();
-            let label = match kind {
-                "five_hour" => "session".to_string(),
-                "seven_day" => "week".to_string(),
-                "seven_day_opus" => "Opus week".to_string(),
-                "seven_day_sonnet" => "Sonnet week".to_string(),
-                other => other.replace('_', " "),
-            };
-            out.extend(window(limit, &label, &["percent", "utilization", "used_percentage"]));
+    // New servers keep the common flat fields alongside model-specific rows.
+    // Read both, deduplicating the common meters by their semantic label.
+    for limit in v["limits"].as_array().into_iter().flatten() {
+        let label = match limit["kind"].as_str().unwrap_or_default() {
+            "session" | "five_hour" => "session".to_string(),
+            "weekly_all" | "seven_day" => "week".to_string(),
+            "seven_day_opus" => "Opus week".to_string(),
+            "seven_day_sonnet" => "Sonnet week".to_string(),
+            "weekly_scoped" => {
+                let Some(model) = limit["scope"]["model"]["display_name"].as_str() else { continue };
+                let model = deck_model::sanitize::collapse(model);
+                if model.is_empty() { continue }
+                format!("{} week", deck_model::sanitize::cut(&model, 64))
+            }
+            other => other.replace('_', " "),
+        };
+        if let Some(w) = window(limit, &label, &["percent", "utilization", "used_percentage"]) {
+            if let Some(old) = out.iter_mut().find(|old| old.label == w.label) { *old = w; }
+            else { out.push(w); }
         }
     }
+    // Put Fable ahead of legacy model meters when the six-row deck is full.
+    out.sort_by_key(|w| match w.label.as_str() {
+        "session" => 0, "week" => 1, label if label.to_ascii_lowercase().starts_with("fable") => 2, _ => 3,
+    });
     // The overage pool is a bar only once it is switched on.
     if v["extra_usage"]["is_enabled"] == Value::Bool(true) {
         out.extend(window(&v["extra_usage"], "extra", &["utilization", "percent"]));
@@ -397,6 +409,21 @@ impl Feeder {
         changed
     }
 
+    /// Status-line reports contain only a subset of the account's meters.
+    /// Preserve model limits only for the same known account and before reset.
+    pub fn set_partial(&mut self, provider: Provider, mut windows: Vec<Window>, account: Option<String>, now: u64) -> bool {
+        let account = account_label(account.as_deref());
+        if account.is_some() && self.accounts.get(&provider) == Some(&account) {
+            for old in self.windows.get(&provider).into_iter().flatten() {
+                if !windows.iter().any(|w| w.label == old.label)
+                    && old.resets_at.is_some_and(|reset| reset > now) {
+                    windows.push(old.clone());
+                }
+            }
+        }
+        self.set(provider, windows, account)
+    }
+
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.windows.values().all(Vec::is_empty)
@@ -414,12 +441,16 @@ impl Feeder {
     #[must_use]
     pub fn render(&self, cfg: &UsageCfg, period: &str, now: u64) -> Option<(String, Vec<UsageItem>)> {
         let mut items = Vec::new();
-        for provider in Provider::ALL {
+        for (index, provider) in Provider::ALL.into_iter().enumerate() {
             if !provider.enabled(cfg) {
                 continue;
             }
+            // Reserve the other provider's session/week meters instead of
+            // allowing extra Claude model limits to crowd out Codex entirely.
+            let reserve: usize = Provider::ALL[index + 1..].iter().filter(|p| p.enabled(cfg))
+                .map(|p| self.windows.get(p).map_or(0, |w| w.len().min(2))).sum();
             for w in self.windows.get(&provider).into_iter().flatten() {
-                if items.len() == ITEMS_MAX {
+                if items.len() >= ITEMS_MAX.saturating_sub(reserve) {
                     break;
                 }
                 items.push(UsageItem {
@@ -605,6 +636,56 @@ mod tests {
         }));
         assert_eq!(bare.iter().map(|w| w.label.as_str()).collect::<Vec<_>>(), vec!["1h", "2d"]);
         assert!(codex_windows(&json!({"rateLimits": null})).is_empty());
+    }
+
+    #[test]
+    fn fable_is_read_alongside_flat_meters_and_reserves_codex_room() {
+        let answer = json!({
+            "five_hour":{"utilization":40}, "seven_day":{"utilization":52},
+            "seven_day_opus":{"utilization":10}, "seven_day_sonnet":{"utilization":20},
+            "limits":[
+                {"kind":"session","percent":41}, {"kind":"weekly_all","percent":53},
+                {"kind":"weekly_scoped","group":"weekly","percent":100,"resets_at":2_000_000_000,
+                    "scope":{"model":{"display_name":"Fable"}}},
+                {"kind":"weekly_scoped","percent":88,"scope":{"surface":{"display_name":"Other"}}}
+            ], "extra_usage":{"is_enabled":true,"utilization":7}
+        });
+        let windows = claude_oauth_windows(&answer);
+        assert_eq!(windows.iter().map(|w| w.label.as_str()).collect::<Vec<_>>(),
+            ["session", "week", "Fable week", "Opus week", "Sonnet week", "extra"]);
+        assert_eq!((windows[0].percent, windows[1].percent, windows[2].percent), (41,53,100));
+        let mut f = Feeder::default();
+        f.set(Provider::Claude, windows, Some("claude@example.com".into()));
+        f.set(Provider::Codex, vec![Window { label:"session".into(),percent:10,resets_at:None },
+            Window { label:"week".into(),percent:20,resets_at:None }], Some("codex@example.com".into()));
+        let items = f.render(&UsageCfg::default(), "usage", 1_999_996_400).unwrap().1;
+        assert_eq!(items.len(),6);
+        assert_eq!(items[2].name,"Claude Fable week");
+        assert_eq!(items[2].account.as_deref(),Some("claude@example.com"));
+        assert_eq!(items[2].reset,"resets in 1h");
+        assert_eq!(items[4].name,"Codex session");
+        assert_eq!(items[5].name,"Codex week");
+    }
+
+    #[test]
+    fn partial_usage_preserves_fable_only_for_the_same_account_until_reset() {
+        let mut f = Feeder::default();
+        let fable = Window { label:"Fable week".into(), percent:75, resets_at:Some(1000) };
+        let session = Window { label:"session".into(), percent:10, resets_at:Some(2000) };
+        let account = Some("work@example.com".into());
+        f.set(Provider::Claude, vec![fable.clone()], account.clone());
+        f.set_partial(Provider::Claude, vec![session.clone()], account.clone(), 100);
+        assert_eq!(f.windows[&Provider::Claude], [session.clone(), fable.clone()]);
+        f.set_partial(Provider::Claude, vec![session.clone()], account.clone(), 1001);
+        assert_eq!(f.windows[&Provider::Claude].as_slice(), std::slice::from_ref(&session));
+        for switched in [None, Some("personal@example.com".into())] {
+            f.set(Provider::Claude, vec![fable.clone()], account.clone());
+            f.set_partial(Provider::Claude, vec![session.clone()], switched, 100);
+            assert_eq!(f.windows[&Provider::Claude].as_slice(), std::slice::from_ref(&session));
+        }
+        f.set(Provider::Claude, vec![fable], account.clone());
+        f.set(Provider::Claude, vec![session.clone()], account);
+        assert_eq!(f.windows[&Provider::Claude], [session]);
     }
 
     #[test]

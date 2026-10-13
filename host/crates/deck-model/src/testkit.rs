@@ -83,7 +83,7 @@ pub fn fixture_agent(id: &str, slot: u8, state: AgentState) -> Agent {
             redacted: false,
         }),
         messages: Vec::new(),
-        workflow: None,
+        workflow_runs: Vec::new(), workflow: None,
         chat_rev: 0,
         reply_rev: 0,
         voice: None,

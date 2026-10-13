@@ -216,6 +216,7 @@ pub async fn ingest(
         if !windows.is_empty() {
             let _ = core
                 .send(CoreMsg::Usage {
+                    partial: true,
                     provider: crate::usage::Provider::Claude,
                     windows,
                     account: crate::usage::account_label(
@@ -923,6 +924,7 @@ mod tests {
         let msg = rx.try_recv().expect("the windows reach the core first");
         match msg {
             CoreMsg::Usage {
+                partial: true,
                 provider,
                 windows,
                 account,

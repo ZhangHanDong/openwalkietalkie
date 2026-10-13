@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 70] = [
+const DECK_SCENES: [&str; 72] = [
     "roster",
     "roster-page2",
     "roster-offline",
@@ -44,6 +44,7 @@ const DECK_SCENES: [&str; 70] = [
     "channel-tools",
     "channel-tool-open",
     "workflow",
+    "workflow-runs",
     "workflow-complete",
     "workflow-tool-open",
     "workflow-question",
@@ -72,6 +73,7 @@ const DECK_SCENES: [&str; 70] = [
     "macropad-edit",
     "usage",
     "usage-accounts",
+    "usage-fable",
     "usage-updating",
     "settings-volume",
     "settings-speech",
@@ -201,10 +203,11 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 ui.agents.reply_top = 0;
             }
         }
-        "workflow" | "workflow-complete" | "workflow-tool-open" | "workflow-question" => {
+        "workflow" | "workflow-runs" | "workflow-complete" | "workflow-tool-open" | "workflow-question" => {
             let agent = &mut ui.deck.agents[0];
             agent.has_card = scene == "workflow-question";
             agent.name.set("Workflow");
+            if scene == "workflow-runs" { agent.kind = deck::msg::AgentKind::Claude; }
             agent.state = if scene == "workflow-complete" { deck::msg::AgentState::Ready }
                 else if agent.has_card { deck::msg::AgentState::Question } else { deck::msg::AgentState::Working };
             agent.last_reply.set("Workflow");
@@ -212,7 +215,10 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             agent.reply_rev = 1;
             agent.reply.id = 1;
             agent.reply.font = deck::msg::DocFont::RichRow;
-            let lines: &[&str] = if scene == "workflow-tool-open" { &[
+            let lines: &[&str] = if scene == "workflow-runs" { &[
+                "h0Workflow", "h0fixup-constraints-and-truth", "p00/9 · 1m16s · 488.1k tokens", "w00009",
+                "h0design-navigation-panel", "p00/4 · 1m16s · 1.1m tokens", "w00004",
+            ] } else if scene == "workflow-tool-open" { &[
                 "T002Run cargo test · failed", "h0Bash", "c0\u{e000}Ccargo test workflow", "p0One test needs attention.",
                 "c0\u{e000}Sassert_eq!\u{e000}C(done, total);", "p0Expected: 5", "p0Actual: 4", "t003Read workflow.rs · done",
             ] } else if scene == "workflow-complete" { &[
@@ -405,7 +411,7 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             ui.macropad.edit.adjusting = true;
         }
         "usage" => ui.on_face(Template::Usage),
-        "usage-accounts" => {
+        "usage-accounts" | "usage-fable" => {
             ui.on_face(Template::Usage);
             ui.deck.usage.period.set("5h / 7d");
             ui.deck.usage.count = 4;
@@ -421,6 +427,15 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 item.percent = percent;
                 item.reset.set(reset);
                 item.tone = None;
+            }
+            if scene == "usage-fable" {
+                ui.deck.usage.items[4] = ui.deck.usage.items[3];
+                ui.deck.usage.items[3] = ui.deck.usage.items[2];
+                ui.deck.usage.items[2].name.set("Claude Fable week");
+                ui.deck.usage.items[2].account.set("personal@example.com");
+                ui.deck.usage.items[2].reset.set("resets in 4d 8h");
+                ui.deck.usage.items[2].percent = 100;
+                ui.deck.usage.count = 5;
             }
         }
         "usage-updating" => {

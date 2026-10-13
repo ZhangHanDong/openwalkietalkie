@@ -8,6 +8,7 @@ pub mod audio;
 pub mod ble;
 pub mod bus;
 mod chat;
+mod claude_workflows;
 pub mod cli;
 pub mod codexd;
 pub mod config;

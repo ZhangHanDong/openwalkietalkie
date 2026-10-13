@@ -265,6 +265,8 @@ pub enum CoreMsg {
     /// A usage feeder's latest windows (`crate::usage`): the core merges
     /// them with the other provider's and pushes the Usage face.
     Usage {
+        /// Status-line reports omit model meters; OAuth reports replace them.
+        partial: bool,
         provider: crate::usage::Provider,
         windows: Vec<crate::usage::Window>,
         account: Option<String>,

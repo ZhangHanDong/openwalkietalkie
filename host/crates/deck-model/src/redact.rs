@@ -38,6 +38,7 @@ pub fn redact_agent(agent: &mut Agent) {
     agent.meta = Value::Null;
     agent.messages.clear();
     agent.workflow = None;
+    agent.workflow_runs.clear();
     if let Some(card) = &mut agent.card {
         card.text = None;
         card.choices.clear();
@@ -117,6 +118,7 @@ pub fn redact_event(event: &Event, scopes: &[Scope], own_agent: bool) -> Option<
             null_field(data, "announce");
             if let Some(message) = data.get_mut("message").and_then(Value::as_object_mut) {
                 null_field(message, "plan");
+                null_field(message, "runs");
             }
         }
         EventKind::OpConfirmRequested => null_field(data, "order"),

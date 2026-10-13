@@ -38,6 +38,7 @@ pub mod style;
 pub mod tray;
 pub mod updater;
 pub mod ui;
+pub mod usage;
 pub mod voice;
 pub mod welcome;
 pub mod workflow;

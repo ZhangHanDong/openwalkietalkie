@@ -40,7 +40,8 @@ use crate::adapters::{
     self, rt, Adapter, Adapters, GroupPlan, HookCtx, HookOutput, HookPayload, Ingest,
 };
 use crate::core::handle::{
-    ClientInfo, CoreHandle, CoreMsg, Delivery, HoldResult, OpenSession, Reply, SessionKind,
+    ClientInfo, CoreHandle, CoreMsg, Delivery, HoldGuard, HoldResult, HoldRx, OpenSession, Reply,
+    SessionKind,
 };
 use deck_model::{AgentId, ApiError, CardId, CardSet, PidKind, Request, Scope, SessionId};
 use serde::Deserialize;
@@ -217,7 +218,9 @@ pub async fn ingest(
                 .send(CoreMsg::Usage {
                     provider: crate::usage::Provider::Claude,
                     windows,
-                    account: crate::usage::account_label(payload.0["_openwalkietalkie_account"].as_str()),
+                    account: crate::usage::account_label(
+                        payload.0["_openwalkietalkie_account"].as_str(),
+                    ),
                 })
                 .await;
         }
@@ -467,6 +470,65 @@ fn nothing() -> (HookOutput, Option<Delivery>) {
     (HookOutput::Empty, None)
 }
 
+/// Cancellation must release both the core's hold and the adapter's memo.
+/// Keep the memo update before HoldGuard's drop, so a degraded card cannot
+/// become visible before the next turn knows which card to clear.
+struct HookHold {
+    adapters: Arc<Adapters>,
+    cli: &'static str,
+    payload: HookPayload,
+    cmd: CardSet,
+    card: CardId,
+    hold: HoldRx,
+    guard: HoldGuard,
+}
+
+impl Drop for HookHold {
+    fn drop(&mut self) {
+        if self.guard.is_armed() {
+            if let Some(adapter) = adapter_of(&self.adapters, self.cli) {
+                adapter.released(
+                    &self.payload,
+                    &self.cmd,
+                    self.card,
+                    deck_model::Release::HoldGone,
+                    Instant::now(),
+                );
+            }
+        }
+    }
+}
+
+/// Finish the short registration round trip even if the hook disappears
+/// while its reply is in flight. Dropping the JoinHandle detaches this task;
+/// its returned guard is then dropped after `carded`, releasing both halves.
+/// The caller still applies CORE_BUDGET and never waits for a stalled core.
+fn register_hold(
+    adapters: Arc<Adapters>,
+    core: CoreHandle,
+    cli: &'static str,
+    payload: HookPayload,
+    cmd: CardSet,
+    session: SessionId,
+) -> tokio::task::JoinHandle<Result<HookHold, ApiError>> {
+    tokio::spawn(async move {
+        let adapter = adapter_of(&adapters, cli).ok_or_else(core_stalled)?;
+        let (card, hold, guard) = core
+            .set_card_held(adapter.principal(), session, cmd.clone())
+            .await?;
+        adapter.carded(&payload, &cmd, card);
+        Ok(HookHold {
+            adapters,
+            cli,
+            payload,
+            cmd,
+            card,
+            hold,
+            guard,
+        })
+    })
+}
+
 /// The held path (facts-seams §2d), card by card.
 ///
 /// A single permission card is a group of one. Each card is parked on its
@@ -514,7 +576,6 @@ async fn held(
     let Some(session) = adapter.session() else {
         return nothing();
     };
-    let principal = adapter.principal();
     let mut cards = vec![cmd];
     if let Some(plan) = &group {
         cards.extend(plan.rest.iter().cloned());
@@ -528,26 +589,34 @@ async fn held(
     let mut answers: Vec<Option<deck_model::Answer>> = Vec::with_capacity(cards.len());
     for (index, mut cmd) in cards.into_iter().enumerate() {
         cmd.agent = agent.clone();
-        let park = core.set_card_held(principal.clone(), session, cmd.clone());
+        let park = register_hold(
+            adapters.clone(),
+            core.clone(),
+            cli,
+            payload.clone(),
+            cmd.clone(),
+            session,
+        );
         let parked = rt::budgeted(park)
             .await
+            .and_then(Result::ok)
             .unwrap_or_else(|| Err(core_stalled()));
-        let (card, hold, mut guard) = match parked {
+        let mut parked = match parked {
             Ok(parked) => parked,
             Err(e) => {
                 // `-32008` past `[api] max_held_hooks`, `-32003` when the
                 // session ended under us: the CLI shows its own dialog.
-                // No card was raised, so there is none to remember: the
-                // CLI's own dialog is the whole of what the operator sees.
+                // If registration is still in flight after a timeout, its
+                // detached task releases the eventual card and memo.
                 refused(cli, "agent.card.set", &e);
                 return nothing();
             }
         };
-        adapter.carded(payload, &cmd, card);
-        match hold.await {
+        let card = parked.card;
+        match (&mut parked.hold).await {
             Ok(HoldResult::Answer(answer)) => {
                 answers.push(Some(answer));
-                guard.disarm();
+                parked.guard.disarm();
                 adapter.uncarded(payload, card);
                 if index == last {
                     let out = output(adapter, &note, &cmd, group.as_ref(), &answers);
@@ -574,7 +643,7 @@ async fn held(
             // altogether (`Release::degrades_card`).
             Ok(HoldResult::Released { reason }) => {
                 tracing::debug!(cli, ?reason, "a released hold");
-                guard.disarm();
+                parked.guard.disarm();
                 adapter.released(payload, &cmd, card, reason, Instant::now());
                 return nothing();
             }
@@ -583,16 +652,7 @@ async fn held(
             // and what it reports is a `HoldGone` — which is what the core
             // will degrade the card under, so that is the reason the
             // adapter is told.
-            Err(_) => {
-                adapter.released(
-                    payload,
-                    &cmd,
-                    card,
-                    deck_model::Release::HoldGone,
-                    Instant::now(),
-                );
-                return nothing();
-            }
+            Err(_) => return nothing(),
         }
     }
     nothing()
@@ -665,6 +725,111 @@ mod tests {
                 "hook_event_name": event,
             }
         })
+    }
+
+    /// Exercise each cancellation boundary without depending on the core
+    /// thread winning a scheduling race. Both permission and question cards
+    /// must remain clearable by the next turn after their hook disappears.
+    #[tokio::test]
+    async fn cancelled_registration_remembers_the_degraded_card() {
+        for question in [false, true] {
+            for boundary in ["before reply", "queued reply", "waiting for answer"] {
+                let (core, messages) = CoreHandle::detached();
+                let adapters = Arc::new(Adapters::default());
+                let mut ask = payload(if question {
+                    "PreToolUse"
+                } else {
+                    "PermissionRequest"
+                });
+                ask["payload"]["tool_name"] =
+                    serde_json::json!(if question { "AskUserQuestion" } else { "Bash" });
+                ask["payload"]["tool_input"] = if question {
+                    serde_json::json!({"questions": [{
+                        "question": "Which colour?", "header": "Colour",
+                        "options": [{"label": "Red"}, {"label": "Green"}]
+                    }]})
+                } else {
+                    serde_json::json!({"command": "date"})
+                };
+                let ask = HookPayload(ask["payload"].take());
+                let context = HookCtx::default();
+                let Ingest::Held { mut cmd, .. } = adapters.claude.ingest(&ask, &context) else {
+                    panic!("the prompt must be held");
+                };
+                let agent = AgentId("ag_cancelled".into());
+                adapters.claude.resolved(&ask, &agent);
+                cmd.agent = agent.clone();
+                let task = register_hold(adapters.clone(), core, "claude", ask, cmd, SessionId(2));
+                let message = tokio::time::timeout(std::time::Duration::from_secs(1), async {
+                    loop {
+                        if let Ok(message) = messages.try_recv() {
+                            break message;
+                        }
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .expect("registration reaches the core");
+                let CoreMsg::SetCardHeld { reply, .. } = message else {
+                    panic!("expected the registration");
+                };
+                let card = CardId(7);
+                let mut holds = crate::core::holds::Holds::new();
+                let (token, hold) = holds.park(agent.clone(), card);
+                if boundary == "before reply" {
+                    drop(task);
+                    reply
+                        .send(Ok((card, token, hold)))
+                        .expect("registration survives cancellation");
+                } else {
+                    reply.send(Ok((card, token, hold))).unwrap();
+                    if boundary == "queued reply" {
+                        drop(task);
+                    } else {
+                        drop(task.await.unwrap().unwrap());
+                    }
+                }
+                let gone = tokio::time::timeout(std::time::Duration::from_secs(1), async {
+                    loop {
+                        if let Ok(message) = messages.try_recv() {
+                            break message;
+                        }
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .expect("cancellation releases the core hold");
+                assert!(
+                    matches!(gone, CoreMsg::HoldGone { card: gone, token: seen, .. }
+                    if gone == card && seen == token),
+                    "{question}: {boundary}"
+                );
+                assert!(holds.forget(&agent, card, token));
+                let post = HookPayload(payload("PostToolUse")["payload"].take());
+                let Ingest::Report(plan) = adapters.claude.ingest(&post, &context) else {
+                    panic!("the next turn must clear the card");
+                };
+                let cleared: Vec<_> = plan
+                    .iter()
+                    .filter_map(|request| match request {
+                        Request::CardClear(clear) => Some(clear.card),
+                        _ => None,
+                    })
+                    .collect();
+                assert_eq!(cleared, vec![card], "{question}: {boundary}");
+                let notification = HookPayload(serde_json::json!({
+                    "session_id": "abc123", "cwd": "/w/project",
+                    "hook_event_name": "Notification", "notification_type": "permission_prompt",
+                    "message": "Another prompt"
+                }));
+                let Ingest::Report(plan) = adapters.claude.ingest(&notification, &context) else {
+                    panic!("the cancelled hold must not silence future notifications");
+                };
+                assert!(plan
+                    .iter()
+                    .any(|request| matches!(request, Request::CardSet(_))));
+            }
+        }
     }
 
     /// B5: a held hook parks for the whole hold budget and `Core::call`
@@ -757,7 +922,11 @@ mod tests {
         assert_eq!(reply.result.unwrap(), serde_json::json!({}));
         let msg = rx.try_recv().expect("the windows reach the core first");
         match msg {
-            CoreMsg::Usage { provider, windows, account } => {
+            CoreMsg::Usage {
+                provider,
+                windows,
+                account,
+            } => {
                 assert_eq!(provider, crate::usage::Provider::Claude);
                 assert_eq!(account.as_deref(), Some("work@example.com"));
                 assert_eq!(

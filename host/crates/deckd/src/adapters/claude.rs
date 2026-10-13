@@ -1184,7 +1184,8 @@ impl Adapter for Claude {
     /// C8 clears from `PostToolUse`/`Stop`; a Ready card is expired by the
     /// next prompt. A **held** card of either origin is also remembered as
     /// parked, which is what stops a `Notification` from replacing it
-    /// while the CLI waits (`carded_already`).
+    /// while the CLI waits (`carded_already`). Core replies can resume their
+    /// handlers in either order, so an older callback cannot replace a newer id.
     fn carded(&self, payload: &HookPayload, cmd: &CardSet, card: CardId) {
         let Some(session_id) = payload.str("session_id") else {
             return;
@@ -1193,14 +1194,23 @@ impl Adapter for Claude {
             return;
         };
         if cmd.deliver == Deliver::Hold {
-            memo.parked.insert(session_id.to_string(), card);
+            memo.parked
+                .entry(session_id.to_string())
+                .and_modify(|current| *current = (*current).max(card))
+                .or_insert(card);
         }
         match (cmd.kind, cmd.origin.kind) {
             (CardKind::R, _) => {
-                memo.ready.insert(session_id.to_string(), card);
+                memo.ready
+                    .entry(session_id.to_string())
+                    .and_modify(|current| *current = (*current).max(card))
+                    .or_insert(card);
             }
             (_, OriginKind::Permission) => {
-                memo.open.insert(session_id.to_string(), card);
+                memo.open
+                    .entry(session_id.to_string())
+                    .and_modify(|current| *current = (*current).max(card))
+                    .or_insert(card);
             }
             _ => {}
         }
@@ -1960,42 +1970,49 @@ mod tests {
     /// both events are ingested before either is carded.
     #[test]
     fn a_displaced_hold_does_not_take_the_live_cards_place() {
-        let t0 = Instant::now();
-        let claude = Claude::default();
-        let first = payload(permission("Bash", serde_json::json!({"command": "date"})));
-        let second = payload(permission("Bash", serde_json::json!({"command": "uname"})));
-        let Ingest::Held { cmd: one, .. } = claude.ingest(&first, &ctx(t0)) else {
-            panic!("a permission is held");
-        };
-        let Ingest::Held { cmd: two, .. } = claude.ingest(&second, &ctx(t0)) else {
-            panic!("the second permission is held too: nothing is parked yet");
-        };
-        // Both are parked in the core; the second retired the first in the
-        // same step, and the two handlers come back in either order.
-        claude.carded(&first, &one, CardId(1));
-        claude.carded(&second, &two, CardId(2));
-        // Handler A's release lands last, and with the reason that *does*
-        // leave a degraded card behind — it still is not this session's.
-        claude.released(&first, &one, CardId(1), Release::Expiry, t0);
+        for reversed in [false, true] {
+            let t0 = Instant::now();
+            let claude = Claude::default();
+            let first = payload(permission("Bash", serde_json::json!({"command": "date"})));
+            let second = payload(permission("Bash", serde_json::json!({"command": "uname"})));
+            let Ingest::Held { cmd: one, .. } = claude.ingest(&first, &ctx(t0)) else {
+                panic!("a permission is held");
+            };
+            let Ingest::Held { cmd: two, .. } = claude.ingest(&second, &ctx(t0)) else {
+                panic!("the second permission is held too: nothing is parked yet");
+            };
+            // Both are parked in the core; the second retired the first in the
+            // same step, and the two handlers come back in either order.
+            if reversed {
+                claude.carded(&second, &two, CardId(2));
+                claude.carded(&first, &one, CardId(1));
+            } else {
+                claude.carded(&first, &one, CardId(1));
+                claude.carded(&second, &two, CardId(2));
+            }
+            // Handler A's release lands last, and with the reason that *does*
+            // leave a degraded card behind — it still is not this session's.
+            claude.released(&first, &one, CardId(1), Release::Expiry, t0);
 
-        let post = payload(serde_json::json!({
-            "session_id": "abc123", "cwd": "/w/project", "hook_event_name": "PostToolUse",
-        }));
-        let Ingest::Report(plan) = claude.ingest(&post, &ctx(t0)) else {
-            panic!("PostToolUse is report-only");
-        };
-        let cleared: Vec<CardId> = plan
-            .iter()
-            .filter_map(|r| match r {
-                Request::CardClear(c) => Some(c.card),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(
-            cleared,
-            vec![CardId(2)],
-            "the live card is cleared, never the one the store already retired"
-        );
+            let post = payload(serde_json::json!({
+                "session_id": "abc123", "cwd": "/w/project", "hook_event_name": "PostToolUse",
+            }));
+            let Ingest::Report(plan) = claude.ingest(&post, &ctx(t0)) else {
+                panic!("PostToolUse is report-only");
+            };
+            let cleared: Vec<CardId> = plan
+                .iter()
+                .filter_map(|r| match r {
+                    Request::CardClear(c) => Some(c.card),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(
+                cleared,
+                vec![CardId(2)],
+                "the live card is cleared, never the one the store already retired"
+            );
+        }
     }
 
     /// C7: 1–4 questions, 2–4 options. A payload outside the bounds is

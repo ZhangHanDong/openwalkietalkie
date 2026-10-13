@@ -65,6 +65,17 @@ jobs:
           APPLE_API_PRIVATE_KEY_P8_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_P8_BASE64 }}
           SPARKLE_ED25519_PRIVATE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
         run: bash tools/release-macos.sh "$ARCH" "$TAG"
+      - name: Preserve packages for notarization recovery
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: notarization-recovery-${{ matrix.arch }}
+          path: |
+            dist/macos/*.dmg
+            dist/macos/release-manifest.json
+          if-no-files-found: ignore
+          retention-days: 7
+          compression-level: 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: macos-${{ matrix.arch }}

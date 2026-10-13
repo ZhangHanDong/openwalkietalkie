@@ -46,7 +46,7 @@ jobs:
           /tmp/panel-test
           cc -std=c11 -Wall -Wextra -Werror tests/speaker_pcm.c -o /tmp/speaker-test
           /tmp/speaker-test
-          python3 -m unittest discover -s tools/tests -p 'test_release.py'
+          python3 -m unittest discover -s tools/tests -p 'test_*.py'
       - name: Build firmware
         env:
           BOARD: ${{ matrix.board }}

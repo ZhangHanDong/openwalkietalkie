@@ -253,8 +253,7 @@ elif ! xcrun notarytool history --keychain-profile "$notary_profile" >/dev/null 
 else
     say ".." "notarising $(basename "$dmg") (profile $notary_profile)"
     if xcrun notarytool submit "$dmg" --keychain-profile "$notary_profile" --wait &&
-       xcrun stapler staple "$dmg" &&
-       xcrun stapler validate "$dmg"; then
+       bash "$root/tools/staple-macos.sh" "$dmg"; then
         notarized=true
         notarization="notarised and stapled with keychain profile '$notary_profile'"
         dmg_sha256=$(shasum -a 256 "$dmg" | awk '{print $1}')

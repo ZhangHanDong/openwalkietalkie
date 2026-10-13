@@ -17,3 +17,6 @@ __pycache__/
 
 # KiCad local-history plugin state (an embedded git repo per project)
 .history/
+
+# Cloudflare wrangler cache for the website
+/site/.wrangler/

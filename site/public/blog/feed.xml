@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>OpenWalkieTalkie Blog</title>
+  <subtitle>Build logs and write-ups from the open-source handheld radio for your AI agents.</subtitle>
+  <id>https://openwalkietalkie.org/blog/</id>
+  <link href="https://openwalkietalkie.org/blog/" />
+  <link rel="self" type="application/atom+xml" href="https://openwalkietalkie.org/blog/feed.xml" />
+  <updated>2026-10-13T00:00:00Z</updated>
+  <author><name>Tony Huang</name></author>
+  <entry>
+    <title>OpenWalkieTalkie v0.1.0: a handheld for your agents</title>
+    <id>https://openwalkietalkie.org/blog/introducing-openwalkietalkie/</id>
+    <link href="https://openwalkietalkie.org/blog/introducing-openwalkietalkie/" />
+    <published>2026-10-13T00:00:00Z</published>
+    <updated>2026-10-13T00:00:00Z</updated>
+    <summary>The first official Mac app and firmware release: push-to-talk, conversations on the deck, and app and device updates.</summary>
+  </entry>
+</feed>

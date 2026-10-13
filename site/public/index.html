@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenWalkieTalkie — The open-source handheld radio for your AI agents.</title>
+<meta name="description" content="OpenWalkieTalkie is an open handheld for people who run several AI agents at once: a 480×480 touch screen that shows who needs you, a scroll wheel, and a push-to-talk key that sends your voice to the agent that does. Open hardware, open firmware, open host." />
+<link rel="canonical" href="https://openwalkietalkie.org/" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="OpenWalkieTalkie" />
+<meta property="og:title" content="OpenWalkieTalkie — The open-source handheld radio for your AI agents." />
+<meta property="og:description" content="A palm-sized deck with a touch screen, a scroll wheel and a push-to-talk key. It shows which agent needs you, and your voice goes to the one that does. Open hardware, firmware and host." />
+<meta property="og:url" content="https://openwalkietalkie.org/" />
+<meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="OpenWalkieTalkie — The open-source handheld radio for your AI agents." />
+<meta name="twitter:description" content="A deck that shows which agent needs you. Hold PTT and talk to it. Open hardware, firmware and host." />
+<meta name="twitter:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2e2bd" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131a3a" />
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<link rel="alternate" type="application/atom+xml" title="OpenWalkieTalkie Blog" href="/blog/feed.xml" />
+
+<!-- Self-hosted pixel fonts: Press Start 2P for headings/labels, VT323 for body copy -->
+<link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<link rel="stylesheet" href="/css/style.css" />
+<!-- Sets data-theme from localStorage/OS before first paint to avoid a theme flash -->
+<script src="/js/theme-init.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "OpenWalkieTalkie",
+  "url": "https://openwalkietalkie.org/",
+  "codeRepository": "https://github.com/conol-ai/openwalkietalkie",
+  "license": ["https://opensource.org/license/mit/", "https://ohwr.org/cern_ohl_p_v2.txt"],
+  "programmingLanguage": [
+    "Rust",
+    {
+      "@type": "ComputerLanguage",
+      "name": "CoHDL",
+      "url": "https://cohdl.org/",
+      "sameAs": "https://github.com/conol-ai/cohdl"
+    }
+  ],
+  "description": "An open-source handheld for people who run several AI agents at once: a 480x480 touch screen that shows who needs you, a scroll wheel, and a push-to-talk key. MIT software, CERN-OHL-P hardware."
+}
+</script>
+
+<!-- PLACEHOLDER: analytics. openmicrokbd.org carries a Google tag here; this
+     site has no property yet. When one exists, paste the two gtag <script>
+     tags, then add the inline snippet's sha256 to script-src in _headers. -->
+</head>
+<body>
+
+<a class="skip-link" href="#top">Skip to content</a>
+
+<!-- ============ SCROLL PROGRESS BAR ============ -->
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="brand" href="#top" aria-label="OpenWalkieTalkie — home">
+      <img class="logo-mark pixelated" src="/assets/logo-64.png" alt="" width="26" height="26" />
+      <span class="brand__text">OPEN WALKIE TALKIE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Sections">
+      <a href="#pile">The Pile</a>
+      <a href="#features">Features</a>
+      <a href="#demo">Try It</a>
+      <a href="#faces">Faces</a>
+      <a href="#blueprint">Blueprint</a>
+      <a href="#real">Hardware</a>
+      <a href="#download">Download</a>
+      <a href="/blog/">Blog</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle day and night theme" aria-pressed="false">
+      <span class="theme-toggle__track" aria-hidden="true">
+        <span class="theme-toggle__icon theme-toggle__icon--sun"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon"></span>
+        <span class="theme-toggle__knob"></span>
+      </span>
+      <span class="theme-toggle__label" id="themeLabel">DAY</span>
+    </button>
+
+    <button class="nav__burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ 1. HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero__sky" aria-hidden="true">
+    <div class="clouds" data-parallax="0.12">
+      <span class="cloud cloud--1"></span>
+      <span class="cloud cloud--2"></span>
+      <span class="cloud cloud--3"></span>
+    </div>
+    <div class="clouds clouds--far" data-parallax="0.05">
+      <span class="cloud cloud--4"></span>
+      <span class="cloud cloud--5"></span>
+    </div>
+    <div class="stars" id="stars"></div>
+    <div class="hero__hills"><span class="hill hill--back"></span><span class="hill hill--front"></span></div>
+  </div>
+
+  <div class="hero__inner">
+    <div class="hero__copy">
+      <p class="hero__eyebrow">OPEN HARDWARE · OPEN FIRMWARE · OPEN HOST</p>
+      <h1 class="hero__title">
+        <span class="hero__title-line">OPEN</span>
+        <span class="hero__title-line">WALKIE</span>
+        <span class="hero__title-line hero__title-line--accent">TALKIE</span>
+      </h1>
+      <p class="press-start"><span class="blink">▮</span> PRESS START</p>
+      <p class="hero__tagline">The open-source handheld radio for your AI agents.</p>
+      <p class="hero__sub">A palm-sized deck with a touch screen, a scroll wheel and a push-to-talk key. It shows which agent needs you, and your voice goes to the one that does.</p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">Get the Source</a>
+        <a class="btn btn--ghost" href="#demo">Try It Live</a>
+        <a class="btn btn--ghost" href="#download">Download for Mac</a>
+      </div>
+      <p class="hero__platforms">macOS 13+ · Apple Silicon + Intel · open firmware</p>
+      <ul class="hero__stats">
+        <li><b>2.16"</b><span>AMOLED</span></li>
+        <li><b>6+1</b><span>KEYS · WHEEL</span></li>
+        <li><b>USB-C</b><span>OR BLUETOOTH</span></li>
+        <li><b>100%</b><span>OPEN</span></li>
+      </ul>
+    </div>
+
+    <!-- The hero art is a CSS device frame around a real firmware render of the
+         Agents roster (target/preview/roster.png). PLACEHOLDER: swap in a
+         pixel-art illustration or a product photo (day + night) when there is one. -->
+    <div class="hero__art" id="heroArt">
+      <div class="hero__art-frame">
+        <div class="device" aria-label="The OpenWalkieTalkie deck showing the Agents roster" role="img">
+          <span class="device__antenna" aria-hidden="true"></span>
+          <span class="device__wheel" aria-hidden="true"></span>
+          <div class="device__screen">
+            <img src="/assets/screens/roster.png" alt="" width="480" height="480" fetchpriority="high" />
+          </div>
+          <div class="device__keys" aria-hidden="true">
+            <span class="device__key">ESC</span>
+            <span class="device__key device__key--ptt">PTT</span>
+            <span class="device__key">ENTER</span>
+            <span class="device__key">SHIFT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a class="scroll-hint" href="#pile" aria-label="Scroll down">
+    <span class="scroll-hint__txt">SCROLL</span>
+    <span class="scroll-hint__arrow" aria-hidden="true"></span>
+  </a>
+</section>
+
+<!-- ============ 2. TICKER ============ -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <div class="ticker__group">
+      <span>HARDWARE OPEN</span><b>✦</b><span>FIRMWARE OPEN</span><b>✦</b><span>HOST OPEN</span><b>✦</b><span>HOLD · TALK · RELEASE</span><b>✦</b><span>WHO NEEDS YOU, AT A GLANCE</span><b>✦</b><span>A BLUEPRINT ANYONE CAN REPLICATE</span><b>✦</b>
+    </div>
+    <div class="ticker__group">
+      <span>HARDWARE OPEN</span><b>✦</b><span>FIRMWARE OPEN</span><b>✦</b><span>HOST OPEN</span><b>✦</b><span>HOLD · TALK · RELEASE</span><b>✦</b><span>WHO NEEDS YOU, AT A GLANCE</span><b>✦</b><span>A BLUEPRINT ANYONE CAN REPLICATE</span><b>✦</b>
+    </div>
+  </div>
+</div>
+<p class="sr-only">Hardware open. Firmware open. Host open. Hold, talk, release. Who needs you, at a glance. A blueprint anyone can replicate.</p>
+
+<!-- ============ 3. THE TAB PILE ============ -->
+<section class="section paradox" id="pile">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER I</p>
+      <h2 class="section-title">THE TAB PILE</h2>
+      <p class="section-lede">Three agents running, one of them stuck on a question, and you are scrolling terminals to find out which. The deck is the radio that tells you.</p>
+    </header>
+
+    <div class="vs">
+      <article class="card card--rival reveal reveal--left">
+        <div class="card__tag">THE OLD WAY</div>
+        <h3 class="card__title">A desk full of terminals</h3>
+        <p class="card__price card__price--bad">N TABS</p>
+        <ul class="speclist">
+          <li class="no">Which agent is waiting? Scroll to find out.</li>
+          <li class="no">Permission prompts buried under other work</li>
+          <li class="no">Every prompt typed, every reply read</li>
+          <li class="no">You are tethered to the screen</li>
+          <li class="no">Nothing you can take apart or rebuild</li>
+        </ul>
+        <p class="card__foot">Fast agents. Slow you.</p>
+      </article>
+
+      <div class="vs__badge reveal" aria-hidden="true">
+        <span class="vs__badge-inner">VS</span>
+      </div>
+
+      <article class="card card--ours reveal reveal--right">
+        <div class="card__tag card__tag--good">OURS</div>
+        <h3 class="card__title">Open Walkie Talkie</h3>
+        <p class="card__price card__price--good">1 DECK</p>
+        <ul class="speclist">
+          <li class="yes">One screen, every agent, who needs you first</li>
+          <li class="yes">Questions become cards. One press answers.</li>
+          <li class="yes">Hold PTT and talk. Hear the reply.</li>
+          <li class="yes">Walk the room on Bluetooth, dock on USB-C</li>
+          <li class="yes">Open hardware, firmware and host. It's yours.</li>
+        </ul>
+        <p class="card__foot">A blueprint anyone can replicate.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. FEATURES ============ -->
+<section class="section features" id="features">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER II</p>
+      <h2 class="section-title">THREE CHANNELS, ONE JOB EACH</h2>
+      <p class="section-lede">The screen is the status board. PTT is the radio. The buttons are the decisions. Read the conversation, see who needs you, and respond from the deck.</p>
+    </header>
+
+    <!-- featured: the PTT key you can actually hold -->
+    <article class="feat feat--ptt reveal">
+      <div class="ptt-stage">
+        <button class="pttbtn" id="featPtt" type="button" aria-label="Push-to-talk demo — hold the button, or hold Space, to talk">PTT</button>
+        <p class="ptt-stage__hint" aria-hidden="true">▼ HOLD ME ▼</p>
+      </div>
+
+      <div class="ptt-copy">
+        <div class="feat__icon icon-voice" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <h3 class="feat__title">Push to Talk</h3>
+        <p class="feat__body">Hold the key from any face and the screen becomes a LISTENING overlay. Release it and the transcript stays visible while recognition finishes. The deck's microphone streams to your Mac, the words land in the active agent as its next prompt, and the reply can be spoken back through the deck's speaker.</p>
+        <p class="ptt-readout" id="featPttReadout" role="status">At rest. Hold the key to open a session.</p>
+      </div>
+
+      <div class="ptt-out" id="featPttOut" aria-hidden="true">
+        <div class="ptt-out__idle">The deck's screen while you hold PTT</div>
+        <div class="ptt" id="featPttOverlay">
+          <div class="ptt__head"><span class="ptt__who">Claude · web-ui</span><span class="ptt__pill">LISTENING</span></div>
+          <div class="ptt__wave" id="featPttWave"></div>
+          <p class="ptt__text"><span id="featPttText"></span><span class="caret">▮</span></p>
+          <p class="ptt__foot">release PTT to send</p>
+        </div>
+      </div>
+    </article>
+
+    <div class="feat-grid" data-stagger>
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-roster" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h3 class="feat__title">The Roster</h3>
+        <p class="feat__body">Every agent is a channel. A red dot is a question, green is ready, blue is working. Questions sort to the top, so the row you see first is the one that needs you.</p>
+        <p class="feat__meta">QUESTION · READY · WORKING</p>
+      </article>
+
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-card" aria-hidden="true"><i class="frame"></i><i class="tick"></i></div>
+        <h3 class="feat__title">Cards</h3>
+        <p class="feat__body">A permission request or a multiple-choice question becomes a card. Scroll to a choice and press ENTER, tap it, or answer by voice. Only a person can approve a Claude Code or Codex permission card.</p>
+        <p class="feat__meta">ONE PRESS · FULL CONTEXT</p>
+      </article>
+
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-wheel" aria-hidden="true"><i class="drum"></i></div>
+        <h3 class="feat__title">The Wheel</h3>
+        <p class="feat__body">One detent, one row. Hold SHIFT and the same wheel slides between faces: Agents, Omarchy, Macropad, Usage, Settings. Double-tap SHIFT to reorder them.</p>
+        <p class="feat__meta">SCROLL · SHIFT+SCROLL</p>
+      </article>
+
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-pad" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h3 class="feat__title">Macropad Face</h3>
+        <p class="feat__body">Nine keys on the touch screen, each with a label and a keystroke. The host posts the chord to your desktop. Edit a key on the deck itself and dictate its label with PTT.</p>
+        <p class="feat__meta">⌘⇧4 · TAP OR BIND</p>
+      </article>
+
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-usage" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <h3 class="feat__title">Usage Face</h3>
+        <p class="feat__body">Your Claude and Codex rate-limit windows as bars, with the active account and countdown to each reset. The host reads them with the logins you already have, nothing else.</p>
+        <p class="feat__meta">SESSION · WEEK · RESET</p>
+      </article>
+
+      <article class="feat reveal" tabindex="0">
+        <div class="feat__icon icon-link" aria-hidden="true"><i class="plug"></i><i class="wave"></i></div>
+        <h3 class="feat__title">Cable or Air</h3>
+        <p class="feat__body">Plug in over USB-C and the host writes a report in under a millisecond. Unplug and the same link, voice included, rides Bluetooth LE. The host takes the cable whenever it is there.</p>
+        <p class="feat__meta">USB HID · BLE · 1209:5754</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. INTERACTIVE DEMO ============ -->
+<section class="section demo" id="demo">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER III</p>
+      <h2 class="section-title">TRY IT</h2>
+      <p class="section-lede">The deck's grammar, in miniature. Drag or scroll the wheel, press the keys, or use your keyboard: <kbd>↑</kbd> <kbd>↓</kbd> scroll, <kbd>↵</kbd> enter, <kbd>esc</kbd> cancel, <kbd>←</kbd> <kbd>→</kbd> channels, hold <kbd>shift</kbd> to change faces, hold <kbd>space</kbd> to talk.</p>
+    </header>
+
+    <div class="demo__grid reveal">
+      <!-- ---- the handheld replica ---- -->
+      <div class="pad-wrap">
+        <div class="deck" id="deck">
+          <div class="deck__top">
+            <div class="screen" id="screen">
+              <span class="screen__notch" aria-hidden="true"></span>
+              <div class="screen__head">
+                <span class="screen__title" id="screenTitle">AGENTS</span>
+                <span class="screen__tag" id="screenTag">19:42</span>
+              </div>
+              <div class="screen__body">
+                <!-- face 1: Agents -->
+                <div class="face is-active" id="faceAgents">
+                  <ul class="roster" id="roster" data-view="roster" aria-label="Agent roster"></ul>
+                  <div data-view="channel" hidden>
+                    <p class="chan__state" id="chanState">Question · 2m</p>
+                    <p class="chan__reply" id="chanReply"></p>
+                    <div id="chanPending"></div>
+                    <span class="sr-only" id="chanWho"></span>
+                  </div>
+                  <div class="cardq" data-view="card" hidden>
+                    <span class="sr-only" id="cardWho"></span>
+                    <p class="cardq__q" id="cardQ"></p>
+                    <div id="cardChoices"></div>
+                  </div>
+                </div>
+                <!-- face 2: Omarchy -->
+                <div class="face" id="faceOmarchy">
+                  <div class="chips" id="wsChips"></div>
+                  <ul class="rows">
+                    <li><span>ghostty · claude</span><span>ws 1</span></li>
+                    <li><span>ghostty · codex</span><span>ws 1</span></li>
+                    <li><span>firefox · docs</span><span>ws 2</span></li>
+                    <li><span>kicad · main-revb</span><span>ws 3</span></li>
+                  </ul>
+                </div>
+                <!-- face 3: Macropad -->
+                <div class="face" id="faceMacropad">
+                  <div class="mgrid" id="mgrid"></div>
+                </div>
+                <!-- face 4: Usage -->
+                <div class="face" id="faceUsage">
+                  <div id="usage"></div>
+                </div>
+                <!-- face 5: Settings -->
+                <div class="face" id="faceSettings">
+                  <ul class="rows" id="settings"></ul>
+                </div>
+              </div>
+              <!-- the PTT overlay sits over whatever face is up -->
+              <div class="ptt" id="pttOverlay" aria-live="polite">
+                <div class="ptt__head"><span class="ptt__who" id="pttWho">Codex · cohdl-api</span><span class="ptt__pill">LISTENING</span></div>
+                <div class="ptt__wave" id="pttWave" aria-hidden="true"></div>
+                <p class="ptt__text"><span id="pttText"></span><span class="caret">▮</span></p>
+                <p class="ptt__foot">release PTT to send</p>
+              </div>
+              <div class="screen__hint" id="screenHint" aria-hidden="true"></div>
+            </div>
+
+            <div class="wheel" id="wheel" role="slider" tabindex="0" aria-label="Scroll wheel — drag, scroll, or use the arrow keys; hold Shift to change faces" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+              <span class="wheel__drum" id="wheelDrum" aria-hidden="true"></span>
+              <span class="wheel__lbl" aria-hidden="true">SCROLL</span>
+            </div>
+          </div>
+
+          <div class="deck__keys">
+            <button class="dkey" data-key="left" type="button" aria-label="Left front key"><span class="dkey__cap">‹</span></button>
+            <button class="dkey" data-key="cancel" type="button"><span class="dkey__cap">ESC</span></button>
+            <button class="dkey dkey--ptt" data-key="ptt" type="button" aria-label="Push to talk — hold"><span class="dkey__cap">PTT</span></button>
+            <button class="dkey" data-key="enter" type="button"><span class="dkey__cap">ENTER</span></button>
+            <button class="dkey" data-key="right" type="button" aria-label="Right front key"><span class="dkey__cap">›</span></button>
+          </div>
+          <div class="deck__keys" style="grid-template-columns: 1fr 5fr;">
+            <button class="dkey" data-key="shift" type="button" aria-label="Shift — click to hold" aria-pressed="false"><span class="dkey__cap">SHIFT</span></button>
+            <p class="deck__hint" style="align-self:center;margin:0">touch screen · scroll wheel · PTT · ENTER · ESC · SHIFT · two front keys</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- the host console: what deckd sees ---- -->
+      <div class="monitor">
+        <div class="monitor__bezel">
+          <div class="monitor__screen" id="hostScreen">
+            <div class="monitor__bar">
+              <span class="monitor__dot"></span>
+              <span class="monitor__title">deckd · HOST LOG · channel 5</span>
+              <span class="monitor__ver">v0.1</span>
+            </div>
+            <div class="monitor__body">
+              <ul class="log" id="hostLog" aria-live="polite"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="monitor__foot">
+          <button class="pxbtn pxbtn--sound" id="soundToggle" type="button" aria-pressed="true">
+            <span class="spk" aria-hidden="true"></span><span id="soundLabel">SOUND: ON</span>
+          </button>
+          <span class="monitor__log" id="lastEvent" role="status">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. TALKS TO YOUR AGENTS ============ -->
+<section class="section works" id="works">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER IV</p>
+      <h2 class="section-title">TALKS TO YOUR AGENTS</h2>
+      <p class="section-lede">The host service, deckd, runs on your Mac and owns the link. Agents reach the deck through hooks or through an open API on a local socket.</p>
+    </header>
+
+    <p class="row-label reveal">AGENTS</p>
+    <div class="badge-row" data-stagger>
+      <div class="badge reveal"><span class="badge__mark badge__mark--claude-code" aria-hidden="true"></span><b>Claude Code</b><i>a plugin with hooks</i></div>
+      <div class="badge reveal"><span class="badge__mark badge__mark--codex" aria-hidden="true"></span><b>Codex CLI</b><i>through its app server</i></div>
+      <div class="badge reveal"><span class="badge__mark badge__mark--api" aria-hidden="true"></span><b>Your script</b><i>JSON-RPC on a local socket</i></div>
+      <div class="badge badge--wild reveal"><span class="badge__mark badge__mark--any" aria-hidden="true"></span><b>+ any agent</b><i>a curl one-liner can be one</i></div>
+    </div>
+
+    <p class="row-label reveal">AND THE REST OF YOUR DESK</p>
+    <div class="badge-row" data-stagger>
+      <div class="badge badge--alt reveal"><span class="badge__mark badge__mark--omarchy" aria-hidden="true"></span><b>Omarchy</b><i>a Hyprland remote face</i></div>
+      <div class="badge badge--alt reveal"><span class="badge__mark badge__mark--keys" aria-hidden="true"></span><b>Keystrokes</b><i>macropad chords on macOS</i></div>
+      <div class="badge badge--alt reveal"><span class="badge__mark badge__mark--voice" aria-hidden="true"></span><b>Spoken replies</b><i>Apple voice, or your own API key</i></div>
+      <div class="badge badge--alt badge--wild reveal"><span class="badge__mark badge__mark--whisper" aria-hidden="true"></span><b>On-device speech</b><i>Apple recogniser, Whisper opt-in</i></div>
+    </div>
+
+    <p class="works__punch reveal">Speech recognition runs on your Mac. Your transcript goes to the agent you choose.</p>
+  </div>
+</section>
+
+<!-- ============ 7. THE FACES ============ -->
+<section class="section faces" id="faces">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER V</p>
+      <h2 class="section-title">THE FACES</h2>
+      <p class="section-lede">Rendered by the firmware itself, pixel for pixel, from the same code that drives the panel. Tap the stack, swipe it, or use the arrows.</p>
+    </header>
+
+    <div class="polaroid-wrap reveal">
+      <div class="shots-col">
+        <div class="shots shots--square" role="group" aria-label="Firmware renders of the deck's faces">
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/roster.png" alt="The Agents roster: four agents with coloured state dots, the first one asking a question" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">AGENTS · HOME</span><span class="shot__cap-body">Who needs you first. Questions sort to the top; the bar at the left marks the active channel.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/card-question.png" alt="A question card with three choices, the first one recommended" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">QUESTION CARD</span><span class="shot__cap-body">Scroll, ENTER, or tap. The card locks while the host confirms, then the view goes back to the channel.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/ptt-roster.png" alt="The LISTENING overlay with a waveform and a transcript typing in" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">LISTENING</span><span class="shot__cap-body">Hold PTT from any face. Release to send. The last reply stays at the bottom so you know what you are answering.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/macropad.png" alt="The Macropad face: a 3 by 3 grid of labelled keys with keystroke glyphs" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">MACROPAD</span><span class="shot__cap-body">Nine touch keys, each with a label and a chord. SHIFT+CANCEL opens the key editor on the deck.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/usage.png" alt="The Usage face: provider bars with percentages and reset countdowns" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">USAGE</span><span class="shot__cap-body">One bar per rate-limit window, with the countdown to its reset. ENTER probes both providers at once.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/omarchy.png" alt="The Omarchy face: workspace chips and a window list" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">OMARCHY</span><span class="shot__cap-body">A remote for a Hyprland desktop: workspaces and windows, as the host pushes them.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/manager.png" alt="The face manager: the strip of faces as tiles, ready to reorder" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">THE MANAGER</span><span class="shot__cap-body">Double-tap SHIFT. Reorder, add and remove faces, up to eight. Agents and Settings stay pinned.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/screens/slide-50.png" alt="Two faces mid-slide, caught halfway through a SHIFT+SCROLL" width="480" height="480" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">MID-SLIDE</span><span class="shot__cap-body">SHIFT+SCROLL, caught halfway. One detent per face, hard ends, no wrap.</span></figcaption>
+          </figure>
+        </div>
+        <div class="shots-bar">
+          <button class="pxbtn shots__nav shots__prev" type="button" aria-label="Previous render">◂ PREV</button>
+          <span class="shots__count" role="status">1 / 8</span>
+          <button class="pxbtn shots__nav shots__next" type="button" aria-label="Next render">NEXT ▸</button>
+        </div>
+      </div>
+
+      <ul class="build-notes">
+        <li><b>PANEL</b><span>480 × 480 on 38.8 mm, about 12 px per mm</span></li>
+        <li><b>TYPE</b><span>Noto Sans, rasterised ahead of time; no font engine on the chip</span></li>
+        <li><b>STRIP</b><span>Up to eight faces, three of them Macropads</span></li>
+        <li><b>NOTICES</b><span>A toast for four seconds, then a drawer; red while a question waits</span></li>
+        <li><b>IDLE</b><span>Back to the roster after 120 s without input</span></li>
+        <li><b>DARK SCREEN</b><span>Only PTT wakes and acts. Everything else just wakes.</span></li>
+        <li><b>FIRST RUN</b><span>A short tutorial, discovered by using it, not by reading</span></li>
+        <li><b>RENDERS</b><span>These images come from <code>tools/preview-all.py</code>, the firmware drawing on the host</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. THE BLUEPRINT ============ -->
+<section class="section blueprint" id="blueprint">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER VI</p>
+      <h2 class="section-title">THE BLUEPRINT</h2>
+      <p class="section-lede">Not a product you wait for — a repository you clone. The board, the firmware, the host service and the wire protocol, all in one tree.</p>
+    </header>
+
+    <div class="inv reveal">
+      <div class="inv__bar">
+        <span class="inv__bar-title">INVENTORY · openwalkietalkie</span>
+        <span class="inv__bar-meta">MIT + CERN-OHL-P</span>
+      </div>
+      <ul class="tree">
+        <li class="tree__row tree__row--root">
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">openwalkietalkie/</span>
+          <span class="tree__desc">The board, firmware and Mac app, together. Clone it and go.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">├─</span>
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">hardware/rev-b/</span>
+          <span class="tree__desc">The main board, Rev B: a KiCad project with Gerbers, BOM and pick-and-place. CERN-OHL-P 2.0.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">├─</span>
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">hardware/rev-a/</span>
+          <span class="tree__desc">Where it started: CoHDL schematic sources, four fabricated releases, the case CAD.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">├─</span>
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">src/</span>
+          <span class="tree__desc">Rust firmware on embassy: the faces, the HID link over BLE and USB, the bond journal, power.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">├─</span>
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">native/</span>
+          <span class="tree__desc">The RT-Thread image with Bluetooth audio, mounting the same UI core.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">├─</span>
+          <span class="tree__glyph glyph-folder" aria-hidden="true"></span>
+          <span class="tree__name">host/</span>
+          <span class="tree__desc">deckd and the Mac app, Rust + gpui: the link, the Claude Code and Codex adapters, voice, the open API.</span>
+        </li>
+        <li class="tree__row">
+          <span class="tree__branch" aria-hidden="true">└─</span>
+          <span class="tree__glyph glyph-file" aria-hidden="true"></span>
+          <span class="tree__name">docs/deck-protocol.md</span>
+          <span class="tree__desc">The wire contract on channel 5. Read it and your script is an agent on the deck.</span>
+        </li>
+      </ul>
+      <div class="inv__foot">
+        <p>Software under MIT. The board, the case and every design file under the permissive CERN Open Hardware Licence. Build it, modify it, sell it, no permission required.</p>
+        <p class="inv__cohdl"><strong>The hardware design started in CoHDL.</strong> The Rev A schematics are source code in the open-source hardware language at <a href="https://cohdl.org/" target="_blank" rel="noopener">cohdl.org</a>, checked by its compiler; Rev B is hand-placed and routed in KiCad from that lineage.</p>
+        <div class="inv__ctas">
+          <a class="btn btn--primary btn--big" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">★ Get the Blueprint on GitHub</a>
+          <a class="btn btn--ghost btn--big" href="#download">▼ Download for Mac</a>
+          <a class="btn btn--ghost btn--big" href="https://discord.gg/x7DXPvK66" target="_blank" rel="noopener" aria-label="Join the Discord — CoHDL and OpenWalkieTalkie community">Join the Discord</a>
+        </div>
+        <p class="inv__note">The Mac app includes deckd, automatic app updates, and firmware updates for Rev A and Rev B. The source includes the tools for an initial USB-C or UART flash.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. THE REAL THING ============ -->
+<section class="section real" id="real">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">CHAPTER VII</p>
+      <h2 class="section-title">THE REAL THING</h2>
+      <p class="section-lede">From the board to the enclosure, the editable designs are in the repository. These are renders from the Rev A hardware sources.</p>
+    </header>
+
+    <div class="polaroid-wrap reveal">
+      <div class="shots-col">
+        <div class="shots" role="group" aria-label="Renders from the open hardware designs">
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/main-board.png" alt="Rev A main PCB rendered from its KiCad design" loading="lazy" style="object-fit:contain" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">MAIN BOARD · REV A</span><span class="shot__cap-body">A KiCad render of the Rev A main board. Its editable layout and fabrication outputs are in the source.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/encoder-board.png" alt="Rev A encoder PCB rendered from its KiCad design" loading="lazy" style="object-fit:contain" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">ENCODER BOARD</span><span class="shot__cap-body">The scroll wheel lives on a separate encoder board, connected to the main board by a flex cable.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/enclosure.png" alt="Rev A BodyV6 enclosure design preview" loading="lazy" style="object-fit:contain" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">THE ENCLOSURE</span><span class="shot__cap-body">A BodyV6 design preview. The repository includes the editable Fusion source and STEP exports.</span></figcaption>
+          </figure>
+        </div>
+        <div class="shots-bar">
+          <button class="pxbtn shots__nav shots__prev" type="button" aria-label="Previous photo">◂ PREV</button>
+          <span class="shots__count" role="status">1 / 3</span>
+          <button class="pxbtn shots__nav shots__next" type="button" aria-label="Next photo">NEXT ▸</button>
+        </div>
+      </div>
+
+      <ul class="build-notes">
+        <li><b>BRAIN</b><span>SiFli SF32LB52x, Cortex-M33, 16 MB flash, 8 MB PSRAM, running Rust on embassy</span></li>
+        <li><b>SCREEN</b><span>2.16" CO5300 AMOLED, 480 × 480, with CST9220 touch</span></li>
+        <li><b>PCB</b><span>Four-layer main board and a two-layer encoder board, both in the repo</span></li>
+        <li><b>CASE</b><span>3D-printed BodyV6.13; the Fusion source ships with the hardware</span></li>
+        <li><b>AUDIO</b><span>MP34DT05 PDM microphone and an NS4150B speaker amplifier</span></li>
+        <li><b>LINK</b><span>USB-C and Bluetooth LE, one HID device: VID 1209, PID 5754</span></li>
+        <li><b>BATTERY</b><span>3.7 V, 500 mAh cell, charged over USB-C</span></li>
+        <li><b>STATUS</b><span>Rev A prototypes on the bench · Rev B main board designed</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOWNLOAD ============ -->
+<section class="section" id="download">
+  <div class="wrap">
+    <header class="section-head reveal">
+      <p class="section-kicker">READY TO TALK</p>
+      <h2 class="section-title">GET THE APP</h2>
+      <p class="section-lede">v0.1.0 for macOS 13 and later. Signed, notarized, and ready for your deck.</p>
+    </header>
+    <div class="inv reveal">
+      <div class="inv__foot">
+        <div class="inv__ctas">
+          <a class="btn btn--primary btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.1.0/OpenWalkieTalkie-0.1.0-macos-aarch64.dmg">↓ Mac · Apple Silicon</a>
+          <a class="btn btn--ghost btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.1.0/OpenWalkieTalkie-0.1.0-macos-x86_64.dmg">↓ Mac · Intel</a>
+        </div>
+        <p>Open the disk image, drag OpenWalkieTalkie into Applications, then follow the setup in the app. Choose Apple Silicon for an M-series Mac, or Intel for an Intel Mac.</p>
+        <p class="inv__note">The app includes automatic updates and board-aware USB firmware updates for Rev A and Rev B. Initial flashing requires a compatible bootloader. <a href="https://github.com/conol-ai/openwalkietalkie/releases/latest">Release notes, firmware &amp; checksums →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ 10. FOOTER ============ -->
+<footer class="footer" id="footer">
+  <div class="footer__banner" aria-hidden="true">
+    <img class="swap-img swap-img--day" src="/assets/landscape_day.webp" alt="" width="1536" height="1024" loading="lazy" />
+    <img class="swap-img swap-img--night" src="/assets/landscape_night.webp" alt="" width="1536" height="1024" loading="lazy" />
+    <span class="footer__banner-fade"></span>
+  </div>
+
+  <div class="footer__inner">
+    <div class="footer__panel">
+      <p class="footer__slogan">The open-source handheld radio for your AI agents.</p>
+      <div class="footer__cta">
+        <a class="btn btn--primary" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">Get the Source</a>
+        <a class="btn btn--ghost" href="#demo">Try It</a>
+        <a class="btn btn--ghost" href="#top">Back to Top ▲</a>
+      </div>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/hardware" target="_blank" rel="noopener">hardware/</a>
+        <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/src" target="_blank" rel="noopener">src/</a>
+        <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/host" target="_blank" rel="noopener">host/</a>
+        <a href="https://github.com/conol-ai/openwalkietalkie#readme" target="_blank" rel="noopener">README.md</a>
+        <a href="https://openmicrokbd.org/" target="_blank" rel="noopener">OpenMicroKbd</a>
+        <a href="https://cohdl.org/" target="_blank" rel="noopener">CoHDL</a>
+        <a href="https://discord.gg/x7DXPvK66" target="_blank" rel="noopener" aria-label="Join the CoHDL and OpenWalkieTalkie community on Discord">Discord</a>
+        <a href="/blog/">blog</a>
+      </nav>
+      <p class="footer__fine">MIT software · CERN-OHL-P hardware · no permission required</p>
+      <p class="footer__heart">made with ♥ and solder</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

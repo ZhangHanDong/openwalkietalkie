@@ -1,0 +1,21 @@
+// openwalkietalkie.org — static site on Cloudflare Workers (assets-only, no Worker script)
+// Deploy from this directory: npx wrangler deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openwalkietalkie-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // Preview URL on workers.dev in addition to the custom domain.
+  "workers_dev": true,
+  // Requires the openwalkietalkie.org zone to exist on the Cloudflare account
+  // (its nameservers already point at Cloudflare). Wrangler provisions DNS +
+  // certificates for custom domains automatically.
+  "routes": [
+    { "pattern": "openwalkietalkie.org", "custom_domain": true },
+    { "pattern": "www.openwalkietalkie.org", "custom_domain": true }
+  ]
+}

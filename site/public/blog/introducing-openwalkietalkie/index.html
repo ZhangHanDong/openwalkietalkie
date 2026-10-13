@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenWalkieTalkie v0.1.0 · OpenWalkieTalkie</title>
+<meta name="description" content="Build logs and write-ups from OpenWalkieTalkie — the open-source handheld radio for your AI agents." />
+<link rel="canonical" href="https://openwalkietalkie.org/blog/introducing-openwalkietalkie/" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="OpenWalkieTalkie" />
+<meta property="og:title" content="OpenWalkieTalkie v0.1.0 · OpenWalkieTalkie" />
+<meta property="og:description" content="Build logs and write-ups from OpenWalkieTalkie — the open-source handheld radio for your AI agents." />
+<meta property="og:url" content="https://openwalkietalkie.org/blog/introducing-openwalkietalkie/" />
+<meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2e2bd" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131a3a" />
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<link rel="alternate" type="application/atom+xml" title="OpenWalkieTalkie Blog" href="/blog/feed.xml" />
+
+<link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/blog.css" />
+<script src="/js/theme-init.js"></script>
+<!-- PLACEHOLDER: analytics tag, see index.html -->
+</head>
+<body>
+
+<a class="skip-link" href="#content">Skip to content</a>
+
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="brand" href="/" aria-label="OpenWalkieTalkie — home">
+      <img class="logo-mark pixelated" src="/assets/logo-64.png" alt="" width="26" height="26" />
+      <span class="brand__text">OPEN WALKIE TALKIE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Sections">
+      <a href="/#pile">The Pile</a>
+      <a href="/#features">Features</a>
+      <a href="/#demo">Try It</a>
+      <a href="/#faces">Faces</a>
+      <a href="/#blueprint">Blueprint</a>
+      <a href="/blog/" aria-current="true">Blog</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle day and night theme" aria-pressed="false">
+      <span class="theme-toggle__track" aria-hidden="true">
+        <span class="theme-toggle__icon theme-toggle__icon--sun"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon"></span>
+        <span class="theme-toggle__knob"></span>
+      </span>
+      <span class="theme-toggle__label" id="themeLabel">DAY</span>
+    </button>
+
+    <button class="nav__burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main class="blog-main" id="content">
+<header class="post-head">
+  <p class="section-kicker">THE BLOG · RELEASE NOTES</p>
+  <h1>OpenWalkieTalkie v0.1.0: a handheld for your agents</h1>
+  <p class="post-meta"><span>October 13, 2026</span><span>First official release</span></p>
+</header>
+<article class="post-body">
+  <p>OpenWalkieTalkie puts your coding agents on a small handheld screen. See which session needs you, hold push-to-talk to reply, and answer a question with the wheel and buttons.</p>
+  <h2>A conversation you can carry</h2>
+  <p>The 480 × 480 touch screen shows agent sessions and their conversations. Messages use the available screen space, tool activity stays compact until you expand it, and code has syntax highlighting. The view follows new messages while you are at the end.</p>
+  <p>Release push-to-talk and the transcript stays on screen while speech recognition finishes. The completed transcript is sent to the selected agent. Usage shows the active Claude or Codex account alongside its limits.</p>
+  <h2>Mac app and device updates</h2>
+  <p>Version 0.1.0 includes a signed and notarized Mac app for Apple Silicon and Intel, on macOS 13 or later. The app includes automatic app updates and USB firmware updates that check the connected board before flashing.</p>
+  <p>Rev A and Rev B firmware, checksums, and build attestations are available with the release. A first flash still requires a compatible bootloader; subsequent updates can run through the app.</p>
+  <p><a href="/#download">Download the Mac app</a> or read the <a href="https://github.com/conol-ai/openwalkietalkie/releases/tag/v0.1.0">full release notes and firmware instructions</a>.</p>
+  <h2>Open from the board up</h2>
+  <p>The repository includes firmware, the Mac app and host service, editable CoHDL schematics, KiCad board layouts, and enclosure CAD. Software is MIT licensed; the hardware designs use CERN-OHL-P 2.0. Third-party components keep their own licenses.</p>
+  <p><a href="https://github.com/conol-ai/openwalkietalkie">Explore the source</a>, or <a href="/#demo">try the interactive deck in your browser</a>.</p>
+</article>
+</main>
+
+<footer class="footer--mini">
+  <div class="inner">
+    <span>OpenWalkieTalkie · MIT software · CERN-OHL-P hardware · made with ♥ and solder</span>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/#demo">Try It</a>
+      <a href="https://github.com/conol-ai/openwalkietalkie" rel="noopener">GitHub</a>
+      <a href="https://cohdl.org/" rel="noopener">CoHDL</a>
+      <a href="https://discord.gg/x7DXPvK66" rel="noopener" aria-label="Join the CoHDL and OpenWalkieTalkie community on Discord">Discord</a>
+      <a href="/blog/feed.xml">Feed</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

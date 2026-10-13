@@ -1,5 +1,8 @@
 # Cohdl OpenWalkieTalkie
 
+[Website and downloads](https://openwalkietalkie.org/) ·
+[Latest release](https://github.com/conol-ai/openwalkietalkie/releases/latest)
+
 Firmware and [routed BodyV5 r3 hardware design](hardware/rev-a/README.md) for
 OpenWalkieTalkie, a handheld with a touch screen, a scroll wheel, PTT, Enter,
 Esc, Shift and two front macro keys. The custom hardware includes a four-layer main PCB and
@@ -33,6 +36,11 @@ The deck is its own USB/BLE HID device: **Cohdl OpenWalkieTalkie**, VID
 6, 64-byte reports). Report channel 2 carries a small system RPC
 (`sys.version`, `sys.reboot`, `device.status`); the deck faces talk to a deck
 host over channel 5 of the same connection ([deck protocol](#the-deck-host)).
+
+The `1209:5754` allocation has been requested in
+[pid.codes PR #1312](https://github.com/pidcodes/pidcodes.github.com/pull/1312)
+and is pending registry approval. Application firmware and USB recovery use
+the same product ID.
 
 Pair **OpenWalkieTalkie** in macOS Bluetooth settings. The latest computer's bond
 key and HID/battery notification preferences are stored in an append-only

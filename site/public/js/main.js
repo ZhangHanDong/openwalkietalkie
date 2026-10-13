@@ -479,7 +479,7 @@
     }
 
     /* ---- settings ---- */
-    var SETTINGS = [['Host · Demo data', ['on', 'off']], ['Display · Idle home', ['120 s', 'off', '30 s', '60 s']], ['Speech · Replies', ['Apple', 'OpenAI', 'ElevenLabs']], ['About · Firmware', ['0.1.0 · Rev A']]];
+    var SETTINGS = [['Host · Demo data', ['on', 'off']], ['Display · Idle home', ['120 s', 'off', '30 s', '60 s']], ['Speech · Replies', ['Apple', 'OpenAI', 'ElevenLabs']], ['About · Firmware', ['0.2.0 · Rev A']]];
     var settingIdx = [0, 0, 0, 0];
     var settingsEl = $('#settings');
     function renderSettings() {
@@ -702,7 +702,7 @@
     /* ---- go ---- */
     renderUsage(false); renderWs(); renderSettings();
     paint();
-    log('in', 'hello · deckd 0.1.0 · 4 agents · usage · macros', 'host');
+    log('in', 'hello · deckd 0.2.0 · 4 agents · usage · macros', 'host');
     log('in', 'card · Codex · cohdl-api asks a question', 'host');
   })();
 

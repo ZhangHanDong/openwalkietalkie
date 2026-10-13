@@ -158,7 +158,12 @@ From the hid thread (§6.2, §6.3): what happened to the link.
 
 ## Types
 
-The 72 named types the schemas above refer to.
+The 76 named types the schemas above refer to.
+
+### `ActivityStatus`
+
+One of: `running`, `completed`, `failed`, `stopped`.
+
 
 ### `Agent`
 
@@ -185,6 +190,7 @@ The 72 named types the schemas above refer to.
 | `title` | string? | no |  | Content when `title_source` is `prompt`/`tool`. |
 | `title_source` | [`TitleSource`](#titlesource) | yes |  |  |
 | `voice` | string? | no |  |  |
+| `workflow` | [`Plan`](#plan)? | no |  |  |
 
 ### `AgentId`
 
@@ -301,8 +307,10 @@ One of: `q`, `r`.
 
 | field | type | required | default | description |
 |---|---|---|---|---|
+| `activity` | [`ActivityStatus`](#activitystatus)? | no |  |  |
 | `at` | [`Ts`](#ts) | yes |  |  |
 | `id` | string | yes |  |  |
+| `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
 | `streaming` | boolean | no | `false` |  |
 | `text` | string | yes |  |  |
@@ -437,7 +445,9 @@ Who holds the TCP port when the daemon could not take it (§4.1's `lsof -nP -iTC
 
 | field | type | required | default | description |
 |---|---|---|---|---|
+| `activity` | [`ActivityStatus`](#activitystatus)? | no |  |  |
 | `id` | string | yes |  |  |
+| `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
 | `streaming` | boolean | no | `false` |  |
 
@@ -519,6 +529,20 @@ One of: `unknown`, `not_determined`, `granted`, `denied`.
 
 One of: `cli`, `shell`, `unknown`.
 
+
+### `Plan`
+
+| field | type | required | default | description |
+|---|---|---|---|---|
+| `explanation` | string? | no |  |  |
+| `steps` | [`PlanStep`](#planstep)[] | yes |  |  |
+
+### `PlanStep`
+
+| field | type | required | default | description |
+|---|---|---|---|---|
+| `status` | [`StepStatus`](#stepstatus) | yes |  |  |
+| `step` | string | yes |  |  |
 
 ### `Principal`
 
@@ -652,6 +676,11 @@ One of: `hook`, `api`, `mcp`.
 | `agent` | [`AgentId`](#agentid)? | no |  |  |
 | `lane` | string | yes |  |  |
 | `utterance` | string | yes |  |  |
+
+### `StepStatus`
+
+One of: `pending`, `in_progress`, `completed`.
+
 
 ### `SttInfo`
 

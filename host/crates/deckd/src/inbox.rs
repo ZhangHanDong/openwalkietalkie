@@ -1,5 +1,8 @@
-//! Posting an order into a Claude Code session's **inbox socket** — the
-//! second route of `op.order` (§5.5), beside typing into a terminal.
+//! Claude Code's **peer inbox socket** protocol.
+//!
+//! This is not a transport for `op.order`: even authenticated `type:user`
+//! frames arrive as "Another Claude session sent a message", not as the
+//! operator's input. Dictation uses the guarded terminal path instead.
 //!
 //! Every Claude Code session with cross-session messaging (v2.1.224+)
 //! binds a Unix socket other sessions deliver messages to, and exports its
@@ -28,7 +31,7 @@
 //! dialog — therefore runs in front of this path exactly as it does in front
 //! of the injector, and here it is a correctness rule rather than a courtesy.
 //!
-//! Content discipline (§11): the text is the operator's dictation and the
+//! Content discipline (§11): message text is content and the
 //! token is a secret. Neither reaches a log line; [`Inbox`]'s `Debug`
 //! prints the socket path and whether a token is held, nothing else.
 use crate::desktop::{DesktopError, FromDesktop};

@@ -27,6 +27,7 @@
 //! the store still writes the order history. "The queue refused it" and
 //! "there is nothing to refuse it" stay different states, because only the
 //! first is worth telling the operator about.
+mod beacon;
 pub mod errors;
 pub mod fakes;
 pub mod fg;
@@ -56,6 +57,8 @@ use std::time::Instant;
 /// hundred were dropped. `op.order` is rate-limited to 2/s per external
 /// principal (§11), so a full queue here means Ghostty is wedged.
 pub const CMDS_CAPACITY: usize = 32;
+
+type RefreshBeacon = Arc<dyn Fn(&Target) -> Result<String, DesktopError> + Send + Sync>;
 
 /// What the core asks the desktop side to do.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -192,6 +195,9 @@ pub struct Desktop {
     /// How a keystroke is posted: [`keys::press`], or a test's stand-in
     /// (a real press on the test machine would land in whatever has focus).
     press: fn(&str) -> Result<(), keys::KeyError>,
+    /// Tty output is enabled only by the real constructor; scripted
+    /// desktops never touch the operator's terminals.
+    refresh_beacon: Option<RefreshBeacon>,
 }
 
 impl std::fmt::Debug for Desktop {
@@ -210,7 +216,9 @@ impl Desktop {
     #[must_use]
     pub fn new(cfg: DesktopConfig) -> Desktop {
         let script = script::default_runner(cfg.in_process);
-        Desktop::with(script, Arc::new(fg::Procs), cfg)
+        let mut desktop = Desktop::with(script, Arc::new(fg::Procs), cfg);
+        desktop.refresh_beacon = Some(Arc::new(beacon::refresh));
+        desktop
     }
 
     /// A desktop over any runner and any foreground checker: what every
@@ -232,6 +240,7 @@ impl Desktop {
             accessibility: None,
             prompted: false,
             press: keys::press,
+            refresh_beacon: None,
         }
     }
 
@@ -466,7 +475,7 @@ impl Desktop {
             tty: Some(&target.tty),
             pid: Some(target.pid),
         };
-        let attempt = |me: &mut Self| {
+        let attempt = |me: &mut Self, nonce: Option<&str>| {
             // **`-1712` belongs here and nowhere else in this chain.** §5.5's
             // story is an instance that "refused 4/4 element queries with its
             // main thread provably idle", and an element query is exactly
@@ -476,9 +485,10 @@ impl Desktop {
             // the event was delivered, so retrying those risks typing the
             // operator's sentence twice, or sending a second Return.
             let waking = WakeOnce(Arc::clone(&me.script));
-            me.resolver.resolve(&waking, &session, now)
+            me.resolver
+                .resolve(&waking, &resolve::Session { nonce, ..session }, now)
         };
-        match attempt(self) {
+        match attempt(self, session.nonce) {
             Ok(resolution) => Ok(resolution),
             Err(first) => {
                 self.note(&first);
@@ -489,7 +499,18 @@ impl Desktop {
                 {
                     return Err(first);
                 }
-                let again = attempt(self);
+                // SessionStart's title can be overwritten before the first
+                // order. Refresh it through the verified tty's output, then
+                // locate that exact surface; never guess by title or cwd.
+                let nonce = if let Some(refresh) = &self.refresh_beacon {
+                    if !self.fg.check(target.pid, &target.tty).allows() {
+                        return Err(DesktopError::NotForeground);
+                    }
+                    Some(refresh(target)?)
+                } else {
+                    None
+                };
+                let again = attempt(self, nonce.as_deref().or(session.nonce));
                 if let Err(e) = &again {
                     self.note(e);
                 }
@@ -766,6 +787,91 @@ mod tests {
             },
         );
         (gh, desktop)
+    }
+
+    #[test]
+    fn overwritten_titles_are_resolved_by_a_fresh_tty_beacon() {
+        let (gh, mut desktop) = rig(FakeForeground::always(Verdict::Foreground));
+        gh.osc2("UUID-MINE", "Claude is working");
+        let writer = gh.handle();
+        desktop.refresh_beacon = Some(Arc::new(move |target| {
+            assert_eq!(target.tty, "/dev/ttys004");
+            writer.osc2("UUID-MINE", &ghostty::beacon_name("fresh-nonce"));
+            Ok("fresh-nonce".into())
+        }));
+        let mut target = target();
+        target.nonce = None; // A session hooked after SessionStart also works.
+        let out = desktop.on_job(
+            DesktopJob::Inject {
+                agent: agent(),
+                target,
+                text: "Please continue.".into(),
+                dialog_open: false,
+            },
+            Instant::now(),
+        );
+        assert!(
+            matches!(&out[0], FromDesktop::Order { result: Ok(()), .. }),
+            "{out:?}"
+        );
+        assert_eq!(
+            gh.typed(),
+            vec![("UUID-MINE".into(), "Please continue.".into())]
+        );
+        assert_eq!(gh.keys(), vec![("UUID-MINE".into(), "enter".into())]);
+    }
+
+    #[test]
+    fn refreshing_a_title_cannot_bypass_foreground_or_dialog_guards() {
+        for (verdict, dialog_open, refusal) in [
+            (Verdict::Dead, false, DesktopError::NotForeground),
+            (Verdict::OtherTty, false, DesktopError::NotForeground),
+            (Verdict::Foreground, true, DesktopError::DialogOpen),
+        ] {
+            let (gh, mut desktop) = rig(FakeForeground::always(verdict));
+            gh.osc2("UUID-MINE", "Claude is working");
+            desktop.refresh_beacon = Some(Arc::new(|_| panic!("must not touch the tty")));
+            let out = desktop.on_job(
+                DesktopJob::Inject {
+                    agent: agent(),
+                    target: target(),
+                    text: "Please continue.".into(),
+                    dialog_open,
+                },
+                Instant::now(),
+            );
+            assert!(
+                matches!(&out[0], FromDesktop::Order { result: Err(e), .. } if *e == refusal),
+                "{out:?}"
+            );
+            assert!(gh.typed().is_empty());
+            assert!(gh.keys().is_empty());
+        }
+    }
+
+    #[test]
+    fn a_refreshed_beacon_still_requires_an_exact_surface_match() {
+        let (gh, mut desktop) = rig(FakeForeground::always(Verdict::Foreground));
+        gh.osc2("UUID-MINE", "Claude is working");
+        desktop.refresh_beacon = Some(Arc::new(|_| Ok("not-visible-in-this-instance".into())));
+        let out = desktop.on_job(
+            DesktopJob::Inject {
+                agent: agent(),
+                target: target(),
+                text: "Please continue.".into(),
+                dialog_open: false,
+            },
+            Instant::now(),
+        );
+        assert!(matches!(
+            &out[0],
+            FromDesktop::Order {
+                result: Err(DesktopError::Ambiguous(0)),
+                ..
+            }
+        ));
+        assert!(gh.typed().is_empty());
+        assert!(gh.keys().is_empty());
     }
 
     /// The whole happy chain, as one job: resolve, pin, guard 3, text,

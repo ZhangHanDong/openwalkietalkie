@@ -1927,32 +1927,12 @@ impl Core {
                     .map(|a| a.owner.principal.clone())
             })
             .unwrap_or(Principal::Uid(0));
-        // The inbox route first (§5.5, `crate::inbox`): a Claude session
-        // whose message socket a hook reported is **posted to**, never typed
-        // at — no focus, no AppleScript, no TCC, and the only route a
-        // Desktop-app session has. It needs no desktop engine, so it runs
-        // before the `engine()` check below; a `--no-device` daemon can
-        // still deliver a spoken order this way. Guard 2 is read fresh here
-        // and re-checked by the poster, exactly as the injector does.
-        if let DesktopCmd::Inject { text, .. } = &cmd {
-            if let Some(inbox) = self.adapters.inbox(&agent) {
-                let dialog_open = self
-                    .store
-                    .snapshot()
-                    .agents
-                    .get(&agent)
-                    .and_then(|a| a.card.as_ref())
-                    .is_some_and(deck_model::Card::is_open_dialog);
-                crate::inbox::post_async(
-                    self.desktop.outcomes(),
-                    agent,
-                    text.clone(),
-                    inbox,
-                    dialog_open,
-                );
-                return;
-            }
-        }
+        // `op.order` is the operator's input. Claude's messaging socket
+        // always labels a post as another session's peer message, even
+        // with the hook token and a `type:"user"` frame. Use the guarded
+        // terminal path so dictation arrives as normal user input. If no
+        // terminal is available, retain the text in `order.failed` rather
+        // than silently changing its origin through an inbox fallback.
         let target = match self
             .store
             .snapshot()
@@ -2893,6 +2873,110 @@ mod tests {
 
     fn ops_of(rx: &Receiver<DeviceOp>) -> Vec<DeviceOp> {
         rx.try_iter().collect()
+    }
+
+    #[test]
+    fn user_orders_never_use_claudes_peer_inbox() {
+        use crate::desktop::DesktopHandle;
+        use deck_model::{AdapterKind, Kind, OpOrder, OrderCap, OrderSource, PidKind, Terminal};
+
+        for (label, tty, engine, failure) in [
+            ("terminal", Some("/dev/ttys004"), true, None),
+            ("no-tty", None, true, Some("no_terminal")),
+            (
+                "no-engine",
+                Some("/dev/ttys004"),
+                false,
+                Some("no_injector"),
+            ),
+        ] {
+            let dir = temp(&format!("user-order-{label}"));
+            let (mut c, _ops, _lines, _debug) = detached(&dir);
+            let (desktop, jobs, _answers) = DesktopHandle::detached();
+            if engine {
+                c.set_desktop(desktop);
+            }
+            let now = Instant::now();
+            let adapter = Principal::Adapter(AdapterKind::Claude);
+            let session = SessionId(9);
+            c.sessions
+                .open_internal(session, adapter.clone(), "claude-adapter", now);
+            let mut reg = testkit::register("voice-target", Some("claude:voice-target"));
+            reg.kind = Kind::Claude;
+            reg.caps.order = OrderCap::Inject;
+            reg.pid = Some(std::process::id());
+            reg.pid_kind = Some(PidKind::Cli);
+            let socket = dir.join("peer.sock");
+            reg.terminal = Some(Terminal {
+                program: Some("ghostty".into()),
+                tty: tty.map(String::from),
+                title_stamp: Some("deck:abcd".into()),
+                inbox: Some(socket.to_string_lossy().into_owned()),
+                ..Terminal::default()
+            });
+            let registered = c
+                .api_call(adapter, session, false, Request::AgentRegister(reg), now)
+                .unwrap();
+            let agent = AgentId(registered["agent"].as_str().unwrap().into());
+            // The real hooks keep the authenticated peer inbox outside the
+            // snapshot. Its presence must not change the origin of dictation.
+            c.adapters.set_inbox(
+                agent.clone(),
+                crate::inbox::Inbox {
+                    socket,
+                    token: Some("test-peer-token".into()),
+                },
+            );
+            let text = "Please go ahead with the implementation. 请继续。";
+            c.api_call(
+                Principal::Device,
+                session,
+                true,
+                Request::OpOrder(OpOrder {
+                    agent: agent.clone(),
+                    text: text.into(),
+                    ctx: "talk".into(),
+                    source: OrderSource::Ptt,
+                    utterance: None,
+                }),
+                now,
+            )
+            .unwrap();
+            c.publish();
+            let events = c.bus.replay(0, 100, None).0;
+            let failed: Vec<_> = events
+                .iter()
+                .filter(|e| e.kind == EventKind::OrderFailed)
+                .collect();
+            if let Some(reason) = failure {
+                assert!(
+                    jobs.try_recv().is_err(),
+                    "{label}: no terminal delivery is possible"
+                );
+                assert_eq!(failed.len(), 1, "{label}: preserve undelivered dictation");
+                assert_eq!(failed[0].data["reason"], reason);
+                assert_eq!(failed[0].data["text"], text);
+            } else {
+                assert!(failed.is_empty());
+                let DesktopJob::Inject {
+                    agent: to,
+                    text: sent,
+                    target,
+                    dialog_open,
+                } = jobs
+                    .try_recv()
+                    .expect("user input must reach the terminal worker")
+                else {
+                    panic!("expected a terminal injection");
+                };
+                assert_eq!(to, agent);
+                assert_eq!(sent, text, "no peer envelope or added instructions");
+                assert_eq!(target.tty, tty.unwrap());
+                assert_eq!(target.nonce.as_deref(), Some("abcd"));
+                assert!(!dialog_open);
+            }
+            let _ = std::fs::remove_dir_all(dir);
+        }
     }
 
     /// B1: the core→audio channel is bounded and `try_send` only, and what

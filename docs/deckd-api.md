@@ -716,7 +716,7 @@ One of: `agents`, `omarchy`, `macropad`, `usage`, `settings`.
 
 | field | type | required | default | description |
 |---|---|---|---|---|
-| `inbox` | string? | no |  | The session's own message inbox: the Unix socket Claude Code binds for cross-session messaging (`CLAUDE_CODE_MESSAGING_SOCKET`), captured from the hook helper's environment. An agent with one is ordered by posting to it rather than by typing into its terminal (§5.5), which needs no focus, no AppleScript and no TCC grant. The per-session token that rides beside it is **not** here: it stays inside the daemon (`adapters::rt::Adapters`), never in a snapshot. |
+| `inbox` | string? | no |  | The session's own message inbox: the Unix socket Claude Code binds for cross-session messaging (`CLAUDE_CODE_MESSAGING_SOCKET`), captured from the hook helper's environment. This is peer-message metadata, not a user-input transport: operator orders use the guarded terminal path (§5.5), even when an inbox is present. The per-session token that rides beside it is **not** here: it stays inside the daemon (`adapters::rt::Adapters`), never in a snapshot. |
 | `iterm_session` | string? | no |  |  |
 | `program` | string? | no |  |  |
 | `term_session` | string? | no |  |  |

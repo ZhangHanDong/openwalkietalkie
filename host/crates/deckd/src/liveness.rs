@@ -104,7 +104,7 @@ pub struct Row {
     /// Not from the CLI: the session's message inbox socket, read by
     /// [`enrich`] from `<claude dir>/sessions/<pid>.json`
     /// (`messagingSocketPath`). It is what lets a session the daemon never
-    /// saw start be **ordered** (`crate::inbox`), not merely listed.
+    /// saw start retain its peer-messaging metadata (`crate::inbox`).
     #[serde(skip)]
     pub inbox: Option<String>,
     /// Not from the CLI: the last assistant message in the session's
@@ -426,7 +426,7 @@ fn correction(agent: &Agent, row: &Row) -> Option<AgentUpdate> {
 /// It carries what the roster knows and nothing it does not: no terminal
 /// identity (§5.5's comes from the hook helper's environment, which no
 /// poll can see) — but the session's **inbox** when [`enrich`] found it,
-/// which is the one route an order can take to a session like this — and
+/// retained as peer metadata rather than an operator-input route — and
 /// `pid_kind: cli`, because the pid on the row **is** the CLI's own.
 fn seeded(session_id: &str, row: &Row) -> AgentRegister {
     let terminal = row.inbox.as_ref().map(|inbox| deck_model::Terminal {

@@ -5,6 +5,7 @@ use std::time::Duration;
 
 impl Store {
     pub(crate) fn on_tick(&mut self) {
+        self.tick_session_controls();
         let now = self.now;
         let grace = Duration::from_secs(u64::from(self.cfg.grace_s));
         let ids: Vec<AgentId> = self.snapshot.agents.keys().cloned().collect();

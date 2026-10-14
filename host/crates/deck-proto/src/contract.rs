@@ -1530,3 +1530,29 @@ fn workflow_windows_and_disclosures_round_trip_through_real_firmware_codec() {
         assert!(bytes.len() <= PAYLOAD_MAX);
     }
 }
+
+#[test]
+fn session_picker_round_trips_and_device_choices_fit_one_report() {
+    let menu = SessionMenu { slot: 8, rev: 65535, field: 1, page: 1,
+        model: "Model A".into(), effort: "high".into(), status: 2,
+        note: "Applying for the next turn...".into(), total: 6, selected: Some(0),
+        choices: vec!["Model E".into(), "Model F".into()] };
+    let line = HostLine::SessionMenu(menu.clone());
+    let bytes = encode(&line).unwrap();
+    assert_eq!(parse_host_line(&stripped(&bytes)).unwrap(), line);
+    let parsed = fw_parse(&stripped(&bytes)).unwrap();
+    let HostMsg::SessionMenu(fw) = *parsed else { panic!("session menu") };
+    assert_eq!((fw.agent, fw.rev, fw.field, fw.page, fw.status, fw.total, fw.selected),
+        (8, 65535, 1, 1, 2, 6, Some(0)));
+    assert_eq!(fw.model.as_str(), "Model A");
+    assert_eq!(fw.effort.as_str(), "high");
+    assert_eq!(fw.note.as_str(), menu.note);
+    assert_eq!(fw.choices[1].as_str(), "Model F");
+    for choice in [0, 3, 255] {
+        let event = Event::Session { agent: 8, field: 2, page: 63, rev: 65535, choice };
+        let wire = fw_encode(event, &ui());
+        assert!(wire.len() <= PAYLOAD_MAX);
+        assert_eq!(parse_device_line(&stripped(&wire)).unwrap(),
+            DeviceLine::Session { slot: 8, field: 2, page: 63, rev: 65535, choice });
+    }
+}

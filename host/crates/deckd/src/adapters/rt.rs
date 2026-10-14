@@ -442,6 +442,18 @@ pub async fn handle(
             }
         }
     }
+    if kind == AdapterKind::Claude {
+        if let (Some(agent), Some(model)) = (ctx.agent.clone(), call.payload.get("model").and_then(|m|
+            m.get("display_name").or_else(|| m.get("id")).and_then(serde_json::Value::as_str))) {
+            let controls = deck_model::session_controls::SessionControls {
+                model: model.into(),
+                effort: call.payload.get("effort").and_then(serde_json::Value::as_str).unwrap_or_default().into(),
+                note: "Use /model or /effort in Claude Code. Channels does not enable these controls.".into(),
+                ..Default::default()
+            };
+            let _ = core.send(crate::core::CoreMsg::SessionControls { agent, session, settled: false, controls }).await;
+        }
+    }
     match adapter.ingest(&call.payload, &ctx) {
         Ingest::Nothing => (empty(), None),
         Ingest::Report(reqs) => {

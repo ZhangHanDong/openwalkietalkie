@@ -149,6 +149,7 @@ Required fields have no `?`. Text capacities are in bytes of UTF-8.
 | `agent` | `id` 1..8, `kind?` `claude`/`codex`/`gemini`/`other`, `name?` (24), `proj?` (24), `state?` `working`/`question`/`ready`/`error`/`idle`, `title?` (64), `since?` age of the state in seconds, or `gone:1` | Upsert the roster entry; `gone` removes it (and its card and notices). `id` is the stable slot the daemon assigns (1..4 map to the Hyprland binds). `proj` is the project the session runs in (the working directory's last component): the roster is one page per project, in name order, the agents without one last on a page of their own; an agent whose `name` equals its `proj` shows its kind alone on the row, and a `title` equal to it is left blank there. |
 | `card` | `agent`, `id` u16, `type` `q` (question) / `r` (ready), `text` (128), `choices?` up to 4 strings (32 each), `rec?` 0-based recommended choice, or `clear:1` | The agent's pending card. A new (agent, id) raises a notice, chime and toast; re-sending an id updates the text and choices only. `clear` resolves it (after an `answer`, or when the agent moved on). Unknown agent → `range`. |
 | `reply` | `agent`, `text` (200), `rev?` u16 | Fallback text for the channel; `rev` identifies its current document. Rich conversation windows arrive in `doc` lines. |
+| `session` | `agent`, `rev` u16, `field` 0..2, `page` 0..63, `model` (48), `effort` (16), `status` 0..3, `note` (96), `total` u8, `selected?` absolute index, `choices` up to 4 strings (40 each) | Requested session settings: field 0 overview, 1 model, 2 effort. Status 0 read-only, 1 ready, 2 applying, 3 failed. No unsolicited messages to older firmware. |
 | `transcript` | `agent?`, `text` (200, the tail), `final?`, `p?`, `failed?`, `channel_tip?` | Live STT while PTT is held; `final:1` for the last one. Echo `ptt.p` on every partial/final. `failed:1,final:1` ends a failed transcription without sending text to the agent. Send the last ~120 bytes: the device keeps the end. Without `agent` it is the words of a session with nobody on the strip (a `ptt ctx:name`), shown for whoever is holding PTT. |
 | `focus` | `agent`, `ack?` | The PC's focus changed. When the change was caused by a device `channel` event, echo its `seq` as `ack`; the device ignores a `focus` whose `ack` is older than its last `channel.seq`, and applies one without `ack` always. |
 | `ws` | `active` 1-based (0 unknown) `<= count`, `count` `<= 9`, `sel` window row `< windows.length` (0 when empty), `windows?` up to 6 of `{c?, t}` with `c` `blue`/`amber`/`green`/`red`/`gray` (default gray) and `t` (48) | Omarchy face content. |
@@ -172,6 +173,7 @@ Required fields have no `?`. Text capacities are in bytes of UTF-8.
 | `macro` | `f`, `i` key 0..8, `act` 1/0/2 | Macropad key edges, by hardware binding or touch. |
 | `macrokey` | `f`, `i` key 0..8, `l?` label (12), `b?` binding, `k?` keystroke | The deck's own key editor set slot `i` (with `l`, `k` when a keystroke was composed, and the `b` the slot had) or cleared it (no `l`). The deck shows the change at once; store it and send the face's whole `macro` back. May need two reports. On every `macro` press or wheel step of a key with a `k`, the host posts that keystroke (deckd: CoreGraphics, needs Accessibility); the deck itself types nothing. |
 | `ws` | `go` workspace number, or `win` window row index | A workspace chip or window row was tapped. |
+| `session` | `agent`, `f` 0..2, `p` page 0..63, `r` displayed revision, `i` 0..3 or 255 | `i:255` requests the overview or a picker page; otherwise applies that row from the exact displayed revision. Choices cannot cross sessions, reordered catalogs, or slot reuse. |
 | `refresh` | `what`: `usage` | ENTER on the Usage face: send a fresh `usage`. |
 | `set` | `k`, `v` | A setting changed on the device (persist host-side ones: speaker, mic, announce, chime). |
 | `faces` | `list` of `{f,t,n}` | The strip changed in the face manager; persist it. |
@@ -443,3 +445,30 @@ pill and progress dots until its matching final arrives. A fresh PTT press
 starts recording immediately; older tagged results cannot change that view.
 ESC cancels the pending utterance, failures show a notice, and link loss or
 a 125 s device watchdog releases the waiting screen.
+
+## Session model and thinking effort
+
+Tap the model/effort row below the session name to open settings. Select Model
+or Thinking effort, turn the wheel to choose, then press ENTER (or tap a row).
+The wheel crosses page boundaries; LEFT/RIGHT also change pages. CANCEL goes
+back. The current selection has a dot. The chat keeps its full reading height.
+
+The host sends a `session` response only after a request from the device. The
+single bounded picker holds four labels, while the host owns up to 64 model
+options and the effort levels reported for each model. A choice names its page
+revision, never an executable command. Changes stay pending until the owning
+adapter confirms them; a rejected or unconfirmed change preserves the last
+reported values. Catalog changes invalidate old touches. A reconnect requests
+fresh state, and disconnected/read-only controls never emit a change.
+
+Codex uses the existing shared app-server connection: `model/list` supplies the
+catalog, `thread/settings/update` changes only `model` and `effort`, and
+`thread/resume` reads back the result. These are session defaults for subsequent
+turns; no prompt is sent and an active turn is not interrupted. The installed
+CLI schema documents this method; older servers that refuse it show an update
+instruction. Catalogs refresh on connection, account changes, and periodically.
+
+Claude's status line reports the current model where available. Its view stays
+read-only with `/model` and `/effort` instructions: Channels does not provide a
+model/effort control API. No terminal emulator is assumed and no global model
+settings are rewritten.

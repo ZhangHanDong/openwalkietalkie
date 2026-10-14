@@ -45,6 +45,9 @@ enum Seen {
 
 /// The fake daemon: one connection, scripted.
 struct Fake {
+    methods: Arc<Mutex<Vec<String>>>,
+    settings: Arc<Mutex<(String, String)>>,
+    reject_settings: Arc<std::sync::atomic::AtomicBool>,
     seen: mpsc::UnboundedReceiver<Seen>,
     /// Push a server→client message (a notification or a request).
     push: mpsc::UnboundedSender<Value>,
@@ -69,6 +72,12 @@ async fn fake_daemon(path: PathBuf) -> Fake {
     let (push_tx, mut push_rx) = mpsc::unbounded_channel::<Value>();
     let account: Arc<Mutex<Option<(String, u8)>>> = Arc::default();
     let current_account = account.clone();
+    let methods: Arc<Mutex<Vec<String>>> = Arc::default();
+    let observed = methods.clone();
+    let settings = Arc::new(Mutex::new(("model-a".to_string(), "high".to_string())));
+    let current_settings = settings.clone();
+    let reject_settings = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let rejected = reject_settings.clone();
     tokio::spawn(async move {
         let (stream, _) = listener.accept().await.unwrap();
         let ws = match tokio_tungstenite::accept_async(stream).await {
@@ -92,6 +101,13 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                     match (method, id) {
                         (Some(method), Some(id)) => {
                             let params = value.get("params").cloned().unwrap_or(Value::Null);
+                            observed.lock().unwrap().push(method.clone());
+                            if method == "thread/settings/update" && rejected.load(std::sync::atomic::Ordering::SeqCst) {
+                                let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
+                                let _ = sink.send(tokio_tungstenite::tungstenite::Message::Text(
+                                    json!({"id": id, "error": {"code": -32000, "message": "unsupported choice"}}).to_string().into())).await;
+                                continue;
+                            }
                             let reply = match method.as_str() {
                                 "initialize" => json!({"userAgent": "fake codex"}),
                                 "account/read" => match current_account.lock().unwrap().as_ref() {
@@ -102,11 +118,24 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                                     Some((_, percent)) => json!({"rateLimits": {"primary": {"usedPercent": percent, "windowDurationMins": 300}}}),
                                     None => json!({}),
                                 },
+                                "model/list" => json!({"data": [
+                                    {"model":"model-a", "displayName":"Model A", "hidden":false, "defaultReasoningEffort":"high", "supportedReasoningEfforts":[{"reasoningEffort":"low"},{"reasoningEffort":"high"}]},
+                                    {"model":"model-b", "displayName":"Model B", "hidden":false, "defaultReasoningEffort":"low", "supportedReasoningEfforts":[{"reasoningEffort":"low"}]}
+                                ], "nextCursor":null}),
+                                "thread/settings/update" => {
+                                    let mut selected = current_settings.lock().unwrap();
+                                    if let Some(m) = params["model"].as_str() { selected.0 = m.into(); }
+                                    if let Some(e) = params["effort"].as_str() { selected.1 = e.into(); }
+                                    json!({})
+                                }
                                 "thread/loaded/list" => json!({"data": ["t1"], "nextCursor": null}),
-                                "thread/resume" => json!({"thread": {
-                                    "id": params["threadId"], "name": "Refactor UI",
-                                    "cwd": "/Users/t/code/api", "status": {"type": "idle"},
-                                }}),
+                                "thread/resume" => {
+                                    let selected = current_settings.lock().unwrap();
+                                    json!({"model":selected.0, "reasoningEffort":selected.1, "thread": {
+                                        "id": params["threadId"], "name": "Refactor UI",
+                                        "cwd": "/Users/t/code/api", "status": {"type": "idle"},
+                                    }})
+                                },
                                 _ => json!({}),
                             };
                             let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
@@ -130,7 +159,7 @@ async fn fake_daemon(path: PathBuf) -> Fake {
             }
         }
     });
-    Fake {
+    Fake { methods, settings, reject_settings,
         seen: seen_rx,
         push: push_tx,
         account,
@@ -197,6 +226,51 @@ impl Fake {
             }
         }
     }
+}
+
+async fn picker(daemon: &Daemon, matches: impl Fn(&deck_proto::SessionMenu) -> bool) -> deck_proto::SessionMenu {
+    let end = tokio::time::Instant::now() + PATIENCE;
+    loop {
+        for op in daemon.device_ops() {
+            if let deck_model::DeviceOp::Control(deck_model::Control::SessionMenu(menu)) = op {
+                if matches(&menu) { return menu; }
+            }
+        }
+        assert!(tokio::time::Instant::now() < end, "picker response arrived");
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn device_model_selection_updates_only_session_settings_and_confirms_the_result() {
+    let path = socket_path("settings");
+    let mut fake = fake_daemon(path.clone()).await;
+    let daemon = Daemon::with(Options { codex_socket: Some(path), ..Options::default() }).await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+    let agent = agent_with_key(&daemon, "codex:t1").await;
+    let slot = agent.slot.unwrap().0;
+    daemon.device_input(deck_model::DeviceLine::Session { slot, field: 1, page: 0, rev: 0, choice: 255 });
+    let menu = picker(&daemon, |m| m.status == 1).await;
+    assert_eq!(menu.choices, ["Model A", "Model B"]);
+    daemon.device_input(deck_model::DeviceLine::Session { slot, field: 1, page: 0, rev: menu.rev, choice: 1 });
+    let (_, params) = fake.request("thread/settings/update").await;
+    assert_eq!(params, json!({"threadId":"t1", "model":"model-b", "effort":"low"}));
+    let confirmed = picker(&daemon, |m| m.status == 1 && m.model == "Model B").await;
+    assert_eq!(confirmed.effort, "low");
+    assert_eq!(*fake.settings.lock().unwrap(), ("model-b".into(), "low".into()));
+
+    fake.reject_settings.store(true, std::sync::atomic::Ordering::SeqCst);
+    daemon.device_input(deck_model::DeviceLine::Session { slot, field: 1, page: 0, rev: confirmed.rev, choice: 0 });
+    fake.request("thread/settings/update").await;
+    let failed = picker(&daemon, |m| m.status == 3).await;
+    assert_eq!(failed.model, "Model B");
+    assert!(failed.note.contains("could not apply"));
+    assert!(!fake.methods.lock().unwrap().iter().any(|m| matches!(m.as_str(), "turn/start" | "turn/steer")),
+        "changing settings never sends a prompt or starts a turn");
+    stop.send(true).unwrap();
+    client.await.unwrap();
+    daemon.shutdown().await;
 }
 
 /// Wait until the roster has an agent with this key.

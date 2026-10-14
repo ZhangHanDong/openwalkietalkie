@@ -948,3 +948,29 @@ fn rich_code_and_emphasis_refresh_cleanly_across_scroll_and_card_changes() {
         ("shift hints", &|ui| { ui.global.shift = true; }),
     ]);
 }
+
+#[test]
+fn session_settings_partial_refresh_matches_full_across_pages_and_connection_changes() {
+    let start = scene(|ui| channel(ui, 2));
+    walk(&start, &[
+        ("open settings", &|ui| crate::ui::session::open(ui, 1, &mut Update::new())),
+        ("overview", &|ui| {
+            let mut menu = crate::deck::msg::SessionMenu::EMPTY;
+            menu.agent = 2; menu.rev = 1; menu.status = 1;
+            menu.model.set("Model A"); menu.effort.set("high");
+            host(ui, HostMsg::SessionMenu(menu));
+        }),
+        ("model picker", &|ui| {
+            ui.agents.settings.field = 1;
+            let mut menu = ui.agents.settings.menu;
+            menu.field = 1; menu.rev = 2; menu.count = 2; menu.total = 2; menu.selected = Some(0);
+            menu.choices[0].set("Model A"); menu.choices[1].set("Model B");
+            host(ui, HostMsg::SessionMenu(menu));
+        }),
+        ("highlight", &|ui| ui.agents.settings.highlight = 1),
+        ("pending", &|ui| { ui.agents.settings.menu.status = 2; ui.agents.settings.menu.note.set("Applying for the next turn..."); }),
+        ("confirmed", &|ui| { ui.agents.settings.menu.status = 1; ui.agents.settings.menu.selected = Some(1); ui.agents.settings.menu.model.set("Model B"); }),
+        ("offline", &|ui| ui.deck.host_present = false),
+        ("close", &|ui| ui.agents.settings.open = false),
+    ]);
+}

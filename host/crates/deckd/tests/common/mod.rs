@@ -142,6 +142,10 @@ impl Daemon {
     /// core still encodes each line and sends it: these are exactly the
     /// bytes a connected deck would have been given, which is where §5.6's
     /// `⌨ ` prefix and the `Focus terminal` row are actually applied.
+    pub fn device_input(&self, line: deck_model::DeviceLine) {
+        self._lines.send(FromHid::Line(line)).unwrap();
+    }
+
     pub fn device_ops(&self) -> Vec<deck_model::DeviceOp> {
         self._ops.try_iter().collect()
     }

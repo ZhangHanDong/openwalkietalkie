@@ -289,6 +289,11 @@ pub fn parse_device_line(bytes: &[u8]) -> Result<DeviceLine, DecodeError> {
             id: o.need_u16("id")?,
             first: o.need_u16("first")?,
         },
+        "session" => DeviceLine::Session {
+            slot: slot(o.need_u8("agent", 8)?)?,
+            field: o.need_u8("f", 2)?, page: o.need_u8("p", 63)?,
+            rev: o.need_u16("r")?, choice: o.need_u8("i", 255)?,
+        },
         "tool" => DeviceLine::Tool {
             slot: slot(o.need_u8("agent", 8)?)?,
             id: o.need_u16("id")?,
@@ -489,6 +494,22 @@ pub fn parse_host_line(bytes: &[u8]) -> Result<HostLine, DecodeError> {
             slot: slot(o.need_u8("agent", 8)?)?,
             text: o.need_str("text")?.to_string(),
             rev: o.need_u16("rev")?,
+        },
+        "session" => {
+            if o.array("choices")?.is_some_and(|a| a.len() > 4) { return Err(DecodeError::Range("choices")); }
+            let menu = crate::SessionMenu {
+            slot: slot(o.need_u8("agent", 8)?)?,
+            rev: o.need_u16("rev")?, field: o.need_u8("field", 2)?,
+            page: o.need_u8("page", 63)?, status: o.need_u8("status", 3)?,
+            model: o.need_str("model")?.into(),
+            effort: o.need_str("effort")?.into(),
+            note: o.need_str("note")?.into(),
+            choices: o.array("choices")?.ok_or(DecodeError::Parse("choices"))?.iter().map(|v| v.as_str().map(str::to_string).ok_or(DecodeError::Parse("choices"))).collect::<Result<Vec<_>, _>>()?, total: o.need_u8("total", 255)?,
+            selected: o.u8("selected", 254)?,
+            };
+            if usize::from(menu.page) * 4 + menu.choices.len() > usize::from(menu.total)
+                || menu.selected.is_some_and(|i| i >= menu.total) { return Err(DecodeError::Range("session")); }
+            HostLine::SessionMenu(menu)
         },
         "transcript" => HostLine::Transcript {
             slot: slot(o.need_u8("agent", 8)?)?,

@@ -440,6 +440,33 @@ fn parse_into(line: &[u8], out: &mut HostMsg) -> Result<(), ErrWhy> {
             object.need("text")?.text_into(text)?;
             *rev = object.need("rev")?.u16()?;
         }
+        b"session" => {
+            *out = HostMsg::SessionMenu(super::msg::SessionMenu::EMPTY);
+            let HostMsg::SessionMenu(menu) = out else { return Err(ErrWhy::Parse); };
+            menu.agent = agent_id(object.need("agent")?)?;
+            menu.rev = object.need("rev")?.u16()?;
+            menu.field = object.need("field")?.u8()?;
+            menu.page = object.need("page")?.u8()?;
+            menu.status = object.need("status")?.u8()?;
+            menu.total = object.need("total")?.u8()?;
+            if menu.field > 2 || menu.page > 63 || menu.status > 3 { return Err(ErrWhy::Range); }
+            object.need("model")?.text_into(&mut menu.model)?;
+            object.need("effort")?.text_into(&mut menu.effort)?;
+            object.need("note")?.text_into(&mut menu.note)?;
+            if let Some(value) = object.get("selected")? {
+                let i = value.u8()?;
+                if i >= menu.total { return Err(ErrWhy::Range); }
+                menu.selected = Some(i);
+            }
+            for item in object.need("choices")?.array()? {
+                let text = menu.choices.get_mut(menu.count as usize).ok_or(ErrWhy::Range)?;
+                item?.text_into(text)?;
+                menu.count += 1;
+            }
+            if u16::from(menu.page) * 4 + u16::from(menu.count) > u16::from(menu.total) {
+                return Err(ErrWhy::Range);
+            }
+        }
         b"transcript" => {
             *out = TRANSCRIPT;
             let HostMsg::Transcript { agent, text, last, press, failed, channel_tip } = out else {
@@ -689,6 +716,14 @@ pub fn encode(event: Event, ui: &UiState, out: &mut [u8; TX_MAX]) -> usize {
             json.key("d").string(doc_name(doc));
             json.key("id").number(id as u32);
             json.key("first").number(first as u32);
+        }
+        Event::Session { agent, field, page, rev, choice } => {
+            json.key("m").string("session");
+            json.key("agent").number(agent as u32);
+            json.key("f").number(field as u32);
+            json.key("p").number(page as u32);
+            json.key("r").number(rev as u32);
+            json.key("i").number(choice as u32);
         }
         Event::Tool { agent, id, index } => {
             json.key("m").string("tool");

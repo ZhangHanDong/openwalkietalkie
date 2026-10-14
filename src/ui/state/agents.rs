@@ -91,6 +91,7 @@ pub enum AgentsView {
 
 #[derive(Clone, Copy)]
 pub struct View {
+    pub settings: crate::ui::session::View,
     pub view: AgentsView,
     /// Agent id under the roster highlight; 0 = none.
     pub highlight: u8,
@@ -151,6 +152,7 @@ pub struct View {
 impl View {
     pub const fn new() -> Self {
         Self {
+            settings: crate::ui::session::View::new(),
             view: AgentsView::Roster,
             highlight: 0,
             agent: 0,
@@ -248,6 +250,7 @@ fn page_agent(ui: &UiState, row: u8) -> Option<u8> {
 
 /// After `UiState::reset` loaded its data: put the highlight on the first row.
 pub(super) fn on_reset(ui: &mut UiState) {
+    ui.agents.settings = crate::ui::session::View::new();
     let first = order(ui).first().copied().unwrap_or(0);
     set_highlight(ui, first);
     ui.agents.age_hash = age_hash(ui, ui.now_ms);
@@ -255,6 +258,7 @@ pub(super) fn on_reset(ui: &mut UiState) {
 
 /// Back to the roster (home jump, idle-home, the viewed agent left).
 pub(super) fn show_roster(ui: &mut UiState, _at_ms: u32) {
+    ui.agents.settings.open = false;
     ui.agents.view = AgentsView::Roster;
     ui.agents.pressed = None;
 }
@@ -280,6 +284,8 @@ fn toggle_workflow(ui: &mut UiState, at_ms: u32, out: &mut Update) {
 
 /// `agent`'s channel (ENTER, a sibling, a jump whose card is gone, focus).
 pub(super) fn show_channel(ui: &mut UiState, agent: u8, at_ms: u32) {
+    // Slots can be reused after a session ends. Fetch settings on every entry.
+    ui.agents.settings = crate::ui::session::View::new();
     ui.agents.view = AgentsView::Channel;
     ui.agents.agent = agent;
     let workflow = reading_doc(ui) == DocKind::Workflow;
@@ -557,6 +563,7 @@ pub(super) fn on_control(
     at_ms: u32,
     out: &mut Update,
 ) -> bool {
+    if crate::ui::session::control(ui, control, at_ms, out) { return true; }
     if ui.global.shift {
         if ui.agents.view == AgentsView::Channel && control == Control::Button(Button::Enter, Edge::Press) {
             let slot = ui.agents.agent;
@@ -712,6 +719,9 @@ pub(super) fn on_control(
 }
 
 pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target> {
+    if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
+        return crate::ui::session::hit(ui, x, y);
+    }
     match ui.agents.view {
         AgentsView::Roster => {
             let slot = layout::roster_row_at(x, y)?;
@@ -720,6 +730,9 @@ pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target>
             Some(Target::list_row(layout::roster_row(slot), agent as u16, layout::ROSTER_PITCH))
         }
         AgentsView::Channel => {
+            if crate::ui::session::ENTRY.contains(x, y) {
+                return Some(Target::tap(crate::ui::session::ENTRY, 3));
+            }
             if online(ui) {
                 if faces::agents::WORKFLOW_TOGGLE.contains(x, y) {
                     return Some(Target::tap(faces::agents::WORKFLOW_TOGGLE, 2));
@@ -770,6 +783,10 @@ pub(super) fn on_touch(
     at_ms: u32,
     out: &mut Update,
 ) {
+    if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
+        crate::ui::session::touch(ui, target, act, at_ms, out);
+        return;
+    }
     let id = target.id as u8;
     match (ui.agents.view, act) {
         (_, TouchAct::Down) => {
@@ -808,6 +825,7 @@ pub(super) fn on_touch(
         (AgentsView::Channel, TouchAct::Activate) => {
             ui.agents.pressed = None;
             let agent = ui.agents.agent;
+            if id == 3 { crate::ui::session::open(ui, at_ms, out); return; }
             if id == 2 {
                 toggle_workflow(ui, at_ms, out);
                 return;
@@ -858,6 +876,7 @@ pub(super) fn on_host(
     out: &mut Update,
 ) {
     validate(ui, Some(fx), at_ms, out);
+    crate::ui::session::host(ui, msg, out);
     if matches!(msg, HostMsg::Synced) && ui.agents.view == AgentsView::Channel && reading_doc(ui) == DocKind::Workflow {
         if let Some(agent) = ui.deck.agent(ui.agents.agent) {
             let (slot, id) = (agent.id, agent.reply_rev);
@@ -976,6 +995,7 @@ fn validate(ui: &mut UiState, fx: Option<&Effects>, at_ms: u32, out: &mut Update
 /// Displayed ages roll over, the unacknowledged-answer timeout, the re-sort.
 pub(super) fn on_tick(ui: &mut UiState, now_ms: u32, out: &mut Update) {
     validate(ui, None, now_ms, out);
+    crate::ui::session::tick(ui, now_ms, out);
     // A dropped or revision-stale mode request must not leave an empty view.
     if ui.agents.view == AgentsView::Channel {
         if let Some(agent) = ui.deck.agent(ui.agents.agent) {

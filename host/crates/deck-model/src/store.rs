@@ -146,6 +146,8 @@ pub const USAGE_REFRESH_GRACE: Duration = Duration::from_millis(1500);
 /// (timers are stateless — a `Tick` looks here, never at the timer key).
 #[derive(Debug, Default)]
 pub(crate) struct AgentAux {
+    pub(crate) controls: Option<crate::session_controls::SessionControls>,
+    pub(crate) settings_pending: Option<Instant>,
     /// Last requested reading window; updates must not pull the reader away.
     pub(crate) reply_first: Option<u16>,
     /// Opt-in: older firmware continues to receive only chat documents.
@@ -173,6 +175,8 @@ pub(crate) struct AgentAux {
 
 #[derive(Debug)]
 pub struct Store {
+    pub(crate) session_panel: Option<crate::session_controls::Panel>,
+    pub(crate) session_menu_rev: u16,
     pub(crate) cfg: StoreConfig,
     pub(crate) snapshot: Snapshot,
     /// Last `now` seen by `apply`, for `project()` and event stamps.
@@ -306,6 +310,8 @@ impl Store {
             finalizing_at: None,
             finalizing: VecDeque::new(),
             pending_channel: None,
+            session_panel: None,
+            session_menu_rev: 0,
         }
     }
 
@@ -386,6 +392,7 @@ impl Store {
         match cmd {
             Command::Link(link) => self.on_link(link),
             Command::Device(line) => self.on_device(line),
+            Command::SessionControls { agent, session, settled, controls } => self.on_session_controls(agent, session, settled, controls),
             Command::Voice(v) => self.on_voice(v),
             Command::Tick(_) => self.on_tick(),
             Command::Shutdown => self.on_shutdown(),
@@ -977,6 +984,7 @@ impl Store {
                 id,
                 first,
             } => self.on_device_doc_lines(Slot(slot), doc, id, first),
+            DeviceLine::Session { slot, field, page, rev, choice } => self.on_device_session(slot, field, page, rev, choice),
             DeviceLine::Tool { slot, id, index } => self.on_device_tool(Slot(slot), id, index),
         }
     }

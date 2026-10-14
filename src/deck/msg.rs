@@ -449,11 +449,28 @@ pub enum ErrWhy {
     Unknown,
 }
 
+/// One bounded picker page, shared by the session overview and its selectors.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SessionMenu {
+    pub agent: u8, pub rev: u16, pub field: u8, pub page: u8,
+    pub model: Text<48>, pub effort: Text<16>, pub status: u8,
+    pub note: Text<96>, pub choices: [Text<40>; 4],
+    pub count: u8, pub total: u8, pub selected: Option<u8>,
+}
+impl SessionMenu {
+    pub const EMPTY: Self = Self {
+        agent: 0, rev: 0, field: 0, page: 0, model: Text::new(),
+        effort: Text::new(), status: 0, note: Text::new(),
+        choices: [Text::new(); 4], count: 0, total: 0, selected: None,
+    };
+}
+
 /// One parsed host message. The parser validates all of it before anything is
 /// applied. Over half a kilobyte, most of it one `cardtext` window: parse into
 /// an out-parameter and pass by reference, never by value.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum HostMsg {
+    SessionMenu(SessionMenu),
     /// Nothing to apply: an unknown `m`, or the out-parameter before parsing.
     None,
     Hello {
@@ -555,6 +572,7 @@ pub enum HostMsg {
 /// `Faces`) are read from `UiState` when the event is encoded.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Event {
+    Session { agent: u8, field: u8, page: u8, rev: u16, choice: u8 },
     Hello,
     /// Everything is released.
     Up,

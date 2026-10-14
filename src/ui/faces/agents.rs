@@ -243,16 +243,6 @@ pub fn roster_header(ui: &UiState, out: &mut Text<40>) {
     }
 }
 
-fn state_word(state: AgentState) -> &'static str {
-    match state {
-        AgentState::Working => "Working",
-        AgentState::Question => "Question",
-        AgentState::Ready => "Ready",
-        AgentState::Error => "Error",
-        AgentState::Idle => "Idle",
-    }
-}
-
 fn dot_color(ui: &UiState, agent: &Agent) -> u32 {
     theme::agent_state(agent.state, agent.stale || offline(ui))
 }
@@ -385,6 +375,9 @@ fn choices_viewport(ui: &UiState, card: &Card, visible: u8) -> Viewport {
 pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
     let _ = instance;
     band.fill(kit::rgb(theme::CANVAS));
+    if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
+        crate::ui::session::draw(band, ui); return;
+    }
     let agent = ui.deck.agent(ui.agents.agent);
     match (ui.agents.view, agent, ui.deck.card(ui.agents.agent)) {
         (AgentsView::Roster, _, _) => draw_roster(band, ui),
@@ -401,6 +394,9 @@ pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
 /// Regions of this face and the inputs of their pixels; see `signature.rs`.
 pub fn signature(ui: &UiState, instance: u8, sig: &mut SigBuilder) {
     let _ = instance;
+    if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
+        crate::ui::session::signature(ui, sig); return;
+    }
     let agent = ui.deck.agent(ui.agents.agent);
     match (ui.agents.view, agent, ui.deck.card(ui.agents.agent)) {
         (AgentsView::Roster, _, _) => {
@@ -549,13 +545,11 @@ fn draw_state_line(band: &mut Band, ui: &UiState, agent: &Agent) {
     text(band, Font::Body, WORKFLOW_TOGGLE.center().0, CHANNEL_STATE_BASELINE,
         if agent.reply_kind == DocKind::Workflow { "Chat" } else { "Workflow" },
         theme::TEXT_PRIMARY, bg, WORKFLOW_TOGGLE.width() - 12, Align::Center);
-    let gray = agent.stale || offline(ui);
-    let word = if gray { "Offline" } else { state_word(agent.state) };
-    let used = text(band, Font::Body, lane.left(), CHANNEL_STATE_BASELINE, word, dot_color(ui, agent), theme::CANVAS, lane.width(), Align::Left);
-    let mut rest = Text::<16>::new();
-    let prefix = if agent.state == AgentState::Question { " \u{b7} blocked " } else { " \u{b7} " };
-    age_text(ui, agent, prefix, &mut rest);
-    text(band, Font::Body, lane.left() + used, CHANNEL_STATE_BASELINE, rest.as_str(), theme::TEXT_SECONDARY, theme::CANVAS, lane.width() - used, Align::Left);
+    let label = crate::ui::session::label(ui);
+    text(band, Font::Hint, lane.left(), CHANNEL_STATE_BASELINE, label.as_str(),
+        theme::TEXT_SECONDARY, theme::CANVAS, lane.width() - 12, Align::Left);
+    text(band, Font::Hint, lane.right() - 10, CHANNEL_STATE_BASELINE, "›",
+        theme::TEXT_SECONDARY, theme::CANVAS, 12, Align::Left);
 }
 
 /// Lines the last reply occupies in the channel view; the grammar lets
@@ -736,8 +730,8 @@ fn draw_card_block(band: &mut Band, ui: &UiState, card: &Card) {
 fn channel_signature(ui: &UiState, agent: &Agent, sig: &mut SigBuilder) {
     sig.region_with(HEADER_LANE, |h| hash_header(h, ui, agent, kit::status_tag(ui)));
     sig.region_with(Rect::new(32, 66, 416, 34), |h| {
+        crate::ui::session::hash(ui, h);
         h.u8(agent.reply_kind as u8).u8(ui.agents.pressed.unwrap_or(255));
-        h.u8(agent.state as u8).u32(dot_color(ui, agent)).bool(agent.stale || offline(ui)).u32(age_step(ui, agent));
     });
     sig.region_with(reply_lane(ui, agent), |h| {
         // The window's own lines, not just the capped text: a new window for

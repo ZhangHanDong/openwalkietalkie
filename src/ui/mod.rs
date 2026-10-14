@@ -23,6 +23,7 @@ pub mod kit;
 pub mod layout;
 pub mod overlay;
 pub mod scene;
+pub mod session;
 pub mod signature;
 pub mod splash;
 pub mod state;

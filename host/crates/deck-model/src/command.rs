@@ -449,6 +449,7 @@ pub enum UtterancePhase {
 /// Every input, from every door.
 #[derive(Clone, Debug)]
 pub enum Command {
+    SessionControls { agent: AgentId, session: SessionId, settled: bool, controls: crate::session_controls::SessionControls },
     Api {
         principal: Principal,
         session: SessionId,

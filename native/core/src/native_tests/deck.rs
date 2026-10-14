@@ -370,7 +370,8 @@ fn card_under_dark_screen_not_answered_by_wake_enter() {
     let at = dark + 300 + ui::state::global::GUARD_MS;
     key(31, true, at);
     key(31, false, at + 10);
-    assert_eq!(deck_lines(), [r#"{"m":"answer","agent":1,"card":40,"choice":0}"#]);
+    assert_eq!(deck_lines(), [r#"{"m":"answer","agent":1,"card":40,"choice":0}"#,
+        r#"{"m":"session","agent":1,"f":0,"p":0,"r":0,"i":255}"#]);
     assert_eq!(core.ui.deck.card(1).unwrap().pending_answer, Some(0));
 }
 
@@ -525,7 +526,8 @@ fn a_session_from_boot_through_the_demo_to_a_real_host_and_its_loss() {
     tap(31, &mut now);
     tap(31, &mut now);
     // The channel sequence counts from boot: the demo's ENTER was seq 1.
-    assert_eq!(deck_lines(), [r#"{"m":"channel","agent":1,"seq":2}"#, r#"{"m":"answer","agent":1,"card":40,"choice":0}"#]);
+    assert_eq!(deck_lines(), [r#"{"m":"channel","agent":1,"seq":2}"#, r#"{"m":"session","agent":1,"f":0,"p":0,"r":0,"i":255}"#, r#"{"m":"answer","agent":1,"card":40,"choice":0}"#,
+        r#"{"m":"session","agent":1,"f":0,"p":0,"r":0,"i":255}"#]);
     host_line(br#"{"m":"card","agent":1,"id":40,"clear":1}"#);
     host_line(br#"{"m":"agent","id":1,"state":"working"}"#);
     assert_eq!(core.ui.deck.agent(1).map(|agent| agent.state), Some(AgentState::Working));

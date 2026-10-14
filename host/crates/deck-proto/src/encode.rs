@@ -154,6 +154,29 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
     let mut w = Writer::new(&mut out);
     w.begin(line.m());
     match line {
+        HostLine::SessionMenu(menu) => {
+            if menu.field > 2 || menu.page > 63 || menu.status > 3 || menu.choices.len() > 4
+                || usize::from(menu.page) * 4 + menu.choices.len() > usize::from(menu.total)
+                || menu.selected.is_some_and(|i| i >= menu.total) {
+                return Err(EncodeError::Range { field: "session" });
+            }
+            w.num("agent", u64::from(slot_id(menu.slot, "agent")?));
+            w.num("rev", u64::from(menu.rev));
+            w.num("field", u64::from(menu.field));
+            w.num("page", u64::from(menu.page));
+            w.cut("model", &menu.model, 48);
+            w.cut("effort", &menu.effort, 16);
+            w.num("status", u64::from(menu.status));
+            w.cut("note", &menu.note, 96);
+            w.num("total", u64::from(menu.total));
+            if let Some(i) = menu.selected { w.num("selected", u64::from(i)); }
+            w.key("choices"); w.raw(b"[");
+            for (i, label) in menu.choices.iter().take(4).enumerate() {
+                if i > 0 { w.raw(b","); }
+                w.string(&cut(label, 40));
+            }
+            w.raw(b"]");
+        }
         HostLine::Hello { sid, hm } => {
             w.num("v", u64::from(crate::VERSION));
             w.num("sid", u64::from(*sid));

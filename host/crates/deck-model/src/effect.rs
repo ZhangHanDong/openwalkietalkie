@@ -350,6 +350,8 @@ pub enum Effect {
 /// Event types of §4.12, serialized as their dotted names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum EventKind {
+    #[serde(rename = "session.settings_requested")]
+    SessionSettingsRequested,
     #[serde(rename = "agent.added")]
     AgentAdded,
     #[serde(rename = "agent.changed")]
@@ -450,7 +452,8 @@ pub enum EventKind {
 }
 
 impl EventKind {
-    pub const ALL: [EventKind; 48] = [
+    pub const ALL: [EventKind; 49] = [
+        EventKind::SessionSettingsRequested,
         EventKind::AgentAdded,
         EventKind::AgentChanged,
         EventKind::AgentRemoved,
@@ -504,6 +507,7 @@ impl EventKind {
     /// The dotted wire name (the serde rename, checked by a test).
     pub const fn as_str(self) -> &'static str {
         match self {
+            EventKind::SessionSettingsRequested => "session.settings_requested",
             EventKind::AgentAdded => "agent.added",
             EventKind::AgentChanged => "agent.changed",
             EventKind::AgentRemoved => "agent.removed",

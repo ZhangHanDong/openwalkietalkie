@@ -31,10 +31,16 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 74] = [
+const DECK_SCENES: [&str; 80] = [
     "roster",
     "roster-page2",
     "roster-offline",
+    "session-settings",
+    "session-models",
+    "session-effort",
+    "session-claude",
+    "session-pending",
+    "session-offline",
     "channel",
     "channel-question2",
     "channel-ready",
@@ -137,6 +143,29 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
     ui.deck.host_present = true;
     ui.connected = true;
     match scene {
+        "session-settings" | "session-models" | "session-effort" | "session-claude" | "session-pending" | "session-offline" => {
+            ui.agents.view = AgentsView::Channel;
+            ui.agents.agent = 2;
+            ui.deck.agent_mut(2).unwrap().kind = deck::msg::AgentKind::Codex;
+            let v = &mut ui.agents.settings;
+            v.open = true;
+            v.field = if scene == "session-models" || scene == "session-pending" { 1 } else if scene == "session-effort" { 2 } else { 0 };
+            v.menu.agent = 2; v.menu.rev = 1; v.menu.field = v.field;
+            v.menu.model.set("GPT-6.1 Sol"); v.menu.effort.set("high"); v.menu.status = 1;
+            v.menu.note.set("Changes apply to the next turn.");
+            if v.field != 0 {
+                v.menu.count = 4; v.menu.total = if v.field == 1 { 6 } else { 7 }; v.menu.selected = Some(0);
+                for (i, label) in if v.field == 1 { ["GPT-6.1 Sol", "GPT-6 Astra", "GPT-6 Sol", "GPT-6 Luna"] }
+                    else { ["low", "medium", "high", "xhigh"] }.iter().enumerate() { v.menu.choices[i].set(label); }
+            }
+            if scene == "session-claude" {
+                ui.deck.agent_mut(2).unwrap().kind = deck::msg::AgentKind::Claude;
+                v.menu.model.set("Fable"); v.menu.effort.clear(); v.menu.status = 0;
+                v.menu.note.set("Use /model or /effort in Claude Code. Channels does not enable these controls.");
+            }
+            if scene == "session-pending" { v.menu.status = 2; v.menu.note.set("Applying for the next turn..."); v.highlight = 1; }
+            if scene == "session-offline" { ui.deck.host_present = false; }
+        }
         "ptt-transcribing" => {
             listening(ui);
             ui.global.ptt_pending = ui.global.ptt.take();

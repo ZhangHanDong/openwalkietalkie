@@ -40,6 +40,7 @@
 //! content and never reach a log line; the log carries thread ids, methods
 //! and counts.
 use crate::api::Api;
+use deck_model::session_controls::{ModelOption, SessionControls};
 use deck_model::voice::{intent, Intent};
 use deck_model::{
     sanitize, AdapterKind, AgentId, AgentRegister, AgentState, AgentUpdate, Answer, AnswerCap,
@@ -112,6 +113,7 @@ pub fn socket_path(configured: Option<&str>) -> Option<PathBuf> {
 /// What the shell does with the core or the socket.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Effect {
+    Controls { thread: String, settled: bool, controls: SessionControls },
     Message { thread: String, message: deck_model::MessageMeta, text: String },
     /// `agent.register` for this thread; the shell calls back
     /// [`Model::registered`] with the id.
@@ -214,6 +216,7 @@ pub struct WireQuestion {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct Thread {
+    controls: SessionControls,
     messages: Vec<(deck_model::MessageMeta, String)>,
     dirty_messages: Vec<String>,
     agent: Option<AgentId>,
@@ -228,6 +231,8 @@ struct Thread {
 /// The daemon-side mirror of the threads this client follows.
 #[derive(Debug, Default)]
 pub struct Model {
+    catalog: Vec<ModelOption>,
+    settings_unavailable: bool,
     usage_account: Option<String>,
     threads: BTreeMap<String, Thread>,
     /// A monotonically increasing suffix for the model's own request keys,
@@ -236,6 +241,35 @@ pub struct Model {
 }
 
 impl Model {
+    fn settings(&mut self, thread: &str, value: &Value) -> Vec<Effect> {
+        let Some(t) = self.threads.get_mut(thread) else { return Vec::new(); };
+        let Some(model) = value["model"].as_str() else { return Vec::new(); };
+        let controls = SessionControls {
+            model: model.into(),
+            effort: value.get("effort").or_else(|| value.get("reasoningEffort"))
+                .and_then(Value::as_str).unwrap_or_default().into(),
+            models: self.catalog.clone(),
+            editable: !self.settings_unavailable && !self.catalog.is_empty(),
+            note: if self.settings_unavailable { "Update Codex to enable model and effort selection.".into() }
+                else if self.catalog.is_empty() { "Model catalog unavailable. Reconnect Codex and try again.".into() }
+                else { String::new() },
+        };
+        if t.controls == controls { return Vec::new(); }
+        t.controls = controls.clone();
+        vec![Effect::Controls { thread: thread.into(), settled: false, controls }]
+    }
+
+    /// Validate a device event against this connection's own thread and catalog.
+    fn settings_change(&self, agent: &str, model: &str, effort: &str) -> Option<(String, Value)> {
+        let (thread, t) = self.threads.iter().find(|(_, t)| t.agent.as_ref().is_some_and(|a| a.0 == agent))?;
+        if !t.controls.editable { return None; }
+        let option = self.catalog.iter().find(|m| m.id == model)?;
+        if !option.efforts.iter().any(|e| e == effort) && !(effort.is_empty() && option.efforts.is_empty()) { return None; }
+        let mut params = json!({"threadId": thread, "model": model});
+        if !effort.is_empty() { params["effort"] = json!(effort); }
+        Some((thread.clone(), params))
+    }
+
     fn record_message(&mut self, thread: &str, message: deck_model::MessageMeta, text: String) {
         let Some(t) = self.threads.get_mut(thread) else { return; };
         let text = sanitize::cut(&text, 64 * 1024);
@@ -377,6 +411,7 @@ impl Model {
                 });
                 for (meta, text) in &thread.messages { self.record_message(&thread.id, meta.clone(), text.clone()); }
             }
+            if let Some(settings) = &thread.settings { effects.extend(self.settings(&thread.id, settings)); }
         }
         effects.extend(self.flush_messages());
         effects
@@ -409,6 +444,7 @@ impl Model {
         let Some(thread) = thread else {
             return Vec::new();
         };
+        if method == "thread/settings/updated" { return self.settings(&thread, &params["threadSettings"]); }
         self.chat_notification(&thread, method, params);
         match method {
             "thread/started" => {
@@ -844,6 +880,7 @@ pub struct LoadedThread {
     pub cwd: Option<String>,
     pub active: bool,
     pub messages: Vec<(deck_model::MessageMeta, String)>,
+    pub settings: Option<Value>,
 }
 
 impl LoadedThread {
@@ -851,7 +888,7 @@ impl LoadedThread {
     #[must_use]
     pub fn from_thread(value: &Value) -> Option<LoadedThread> {
         let id = value["id"].as_str().filter(|s| !s.is_empty())?;
-        Some(LoadedThread {
+        Some(LoadedThread { settings: None,
             id: id.to_string(),
             name: value["name"]
                 .as_str()
@@ -1380,6 +1417,7 @@ async fn session(
             break 'run End::Error(format!("initialize: {why}"));
         }
         rpc.notify("initialized", None);
+        model.catalog = read_models(&rpc).await.unwrap_or_default();
 
         // The account's rate limits: read once here, again on the deck's
         // ENTER, and pushed by the server after every turn.
@@ -1387,6 +1425,7 @@ async fn session(
         let mut usage_read: Option<std::time::Instant> = None;
         read_rate_limits(api, &rpc, &mut usage_read, &mut model).await;
 
+        let mut catalog_read = std::time::Instant::now();
         let mut roster = tokio::time::interval(Duration::from_secs(ROSTER_S));
         roster.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         let mut chat_tick = tokio::time::interval(Duration::from_millis(400));
@@ -1402,6 +1441,23 @@ async fn session(
                     Ok(p) if p.event.kind == deck_model::EventKind::UsageRefreshRequested => {
                         read_rate_limits(api, &rpc, &mut usage_read, &mut model).await;
                     }
+                    Ok(p) if p.event.kind == deck_model::EventKind::SessionSettingsRequested
+                        && p.event.principal == Principal::Device => {
+                        let d = &p.event.data;
+                        let change = d["agent"].as_str().zip(d["model"].as_str()).zip(d["effort"].as_str())
+                            .and_then(|((agent, name), effort)| model.settings_change(agent, name, effort));
+                        let effects = if let Some((thread, params)) = change {
+                            change_settings(&rpc, &mut model, &thread, params).await
+                        } else {
+                            model.threads.iter().find(|(_, t)| t.agent.as_ref().is_some_and(|a| d["agent"] == a.0))
+                                .map(|(thread, t)| {
+                                    let mut controls = t.controls.clone();
+                                    controls.note = "Options changed. Reopen the picker and choose again.".into();
+                                    Effect::Controls { thread: thread.clone(), settled: true, controls }
+                                }).into_iter().collect()
+                        };
+                        apply(api, &rpc, &principal, session_id, &mut model, &mail_tx, &mut waiters, &mut steering, effects).await;
+                    }
                     Ok(_) => {}
                     Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
                         usage_events = usage_events.resubscribe();
@@ -1411,6 +1467,10 @@ async fn session(
                     }
                 },
                 _ = roster.tick() => {
+                    if catalog_read.elapsed() >= Duration::from_secs(60) {
+                        if let Ok(catalog) = read_models(&rpc).await { model.catalog = catalog; }
+                        catalog_read = std::time::Instant::now();
+                    }
                     match loaded_threads(&rpc).await {
                         Ok(listed) => {
                             let effects = model.loaded(&listed);
@@ -1484,6 +1544,71 @@ async fn session(
     end
 }
 
+fn model_options(value: &Value) -> Vec<ModelOption> {
+    value["data"].as_array().into_iter().flatten().filter(|m| m["hidden"] != true)
+        .filter_map(|m| {
+            let id = m["model"].as_str()?.to_string();
+            if id.is_empty() || id.len() > 128 { return None; }
+            let efforts: Vec<String> = m["supportedReasoningEfforts"].as_array().into_iter().flatten()
+                .filter_map(|e| e["reasoningEffort"].as_str()).filter(|e| e.len() <= 16)
+                .take(16).map(str::to_string).collect();
+            let default_effort = m["defaultReasoningEffort"].as_str().filter(|e| efforts.iter().any(|v| v == e))
+                .map(str::to_string).or_else(|| efforts.first().cloned()).unwrap_or_default();
+            Some(ModelOption { label: m["displayName"].as_str().filter(|s| !s.is_empty()).unwrap_or(&id).into(),
+                id, efforts, default_effort })
+        }).take(64).collect()
+}
+
+async fn read_models(rpc: &Rpc) -> Result<Vec<ModelOption>, String> {
+    let mut models = Vec::new();
+    let mut cursor = Value::Null;
+    let mut seen = std::collections::BTreeSet::new();
+    loop {
+        let result = rpc.request("model/list", json!({"limit": 64, "includeHidden": false, "cursor": cursor})).await?;
+        for option in model_options(&result) {
+            if !models.iter().any(|m: &ModelOption| m.id == option.id) { models.push(option); }
+        }
+        if models.len() >= 64 { models.truncate(64); break; }
+        let Some(next) = result["nextCursor"].as_str() else { break; };
+        if !seen.insert(next.to_owned()) { break; }
+        cursor = json!(next);
+    }
+    Ok(models)
+}
+
+async fn change_settings(rpc: &Rpc, model: &mut Model, thread: &str, params: Value) -> Vec<Effect> {
+    let expected_model = params["model"].as_str().unwrap_or_default().to_string();
+    let expected_effort = params["effort"].as_str().map(str::to_string);
+    let result = rpc.request("thread/settings/update", params).await;
+    let mut note = None;
+    match result {
+        Ok(_) => {
+            // Read back actual session defaults, without creating a turn or
+            // changing any permission, collaboration or terminal settings.
+            match rpc.request("thread/resume", json!({"threadId": thread, "excludeTurns": true})).await {
+                Ok(value) => {
+                    let verified = value["model"].as_str() == Some(expected_model.as_str())
+                        && expected_effort.as_deref().is_none_or(|e| value["reasoningEffort"].as_str() == Some(e));
+                    let _ = model.settings(thread, &value);
+                    if !verified { note = Some("Change not confirmed. Refresh and try again."); }
+                }
+                Err(_) => note = Some("Could not confirm the change. Check the session."),
+            }
+        }
+        Err(why) => {
+            tracing::debug!(why, "codexd: settings update refused");
+            if why.contains("-32601") {
+                model.settings_unavailable = true;
+                note = Some("Update Codex to enable model and effort selection.");
+            } else { note = Some("Codex could not apply this choice. Try another option."); }
+        }
+    }
+    let Some(t) = model.threads.get_mut(thread) else { return Vec::new(); };
+    if let Some(note) = note { t.controls.note = note.into(); }
+    if model.settings_unavailable { t.controls.editable = false; }
+    vec![Effect::Controls { thread: thread.into(), settled: true, controls: t.controls.clone() }]
+}
+
 /// `thread/loaded/list`, then `thread/resume` on each id for its name and
 /// status — resume is also what subscribes this connection to the thread.
 async fn loaded_threads(rpc: &Rpc) -> Result<Vec<LoadedThread>, String> {
@@ -1500,18 +1625,20 @@ async fn loaded_threads(rpc: &Rpc) -> Result<Vec<LoadedThread>, String> {
     for id in ids {
         match rpc.request("thread/resume", json!({"threadId": id})).await {
             Ok(result) => {
-                let thread = result.get("thread").cloned().unwrap_or(result);
-                out.push(LoadedThread::from_thread(&thread).unwrap_or(LoadedThread {
+                let thread = result.get("thread").cloned().unwrap_or_else(|| result.clone());
+                let mut loaded = LoadedThread::from_thread(&thread).unwrap_or(LoadedThread { settings: None,
                     id: id.clone(),
                     name: None,
                     cwd: None,
                     active: false,
                     messages: Vec::new(),
-                }));
+                });
+                loaded.settings = Some(result);
+                out.push(loaded);
             }
             Err(why) => {
                 tracing::debug!(why, "codexd: thread/resume failed");
-                out.push(LoadedThread {
+                out.push(LoadedThread { settings: None,
                     id,
                     name: None,
                     cwd: None,
@@ -1592,6 +1719,11 @@ async fn apply(
     let adapters = api.core.adapters();
     for effect in effects {
         match effect {
+            Effect::Controls { thread, settled, controls } => {
+                if let Some(agent) = model.agent(&thread).cloned() {
+                    let _ = api.core.send(crate::core::CoreMsg::SessionControls { agent, session, settled, controls }).await;
+                }
+            }
             Effect::Register { thread, name, cwd } => {
                 let register = AgentRegister {
                     kind: Kind::Codex,
@@ -1867,6 +1999,7 @@ async fn apply(
                 }
             }
             Effect::RefreshUsage => {
+                model.catalog = read_models(rpc).await.unwrap_or_default();
                 if crate::usage::Provider::Codex.enabled(&api.config.load().usage) {
                     feed_usage(api, Vec::new(), None).await;
                     read_rate_limits(api, rpc, &mut None, model).await;
@@ -1926,13 +2059,43 @@ mod tests {
     }
 
     fn loaded(id: &str, name: Option<&str>, active: bool) -> LoadedThread {
-        LoadedThread {
+        LoadedThread { settings: None,
             id: id.into(),
             name: name.map(str::to_string),
             cwd: Some("/Users/t/code/api".into()),
             active,
             messages: Vec::new(),
         }
+    }
+
+    #[test]
+    fn session_settings_use_the_live_catalog_and_notifications_without_changing_turn_state() {
+        let catalog = model_options(&json!({"data": [
+            {"model": "hidden", "hidden": true},
+            {"model": "model-a", "displayName": "Model A", "defaultReasoningEffort": "high",
+                "supportedReasoningEfforts": [{"reasoningEffort": "low"}, {"reasoningEffort": "high"}]},
+            {"model": "model-b", "displayName": "Model B", "supportedReasoningEfforts": []}
+        ]}));
+        assert_eq!(catalog.len(), 2);
+        let mut model = Model { catalog, ..Default::default() };
+        model.loaded(&[loaded("t1", Some("Session"), true)]);
+        model.registered("t1", AgentId("ag_1".into()));
+        let before = model.threads["t1"].active_turn.clone();
+        let effects = model.notification("thread/settings/updated", &json!({
+            "threadId": "t1", "threadSettings": {"model": "model-a", "effort": "high"}
+        }));
+        assert!(matches!(effects.as_slice(), [Effect::Controls { settled: false, controls, .. }]
+            if controls.model == "model-a" && controls.effort == "high" && controls.editable));
+        assert_eq!(model.threads["t1"].active_turn, before);
+        assert_eq!(model.settings_change("ag_1", "model-a", "low").unwrap().1,
+            json!({"threadId": "t1", "model": "model-a", "effort": "low"}));
+        assert_eq!(model.settings_change("ag_1", "model-b", "").unwrap().1,
+            json!({"threadId": "t1", "model": "model-b"}));
+        assert!(model.settings_change("another-agent", "model-a", "low").is_none());
+        assert!(model.settings_change("ag_1", "hidden", "low").is_none());
+        assert!(model.settings_change("ag_1", "model-b", "high").is_none());
+        model.catalog.clear();
+        assert!(model.settings_change("ag_1", "model-a", "low").is_none());
     }
 
     #[test]

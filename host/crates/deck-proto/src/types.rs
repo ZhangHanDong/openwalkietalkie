@@ -282,9 +282,29 @@ pub enum ErrWhy {
 /// One host → device line (`docs/deck-protocol.md`, "Host → device"). `slot`
 /// is the wire's `id` on `agent` and `agent` everywhere else; strings are
 /// uncapped here and cut by `encode`.
+/// A single requested page of the device's per-session model/effort picker.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct SessionMenu {
+    pub slot: u8,
+    pub rev: u16,
+    /// 0 overview, 1 model, 2 thinking effort.
+    pub field: u8,
+    pub page: u8,
+    pub model: String,
+    pub effort: String,
+    /// 0 read-only, 1 ready, 2 pending, 3 failed.
+    pub status: u8,
+    pub note: String,
+    pub choices: Vec<String>,
+    pub total: u8,
+    /// Absolute option index, not an index within the page.
+    pub selected: Option<u8>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "m", rename_all = "snake_case")]
 pub enum HostLine {
+    SessionMenu(SessionMenu),
     Hello {
         sid: u32,
         /// `"HH:MM"`, the header clock.
@@ -394,6 +414,7 @@ impl HostLine {
     /// The wire's `m` value.
     pub const fn m(&self) -> &'static str {
         match self {
+            HostLine::SessionMenu(_) => "session",
             HostLine::Hello { .. } => "hello",
             HostLine::Synced => "synced",
             HostLine::Agent { .. } | HostLine::AgentGone { .. } => "agent",
@@ -419,6 +440,8 @@ impl HostLine {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "m", rename_all = "snake_case")]
 pub enum DeviceLine {
+    /// choice 255 requests a page; other choices require the displayed revision.
+    Session { slot: u8, field: u8, page: u8, rev: u16, choice: u8 },
     Hello {
         v: u8,
         fw: String,
@@ -511,6 +534,7 @@ impl DeviceLine {
     /// The wire's `m` value.
     pub const fn m(&self) -> &'static str {
         match self {
+            DeviceLine::Session { .. } => "session",
             DeviceLine::Hello { .. } => "hello",
             DeviceLine::Key { .. } => "key",
             DeviceLine::Up => "up",

@@ -769,6 +769,9 @@ impl Core {
     /// One message from a door.
     pub fn on_msg(&mut self, msg: CoreMsg, now: Instant) {
         match msg {
+            CoreMsg::SessionControls { agent, session, settled, controls } => {
+                self.step(Command::SessionControls { agent, session, settled, controls }, now);
+            }
             CoreMsg::Api {
                 principal,
                 session,

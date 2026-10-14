@@ -153,6 +153,8 @@ pub struct Core {
     audio_retry: VecDeque<deck_model::AudioCmd>,
     /// `Say`/`Chime`/`Gain` a full queue refused, for `metrics.get`.
     audio_dropped: u64,
+    /// The device press and Claude talk target, retained through finalization.
+    device_channel_tip_target: Option<(u16, AgentId)>,
     /// The `[voice]` device selection last pushed (B14), so a reload that
     /// changed something else does not re-select a device mid-session.
     audio_devices: Option<deck_model::AudioCmd>,
@@ -293,6 +295,7 @@ impl Core {
             audio: AudioHandle::none(),
             audio_retry: VecDeque::new(),
             audio_dropped: 0,
+            device_channel_tip_target: None,
             audio_devices: None,
             audio_policy: None,
             tts_settings: Arc::new(arc_swap::ArcSwap::from_pointee(crate::audio::cloud::Settings::default())),
@@ -1770,7 +1773,7 @@ impl Core {
                         self.send_op(DeviceOp::Control(Control::Transcript {
                             slot,
                             text,
-                            last: true, press: None, failed: false,
+                            last: true, press: None, failed: false, channel_tip: false,
                         }));
                     }
                 }
@@ -1847,6 +1850,23 @@ impl Core {
     /// [`deck_model::AudioCmd::retry_when_refused`]) and this is where that
     /// policy is applied.
     fn send_audio(&mut self, cmd: deck_model::AudioCmd) {
+        if let deck_model::AudioCmd::Listen { agent, ctx, from_deck, .. } = &cmd {
+            self.device_channel_tip_target = if *from_deck && *ctx == deck_model::PttCtx::Talk {
+                agent.as_ref().and_then(|id| {
+                    let a = self.store.snapshot().agents.get(id)?;
+                    let press = self.store.snapshot().voice.ptt.as_ref()?.device_press?;
+                    (a.kind == deck_model::Kind::Claude).then(|| (press, id.clone()))
+                })
+            } else { None };
+            if let Some((press, id)) = &self.device_channel_tip_target {
+                if let Some(slot) = self.store.snapshot().agents.get(id).and_then(|a| a.slot) {
+                    self.send_op(DeviceOp::Control(Control::Transcript {
+                        slot, text: String::new(), last: false, press: Some(*press),
+                        failed: false, channel_tip: false,
+                    }));
+                }
+            }
+        }
         if !self.audio.engine() {
             tracing::debug!(?cmd, "audio: no engine in this build");
             return;
@@ -2215,7 +2235,13 @@ impl Core {
     }
 
     /// `try_send` only (§2.3): on overflow drop, remember, re-project later.
-    pub fn send_op(&mut self, op: DeviceOp) {
+    pub fn send_op(&mut self, mut op: DeviceOp) {
+        if let DeviceOp::Control(Control::Transcript { slot, press, failed, channel_tip, .. }) = &mut op {
+            *channel_tip = !*failed && self.device_channel_tip_target.as_ref()
+                .filter(|(p, _)| Some(*p) == *press)
+                .and_then(|(_, id)| self.store.snapshot().agents.get(id))
+                .is_some_and(|agent| agent.slot == Some(*slot) && !self.adapters.claude_channels.ready(agent));
+        }
         if self.needs_resync {
             self.drop_op(op);
             return;
@@ -2911,6 +2937,47 @@ mod tests {
 
     fn ops_of(rx: &Receiver<DeviceOp>) -> Vec<DeviceOp> {
         rx.try_iter().collect()
+    }
+
+    #[test]
+    fn device_transcription_tip_tracks_claude_channel_readiness_and_press() {
+        use deck_model::{AdapterKind, Kind, OrderCap};
+        for (name, kind, ready) in [("fallback", Kind::Claude, false),
+            ("channel", Kind::Claude, true), ("codex", Kind::Codex, false)] {
+            let dir = temp(&format!("ptt-tip-{name}"));
+            let (mut c, ops, _lines, _debug) = detached(&dir);
+            let now = Instant::now();
+            let principal = Principal::Adapter(AdapterKind::Claude);
+            let sid = SessionId(9);
+            c.sessions.open_internal(sid, principal.clone(), "claude-adapter", now);
+            let mut reg = testkit::register(name, Some("claude:tip-target"));
+            reg.kind = kind;
+            reg.pid = Some(42);
+            reg.pid_kind = Some(deck_model::PidKind::Cli);
+            reg.slot_hint = Some(Slot(1));
+            reg.caps.order = OrderCap::Inject;
+            c.api_call(principal, sid, false, Request::AgentRegister(reg), now).unwrap();
+            if ready { c.adapters.claude_channels.test_channel(42, "tip-target"); }
+            ops.try_iter().for_each(drop);
+            c.step(Command::Device(DeviceLine::Ptt { act: 1, slot: 1, ctx: PttCtx::Talk,
+                card: None, abort: false, press: Some(5) }), now);
+            let start: Vec<_> = ops.try_iter().filter_map(|op| match op {
+                DeviceOp::Control(Control::Transcript { channel_tip, press: Some(5), .. }) => Some(channel_tip),
+                _ => None,
+            }).collect();
+            assert_eq!(start, if kind == Kind::Claude { vec![!ready] } else { vec![] }, "{name}");
+            // The target is retained while ASR finishes after the PTT release.
+            c.step(Command::Device(DeviceLine::Ptt { act: 0, slot: 1, ctx: PttCtx::Talk,
+                card: None, abort: false, press: Some(5) }), now);
+            ops.try_iter().for_each(drop);
+            for (press, failed) in [(5, false), (4, false), (5, true)] {
+                c.send_op(DeviceOp::Control(Control::Transcript { slot: Slot(1), text: "hello".into(),
+                    last: false, press: Some(press), failed, channel_tip: false }));
+                assert!(matches!(ops.recv().unwrap(), DeviceOp::Control(Control::Transcript { channel_tip, .. })
+                    if channel_tip == (kind == Kind::Claude && !ready && press == 5 && !failed)));
+            }
+            let _ = std::fs::remove_dir_all(dir);
+        }
     }
 
     #[test]

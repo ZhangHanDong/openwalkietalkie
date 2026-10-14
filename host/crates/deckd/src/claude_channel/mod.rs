@@ -141,6 +141,8 @@ impl Hub {
             .map(|e| e.sender.clone())
     }
 
+    pub fn ready(&self, agent: &Agent) -> bool { self.sender(agent).is_some() }
+
     pub fn status(&self) -> Value {
         let entries = self.entries.lock().expect("channel hub");
         json!(entries

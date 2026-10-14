@@ -471,6 +471,7 @@ pub struct Deck {
     pub sid: u32,
     pub transcript: Text<200>,
     pub transcript_final: bool,
+    pub transcript_channel_tip: bool,
     /// The whole live transcript, laid out by the host. Its window sits at the
     /// **end** of the body: what the operator wants is the newest speech.
     pub transcript_doc: Doc,
@@ -507,6 +508,7 @@ impl Deck {
             sid: 0,
             transcript: Text::new(),
             transcript_final: false,
+            transcript_channel_tip: false,
             transcript_doc: Doc::new(DocFont::Row),
             transcript_rev: 0,
             clock_anchor_ms: 0,
@@ -553,6 +555,7 @@ impl Deck {
         self.clock_valid = false;
         self.transcript.clear();
         self.transcript_final = false;
+        self.transcript_channel_tip = false;
         self.transcript_doc.forget();
         self.offline_data = false;
     }
@@ -967,13 +970,14 @@ impl Deck {
                 }
                 owner.last_reply = *text;
             }
-            HostMsg::Transcript { text, last, .. } => {
+            HostMsg::Transcript { text, last, channel_tip, .. } => {
                 if self.transcript != *text {
                     self.transcript_doc.forget();
                     self.transcript_rev = self.transcript_rev.wrapping_add(1);
                 }
                 self.transcript = *text;
                 self.transcript_final = *last;
+                self.transcript_channel_tip = *channel_tip;
             }
             HostMsg::Workspaces {
                 active,

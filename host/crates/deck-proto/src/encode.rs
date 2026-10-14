@@ -276,7 +276,7 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
             w.cut("text", text, CAPS.reply);
             w.num("rev", u64::from(*rev));
         }
-        HostLine::Transcript { slot, text, last, press, failed } => {
+        HostLine::Transcript { slot, text, last, press, failed, channel_tip } => {
             // Slot 0 is a session with no agent on the strip (a face name,
             // a key label): the line goes without `agent`, and the deck
             // shows it for whoever is holding PTT.
@@ -289,6 +289,7 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
             }
             if let Some(press) = press { w.num("p", u64::from(*press)); }
             if *failed { w.num("failed", 1); }
+            if *channel_tip { w.num("channel_tip", 1); }
         }
         HostLine::Focus { slot, ack } => {
             w.num("agent", u64::from(slot_id(*slot, "agent")?));
@@ -649,7 +650,7 @@ mod tests {
             text(&HostLine::Transcript {
                 slot: 4,
                 text: "hi".into(),
-                last: true, press: None, failed: false,
+                last: true, press: None, failed: false, channel_tip: false,
             }),
             "{\"m\":\"transcript\",\"agent\":4,\"text\":\"hi\",\"final\":1}\n"
         );
@@ -733,7 +734,7 @@ mod tests {
             text(&HostLine::Transcript {
                 slot: 0,
                 text: "deploy".into(),
-                last: false, press: None, failed: false,
+                last: false, press: None, failed: false, channel_tip: false,
             }),
             "{\"m\":\"transcript\",\"text\":\"deploy\"}\n"
         );
@@ -741,7 +742,7 @@ mod tests {
             encode(&HostLine::Transcript {
                 slot: 9,
                 text: "x".into(),
-                last: true, press: None, failed: false,
+                last: true, press: None, failed: false, channel_tip: false,
             }),
             Err(EncodeError::Range { field: "agent" })
         ));
@@ -755,7 +756,7 @@ mod tests {
         let t = text(&HostLine::Transcript {
             slot: 1,
             text: long.clone(),
-            last: false, press: None, failed: false,
+            last: false, press: None, failed: false, channel_tip: false,
         });
         let body = t
             .split("\"text\":\"")

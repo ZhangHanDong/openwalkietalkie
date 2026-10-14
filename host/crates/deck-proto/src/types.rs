@@ -355,6 +355,8 @@ pub enum HostLine {
         last: bool,
         press: Option<u16>,
         failed: bool,
+        /// Show the Claude Channels setup hint during this device PTT session.
+        channel_tip: bool,
     },
     Focus {
         slot: u8,

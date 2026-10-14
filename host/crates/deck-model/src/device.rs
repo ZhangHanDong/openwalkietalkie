@@ -129,6 +129,9 @@ pub enum Control {
         last: bool,
         press: Option<u16>,
         failed: bool,
+        /// Show the Claude Channels setup hint during this device PTT session.
+        #[serde(default)]
+        channel_tip: bool,
     },
     Name(String),
     Synced,

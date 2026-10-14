@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 72] = [
+const DECK_SCENES: [&str; 74] = [
     "roster",
     "roster-page2",
     "roster-offline",
@@ -59,6 +59,8 @@ const DECK_SCENES: [&str; 72] = [
     "card-none",
     "ptt-roster",
     "ptt-transcribing",
+    "ptt-channel-tip",
+    "ptt-channel-tip-pending",
     "ptt-omarchy",
     "ptt-no-host",
     "ptt-naming",
@@ -139,6 +141,15 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             listening(ui);
             ui.global.ptt_pending = ui.global.ptt.take();
             ui.now_ms = 600;
+        }
+        "ptt-channel-tip" | "ptt-channel-tip-pending" => {
+            listening(ui);
+            ui.deck.agent_mut(2).unwrap().kind = deck::msg::AgentKind::Claude;
+            ui.deck.transcript_channel_tip = true;
+            if scene == "ptt-channel-tip-pending" {
+                ui.global.ptt_pending = ui.global.ptt.take();
+                ui.now_ms = 600;
+            }
         }
         "roster" => {}
         "roster-page2" => {

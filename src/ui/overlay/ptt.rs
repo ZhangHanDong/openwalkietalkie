@@ -24,6 +24,8 @@ use crate::ui::signature::{Hasher, SigBuilder};
 use crate::ui::state::{Overlay, PttSession, UiState};
 use crate::ui::{font, font::Align, font::Font, kit, layout, layout::Rect, theme};
 
+pub const CHANNEL_TIP: &str = "Tip: enable Channels in Mac Integrations";
+
 pub const HINTS: [Hint<'static>; 2] = [Hint { key: "", label: "release" }, Hint { key: "PTT", label: "to send" }];
 /// NO HOST: nothing will be sent, the release only ends the session.
 pub const NO_HOST_HINTS: [Hint<'static>; 2] =
@@ -100,8 +102,14 @@ fn title(ui: &UiState, session: &PttSession, agent: Option<&Agent>) -> Text<40> 
     }
 }
 
+fn channel_tip(ui: &UiState, session: &PttSession, agent: Option<&Agent>) -> bool {
+    !offline(ui) && session.ctx == PttCtx::Talk && ui.deck.transcript_channel_tip
+        && agent.is_some_and(|a| a.kind == crate::deck::msg::AgentKind::Claude)
+}
+
 /// The context line: (prefix, text).
 fn context<'a>(ui: &UiState, session: &PttSession, agent: Option<&'a Agent>) -> (&'static str, &'a str) {
+    if channel_tip(ui, session, agent) { return (CHANNEL_TIP, ""); }
     match (session.ctx, agent) {
         (PttCtx::Name, _) if ui.global.overlay == Overlay::MacroEdit => ("Say a label for the key", ""),
         (PttCtx::Name, _) => ("Say a name for the new face", ""),
@@ -136,9 +144,10 @@ pub fn draw(band: &mut Band, ui: &UiState) {
     draw_transcript(band, ui, live);
     if kit::visible(band, CONTEXT_LANE) {
         let (prefix, rest) = context(ui, &session, agent);
+        let face = if channel_tip(ui, &session, agent) { Font::Hint } else { Font::Body };
         let x = layout::PTT_LAST_REPLY.left();
-        let used = text(band, Font::Body, x, layout::PTT_LAST_REPLY_BASELINE, prefix, theme::TEXT_FAINT, theme::CANVAS, layout::PTT_LAST_REPLY.width(), Align::Left);
-        text(band, Font::Body, x + used, layout::PTT_LAST_REPLY_BASELINE, rest, theme::TEXT_FAINT, theme::CANVAS, layout::PTT_LAST_REPLY.width() - used, Align::Left);
+        let used = text(band, face, x, layout::PTT_LAST_REPLY_BASELINE, prefix, theme::TEXT_FAINT, theme::CANVAS, layout::PTT_LAST_REPLY.width(), Align::Left);
+        text(band, face, x + used, layout::PTT_LAST_REPLY_BASELINE, rest, theme::TEXT_FAINT, theme::CANVAS, layout::PTT_LAST_REPLY.width() - used, Align::Left);
     }
     kit::hint_bar(band, hints(live, pending));
 }
@@ -263,6 +272,29 @@ mod tests {
         ui.deck.host_present = true;
         ui.global.ptt = Some(PttSession::new(agent, ctx, 0, 0));
         ui
+    }
+
+    #[test]
+    fn channel_setup_tip_is_small_and_only_for_online_claude_talk_sessions() {
+        let mut ui = session_ui(1, PttCtx::Talk);
+        ui.deck.agent_mut(1).unwrap().kind = crate::deck::msg::AgentKind::Claude;
+        let session = ui.global.ptt.unwrap();
+        assert_ne!(context(&ui, &session, ui.deck.agent(1)).0, CHANNEL_TIP);
+        ui.deck.transcript_channel_tip = true;
+        assert_eq!(context(&ui, &session, ui.deck.agent(1)), (CHANNEL_TIP, ""));
+        assert!(font::measure(Font::Hint, CHANNEL_TIP) <= layout::PTT_LAST_REPLY.width());
+        // Releasing PTT retains the same hint while the final transcript is pending.
+        ui.global.ptt_pending = ui.global.ptt.take();
+        assert!(channel_tip(&ui, &ui.global.ptt_pending.unwrap(), ui.deck.agent(1)));
+        for ctx in [PttCtx::Answer, PttCtx::Name] {
+            assert!(!channel_tip(&ui, &PttSession::new(1, ctx, 0, 0), ui.deck.agent(1)));
+        }
+        ui.deck.agent_mut(1).unwrap().kind = crate::deck::msg::AgentKind::Codex;
+        assert!(!channel_tip(&ui, &session, ui.deck.agent(1)));
+        ui.deck.agent_mut(1).unwrap().kind = crate::deck::msg::AgentKind::Claude;
+        ui.deck.settings.demo = false;
+        ui.deck.host_present = false;
+        assert!(!channel_tip(&ui, &session, ui.deck.agent(1)));
     }
 
     #[test]

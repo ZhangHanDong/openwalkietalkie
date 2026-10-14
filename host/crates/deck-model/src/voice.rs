@@ -699,7 +699,7 @@ impl Store {
         self.device_op(crate::DeviceOp::Control(crate::Control::Transcript {
             slot: slot.unwrap_or(crate::Slot(0)),
             text: text.to_string(),
-            last, press: p.device_press, failed: false,
+            last, press: p.device_press, failed: false, channel_tip: false,
         }));
         if let Some(slot) = slot {
             // Only the **final** transcript gets a window. A partial is
@@ -1050,7 +1050,7 @@ impl Store {
             text: "Transcription failed. Nothing was sent.".into(),
             last: true,
             press: p.device_press,
-            failed: true,
+            failed: true, channel_tip: false,
         }));
     }
 
@@ -1329,7 +1329,7 @@ mod tests {
                 crate::Control::Transcript {
                     slot: Slot(1),
                     text: "run the tests".into(),
-                    last: false, press: None, failed: false,
+                    last: false, press: None, failed: false, channel_tip: false,
                 }
             ))]
         );
@@ -1783,7 +1783,7 @@ mod tests {
                 crate::Control::Transcript {
                     slot: crate::Slot(1),
                     text: "deploy staging now".into(),
-                    last: true, press: None, failed: false,
+                    last: true, press: None, failed: false, channel_tip: false,
                 }
             ))));
 
@@ -2024,7 +2024,7 @@ mod tests {
             Effect::Device(crate::DeviceOp::Control(crate::Control::Transcript {
                 slot: crate::Slot(0),
                 text: text.into(),
-                last, press: None, failed: false,
+                last, press: None, failed: false, channel_tip: false,
             }))
         };
         assert!(sim.effects.contains(&transcript("copy", false)), "{:?}", sim.effects);
@@ -2068,11 +2068,11 @@ mod tests {
         assert!(sim.store.snapshot().voice.ptt.is_some(), "a stale release cannot end the new press");
         sim.drain();
         sim.apply(final_("first complete message"));
-        assert!(sim.effects.iter().any(|e| matches!(e, Effect::Device(crate::DeviceOp::Control(crate::Control::Transcript { press: Some(41), last: true, failed: false, .. })))));
+        assert!(sim.effects.iter().any(|e| matches!(e, Effect::Device(crate::DeviceOp::Control(crate::Control::Transcript { press: Some(41), last: true, failed: false, channel_tip: false, .. })))));
         sim.apply(edge(0, 42));
         sim.drain();
         sim.apply(voice(VoiceIn::FinalFailed { code: "engine".into(), message: "failed".into() }));
-        assert!(sim.effects.iter().any(|e| matches!(e, Effect::Device(crate::DeviceOp::Control(crate::Control::Transcript { press: Some(42), last: true, failed: true, .. })))));
+        assert!(sim.effects.iter().any(|e| matches!(e, Effect::Device(crate::DeviceOp::Control(crate::Control::Transcript { press: Some(42), last: true, failed: true, channel_tip: false, .. })))));
     }
 
     /// B2: a PTT session records **who** started it, including the session

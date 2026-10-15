@@ -48,6 +48,9 @@ struct Fake {
     methods: Arc<Mutex<Vec<String>>>,
     settings: Arc<Mutex<(String, String)>>,
     reject_settings: Arc<std::sync::atomic::AtomicBool>,
+    reject_steer: Arc<std::sync::atomic::AtomicBool>,
+    reject_turns: Arc<std::sync::atomic::AtomicBool>,
+    history: Arc<Mutex<Vec<Value>>>,
     seen: mpsc::UnboundedReceiver<Seen>,
     /// Push a server→client message (a notification or a request).
     push: mpsc::UnboundedSender<Value>,
@@ -78,6 +81,12 @@ async fn fake_daemon(path: PathBuf) -> Fake {
     let current_settings = settings.clone();
     let reject_settings = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let rejected = reject_settings.clone();
+    let reject_steer = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let steer_rejected = reject_steer.clone();
+    let reject_turns = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let turns_rejected = reject_turns.clone();
+    let history: Arc<Mutex<Vec<Value>>> = Arc::default();
+    let current_history = history.clone();
     tokio::spawn(async move {
         let (stream, _) = listener.accept().await.unwrap();
         let ws = match tokio_tungstenite::accept_async(stream).await {
@@ -102,6 +111,13 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                         (Some(method), Some(id)) => {
                             let params = value.get("params").cloned().unwrap_or(Value::Null);
                             observed.lock().unwrap().push(method.clone());
+                            if (method == "turn/steer" && steer_rejected.load(std::sync::atomic::Ordering::SeqCst))
+                                || (matches!(method.as_str(), "turn/start" | "turn/steer") && turns_rejected.load(std::sync::atomic::Ordering::SeqCst)) {
+                                let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
+                                let _ = sink.send(tokio_tungstenite::tungstenite::Message::Text(
+                                    json!({"id": id, "error": {"code": -32000, "message": "turn unavailable"}}).to_string().into())).await;
+                                continue;
+                            }
                             if method == "thread/settings/update" && rejected.load(std::sync::atomic::Ordering::SeqCst) {
                                 let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
                                 let _ = sink.send(tokio_tungstenite::tungstenite::Message::Text(
@@ -134,6 +150,7 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                                     json!({"model":selected.0, "reasoningEffort":selected.1, "thread": {
                                         "id": params["threadId"], "name": "Refactor UI",
                                         "cwd": "/Users/t/code/api", "status": {"type": "idle"},
+                                        "turns": if params["excludeTurns"] == true { Vec::<Value>::new() } else { current_history.lock().unwrap().clone() },
                                     }})
                                 },
                                 _ => json!({}),
@@ -159,11 +176,97 @@ async fn fake_daemon(path: PathBuf) -> Fake {
             }
         }
     });
-    Fake { methods, settings, reject_settings,
+    Fake { methods, settings, reject_settings, reject_steer, reject_turns, history,
         seen: seen_rx,
         push: push_tx,
         account,
     }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn async_pending_questions_restore_deliver_and_resolve_across_clients() {
+    let path = socket_path("async-questions");
+    let mut fake = fake_daemon(path.clone()).await;
+    let key = json!(["request_user_input_async", "old-call", 0]).to_string();
+    let old_reply = format!("<send_user_message_question_reply>{}</send_user_message_question_reply>",
+        json!([{"answer":"Yes","question":"Already answered?","questionItemId":key}]));
+    *fake.history.lock().unwrap() = vec![json!({"id":"old-turn","status":"completed","items":[
+        {"id":"old-call","type":"agentMessage","delivery":"async","text":"Questions","questions":[
+            {"title":"Already answered?","options":["Yes","No"]}, {"title":"Project name?","options":null}]},
+        {"id":"old-reply","type":"userMessage","content":[{"type":"text","text":old_reply}]}
+    ]})];
+    let daemon = Daemon::with(Options {
+        codex_socket: Some(path),
+        verifier: deckd::trust::FakeVerifier { trusted: true, capped: false },
+        ..Options::default()
+    }).await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+    let agent = agent_with_key(&daemon, "codex:t1").await;
+    daemon.until("restored unanswered question", |s| s.agents[&agent.id].card.as_ref()
+        .is_some_and(|c| c.text.as_deref() == Some("Project name?") && c.status == CardStatus::Pending)).await;
+    let card = daemon.api.bus.snapshot().agents[&agent.id].card.clone().unwrap();
+    assert_eq!(card.origin.kind, OriginKind::Question);
+    assert_eq!(card.expires, None);
+    assert!(card.free_text && card.choices.is_empty());
+    let mut peer = daemon.connect().await;
+    peer.call("session.hello", json!({"client":{"name":"gui"},"scopes":["observe","operate"]})).await;
+
+    // Failed delivery must offer the same question again, not lose it.
+    fake.reject_turns.store(true, std::sync::atomic::Ordering::SeqCst);
+    peer.call("op.answer", json!({"agent":agent.id,"card":card.id,"text":"Walkie"})).await;
+    fake.request("turn/start").await;
+    daemon.until("question restored after failed send", |s| s.agents[&agent.id].card.as_ref()
+        .is_some_and(|c| c.id != card.id && c.text.as_deref() == Some("Project name?") && c.status == CardStatus::Pending)).await;
+    fake.reject_turns.store(false, std::sync::atomic::Ordering::SeqCst);
+    let retry = daemon.api.bus.snapshot().agents[&agent.id].card.clone().unwrap();
+    peer.call("op.answer", json!({"agent":agent.id,"card":retry.id,"text":"Walkie"})).await;
+    let (_, params) = fake.request("turn/start").await;
+    let text = params["input"][0]["text"].as_str().unwrap();
+    let body: Value = serde_json::from_str(text.strip_prefix("<send_user_message_question_reply>").unwrap()
+        .strip_suffix("</send_user_message_question_reply>").unwrap()).unwrap();
+    assert_eq!(body, json!([{"answer":"Walkie","question":"Project name?",
+        "questionItemId":json!(["request_user_input_async","old-call",1]).to_string()}]));
+
+    // Live async questions survive turn completion and status updates.
+    fake.push.send(json!({"method":"item/completed","params":{"threadId":"t1","item":{
+        "id":"new-call","type":"agentMessage","delivery":"async","text":"Please choose","questions":[
+            {"title":"Which database?","options":["Postgres (Recommended)","SQLite"]},
+            {"title":"Anything else?","options":null}]
+    }}})).unwrap();
+    fake.push.send(json!({"method":"turn/completed","params":{"threadId":"t1","turn":{"id":"done","status":"completed"}}})).unwrap();
+    fake.push.send(json!({"method":"thread/status/changed","params":{"threadId":"t1","status":{"type":"idle"}}})).unwrap();
+    daemon.until("live question after turn ends", |s| s.agents[&agent.id].card.as_ref()
+        .is_some_and(|c| c.text.as_deref() == Some("Which database?") && c.status == CardStatus::Pending)).await;
+    let live = daemon.api.bus.snapshot().agents[&agent.id].card.clone().unwrap();
+    assert_eq!(live.expires, None);
+    fake.push.send(json!({"method":"turn/started","params":{"threadId":"t1","turn":{"id":"busy"}}})).unwrap();
+    // A harmless title update provides a barrier after turn/started.
+    fake.push.send(json!({"method":"item/started","params":{"threadId":"t1","item":{
+        "id":"busy-input","type":"userMessage","content":[{"type":"text","text":"Working in parallel"}]
+    }}})).unwrap();
+    daemon.until("working turn with question still visible", |s| s.agents[&agent.id].state == AgentState::Question
+        && s.agents[&agent.id].title.as_deref() == Some("Working in parallel")).await;
+    fake.reject_steer.store(true, std::sync::atomic::Ordering::SeqCst);
+    peer.call("op.answer", json!({"agent":agent.id,"card":live.id,"choice":0})).await;
+    let (_, steer) = fake.request("turn/steer").await;
+    assert_eq!(steer["expectedTurnId"], "busy");
+    let (_, start) = fake.request("turn/start").await;
+    assert_eq!(start["input"], steer["input"]);
+    assert!(start["input"][0]["text"].as_str().unwrap().contains("Postgres (Recommended)"));
+    daemon.until("next queued question", |s| s.agents[&agent.id].card.as_ref()
+        .is_some_and(|c| c.text.as_deref() == Some("Anything else?") && c.status == CardStatus::Pending)).await;
+
+    let reply = format!("<send_user_message_question_reply>{}</send_user_message_question_reply>",
+        json!([{"answer":"No","question":"Anything else?","questionItemId":json!(["request_user_input_async","new-call",1]).to_string()}]));
+    fake.push.send(json!({"method":"item/completed","params":{"threadId":"t1","item":{
+        "id":"external-reply","type":"userMessage","content":[{"type":"text","text":reply}]
+    }}})).unwrap();
+    daemon.until("answer in Codex clears device question", |s| s.agents[&agent.id].card.as_ref()
+        .is_none_or(|c| c.status != CardStatus::Pending)).await;
+    stop.send(true).unwrap();
+    client.await.unwrap();
+    daemon.shutdown().await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

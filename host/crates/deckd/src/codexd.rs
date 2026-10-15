@@ -18,6 +18,8 @@
 //!   `item/fileChange/requestApproval`, `item/permissions/requestApproval`,
 //!   `item/tool/requestUserInput` — are the cards, answered with the JSON-RPC
 //!   response the server is blocked on;
+//! - asynchronous `agentMessage.questions` are persistent question cards,
+//!   answered by a structured user message and restored from thread history;
 //! - `turn/steer` (a turn is running) and `turn/start` (idle) are the orders.
 //!
 //! The agents are **poll**-capability virtual agents owned by the Codex
@@ -55,6 +57,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, oneshot, watch};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
+
+mod questions;
 
 /// `TITLE_MAX` of §5.1 ("the first 64 B of the prompt"), shared with the
 /// hooks adapter.
@@ -160,6 +164,8 @@ pub enum Effect {
         method: &'static str,
         params: Value,
     },
+    /// Deliver an async question reply, retaining the question on failure.
+    AsyncReply { thread: String, key: String, text: String },
     /// The account's rate-limit windows, for the Usage face
     /// (`crate::usage`): `account/rateLimits/updated`.
     Usage(Vec<crate::usage::Window>),
@@ -179,6 +185,8 @@ pub struct CardSpec {
     pub rec: Option<u8>,
     pub free_text: bool,
     pub origin: OriginKind,
+    /// Async questions remain pending across turns and have no hold timeout.
+    pub persistent: bool,
 }
 
 /// A server request this client is answering through a card.
@@ -226,6 +234,9 @@ struct Thread {
     /// completed echo of a started item does not re-title.
     last_title_item: Option<String>,
     pending: Vec<Pending>,
+    async_questions: questions::Questions,
+    /// The underlying activity while an asynchronous question is visible.
+    base_state: Option<AgentState>,
 }
 
 /// The daemon-side mirror of the threads this client follows.
@@ -368,6 +379,7 @@ impl Model {
     /// The shell set a card for `request`.
     pub fn carded(&mut self, thread: &str, request: &str, card: CardId) {
         if let Some(t) = self.threads.get_mut(thread) {
+            t.async_questions.carded(request, card);
             for pending in &mut t.pending {
                 if let Some(slot) = pending.cards.get_mut(request) {
                     *slot = Some(card);
@@ -393,7 +405,13 @@ impl Model {
         for thread in listed {
             let known = self.threads.contains_key(&thread.id);
             if !known {
-                self.threads.insert(thread.id.clone(), Thread::default());
+                let state = if thread.active { AgentState::Working } else { AgentState::Idle };
+                self.threads.insert(thread.id.clone(), Thread {
+                    async_questions: thread.async_questions.clone(),
+                    active_turn: thread.active_turn.clone(),
+                    base_state: Some(state),
+                    ..Thread::default()
+                });
                 effects.push(Effect::Register {
                     thread: thread.id.clone(),
                     name: name_of(thread.name.as_deref(), thread.cwd.as_deref(), &thread.id),
@@ -401,14 +419,11 @@ impl Model {
                 });
                 effects.push(Effect::Update {
                     thread: thread.id.clone(),
-                    state: Some(if thread.active {
-                        AgentState::Working
-                    } else {
-                        AgentState::Idle
-                    }),
+                    state: Some(state),
                     title: None,
                 });
                 for (meta, text) in &thread.messages { self.record_message(&thread.id, meta.clone(), text.clone()); }
+                effects.extend(self.show_async_question(&thread.id));
             }
             if let Some(settings) = &thread.settings { effects.extend(self.settings(&thread.id, settings)); }
         }
@@ -418,6 +433,46 @@ impl Model {
 
     /// A notification from the daemon.
     pub fn notification(&mut self, method: &str, params: &Value) -> Vec<Effect> {
+        let mut effects = self.notification_inner(method, params);
+        if let Some(thread) = thread_id(method, params) {
+            if matches!(method, "item/started" | "item/completed") {
+                if let Some(t) = self.threads.get_mut(&thread) {
+                    if let Some(card) = t.async_questions.observe(&params["item"]) {
+                        effects.push(Effect::Clear { thread: thread.clone(), agent: t.agent.clone(), card });
+                    }
+                }
+            }
+            if let Some(t) = self.threads.get_mut(&thread) {
+                for effect in &mut effects {
+                    if let Effect::Update { state: Some(state), .. } = effect {
+                        t.base_state = Some(*state);
+                        if t.async_questions.is_visible() { *state = AgentState::Question; }
+                    }
+                }
+            }
+            effects.extend(self.show_async_question(&thread));
+        }
+        effects
+    }
+
+    fn show_async_question(&mut self, thread: &str) -> Vec<Effect> {
+        let Some(t) = self.threads.get_mut(thread) else { return Vec::new(); };
+        if !t.pending.is_empty() { return Vec::new(); }
+        t.async_questions.show().map(|spec| Effect::Card { thread: thread.into(), spec }).into_iter().collect()
+    }
+
+    fn async_reply_finished(&mut self, thread: &str, key: &str, delivered: bool) -> Vec<Effect> {
+        if delivered {
+            if let Some(t) = self.threads.get_mut(thread) { t.async_questions.resolve(key); }
+        }
+        let mut effects = self.threads.get(thread).map(|t| Effect::Update {
+            thread: thread.into(), state: t.base_state, title: None,
+        }).into_iter().collect::<Vec<_>>();
+        effects.extend(self.show_async_question(thread));
+        effects
+    }
+
+    fn notification_inner(&mut self, method: &str, params: &Value) -> Vec<Effect> {
         if method == "account/updated" {
             self.usage_account = None;
             return vec![Effect::RefreshUsage];
@@ -630,6 +685,20 @@ impl Model {
     /// A request from the server. Unknown methods are declined with a JSON-RPC
     /// error so the server never waits on this client.
     pub fn server_request(&mut self, id: &Value, method: &str, params: &Value) -> Vec<Effect> {
+        let mut effects = self.server_request_inner(id, method, params);
+        if effects.iter().any(|e| matches!(e, Effect::Card { .. })) {
+            if let Some(thread) = thread_id(method, params) {
+                if let Some(t) = self.threads.get_mut(&thread) {
+                    if let Some(card) = t.async_questions.pause() {
+                        effects.insert(0, Effect::Clear { thread, agent: t.agent.clone(), card });
+                    }
+                }
+            }
+        }
+        effects
+    }
+
+    fn server_request_inner(&mut self, id: &Value, method: &str, params: &Value) -> Vec<Effect> {
         let thread = thread_id(method, params).unwrap_or_default();
         let Some(t) = self.threads.get_mut(&thread) else {
             return vec![Effect::Respond {
@@ -656,6 +725,7 @@ impl Model {
                         rec: Some(0),
                         free_text: true,
                         origin: OriginKind::Permission,
+                        persistent: false,
                     },
                 }]
             }
@@ -675,6 +745,7 @@ impl Model {
                         rec: Some(0),
                         free_text: true,
                         origin: OriginKind::Permission,
+                        persistent: false,
                     },
                 }]
             }
@@ -709,6 +780,18 @@ impl Model {
 
     /// The operator answered a card of this thread.
     pub fn answered(&mut self, thread: &str, card: CardId, answer: &Answer) -> Vec<Effect> {
+        if let Some(q) = self.threads.get_mut(thread).and_then(|t| t.async_questions.answered(card)) {
+            return match q.reply(answer) {
+                Some(text) => vec![Effect::AsyncReply { thread: thread.into(), key: q.key, text }],
+                None => self.show_async_question(thread),
+            };
+        }
+        let mut effects = self.answered_inner(thread, card, answer);
+        effects.extend(self.show_async_question(thread));
+        effects
+    }
+
+    fn answered_inner(&mut self, thread: &str, card: CardId, answer: &Answer) -> Vec<Effect> {
         let Some(t) = self.threads.get_mut(thread) else {
             return Vec::new();
         };
@@ -815,7 +898,7 @@ impl Model {
 
     fn release(&mut self, thread: &str) -> Vec<Effect> {
         match self.threads.remove(thread) {
-            Some(t) => {
+            Some(mut t) => {
                 let mut effects: Vec<Effect> = t
                     .pending
                     .iter()
@@ -826,6 +909,9 @@ impl Model {
                         card: *card,
                     })
                     .collect();
+                if let Some(card) = t.async_questions.pause() {
+                    effects.push(Effect::Clear { thread: thread.into(), agent: t.agent.clone(), card });
+                }
                 effects.push(Effect::Release {
                     thread: thread.to_string(),
                     agent: t.agent,
@@ -880,8 +966,10 @@ pub struct LoadedThread {
     pub name: Option<String>,
     pub cwd: Option<String>,
     pub active: bool,
+    active_turn: Option<String>,
     pub messages: Vec<(deck_model::MessageMeta, String)>,
     pub settings: Option<Value>,
+    async_questions: questions::Questions,
 }
 
 impl LoadedThread {
@@ -889,7 +977,13 @@ impl LoadedThread {
     #[must_use]
     pub fn from_thread(value: &Value) -> Option<LoadedThread> {
         let id = value["id"].as_str().filter(|s| !s.is_empty())?;
+        let mut async_questions = questions::Questions::default();
+        for item in value["turns"].as_array().into_iter().flatten()
+            .flat_map(|turn| turn["items"].as_array().into_iter().flatten()) {
+            async_questions.observe(item);
+        }
         Some(LoadedThread { settings: None,
+            async_questions,
             id: id.to_string(),
             name: value["name"]
                 .as_str()
@@ -903,6 +997,9 @@ impl LoadedThread {
                 }),
             cwd: value["cwd"].as_str().map(str::to_string),
             active: value["status"]["type"].as_str() == Some("active"),
+            active_turn: value["turns"].as_array().into_iter().flatten().rev()
+                .find(|turn| turn["status"] == "inProgress")
+                .and_then(|turn| turn["id"].as_str()).map(str::to_string),
             messages: value["turns"].as_array().into_iter().flatten().rev()
                 .flat_map(|turn| turn["items"].as_array().into_iter().flatten().rev())
                 .filter_map(|item| chat_item(item, item["status"].as_str() == Some("inProgress")))
@@ -1069,6 +1166,7 @@ fn question_card(seq: u64, index: usize, q: &WireQuestion) -> CardSpec {
         rec: None,
         free_text: true,
         origin: OriginKind::Question,
+        persistent: false,
     }
 }
 
@@ -1628,6 +1726,7 @@ async fn loaded_threads(rpc: &Rpc, model: &Model) -> Result<Vec<LoadedThread>, S
             Ok(result) => {
                 let thread = result.get("thread").unwrap_or(&result);
                 let mut loaded = LoadedThread::from_thread(thread).unwrap_or(LoadedThread { settings: None,
+                    async_questions: questions::Questions::default(), active_turn: None,
                     id: id.clone(),
                     name: None,
                     cwd: None,
@@ -1640,6 +1739,7 @@ async fn loaded_threads(rpc: &Rpc, model: &Model) -> Result<Vec<LoadedThread>, S
             Err(why) => {
                 tracing::debug!(why, "codexd: thread/resume failed");
                 out.push(LoadedThread { settings: None,
+                    async_questions: questions::Questions::default(), active_turn: None,
                     id,
                     name: None,
                     cwd: None,
@@ -1718,7 +1818,8 @@ async fn apply(
     effects: Vec<Effect>,
 ) {
     let adapters = api.core.adapters();
-    for effect in effects {
+    let mut effects = std::collections::VecDeque::from(effects);
+    while let Some(effect) = effects.pop_front() {
         match effect {
             Effect::Controls { thread, settled, controls } => {
                 if let Some(agent) = model.agent(&thread).cloned() {
@@ -1898,7 +1999,7 @@ async fn apply(
                     rec: spec.rec,
                     free_text: spec.free_text,
                     deliver: Deliver::Poll,
-                    timeout_s: Some(hold_s),
+                    timeout_s: (!spec.persistent).then_some(hold_s),
                     origin: Origin {
                         kind: spec.origin,
                         tool: None,
@@ -1970,6 +2071,21 @@ async fn apply(
                     .await;
             }
             Effect::Respond { id, result } => rpc.respond(&id, result),
+            Effect::AsyncReply { thread, key, text } => {
+                let mut result = Err("thread unavailable".to_string());
+                if let Some(Effect::Request { method, params }) = model.order(&thread, &text, &key) {
+                    result = rpc.request(method, params).await;
+                    // As with a spoken order, the active turn may have
+                    // completed between tapping the choice and delivery.
+                    if result.is_err() && method == "turn/steer" {
+                        if let Some(Effect::Request { method, params }) = model.steer_rejected(&thread, &text) {
+                            result = rpc.request(method, params).await;
+                        }
+                    }
+                }
+                if let Err(why) = &result { tracing::debug!(why, "codexd: async question reply refused; keeping card"); }
+                effects.extend(model.async_reply_finished(&thread, &key, result.is_ok()));
+            }
             Effect::Request { method, params } => {
                 let thread = params["threadId"].as_str().unwrap_or_default().to_string();
                 if let Err(why) = rpc.request(method, params).await {
@@ -2076,12 +2192,102 @@ mod tests {
 
     fn loaded(id: &str, name: Option<&str>, active: bool) -> LoadedThread {
         LoadedThread { settings: None,
+            async_questions: questions::Questions::default(), active_turn: None,
             id: id.into(),
             name: name.map(str::to_string),
             cwd: Some("/Users/t/code/api".into()),
             active,
             messages: Vec::new(),
         }
+    }
+
+    fn async_item() -> Value {
+        json!({"id":"call_async","type":"agentMessage","delivery":"async","text":"Please choose",
+            "questions":[{"title":"Which database?","options":["Postgres (Recommended)","SQLite"]},
+                         {"title":"Project name?","options":null}]})
+    }
+
+    fn card_spec(effects: &[Effect]) -> CardSpec {
+        effects.iter().find_map(|e| match e { Effect::Card { spec, .. } => Some(spec.clone()), _ => None }).expect("question card")
+    }
+
+    #[test]
+    fn async_questions_survive_turns_and_answer_in_order_with_exact_identity() {
+        let mut model = Model::default();
+        model.loaded(&[loaded("t1", None, false)]);
+        let params = json!({"threadId":"t1","item":async_item()});
+        let first = card_spec(&model.notification("item/started", &params));
+        assert_eq!(first.origin, OriginKind::Question);
+        assert!(first.persistent && first.free_text);
+        assert_eq!(first.text, "Which database?");
+        assert_eq!(first.rec, None); // A suggested option is not an answer.
+        model.carded("t1", &first.request, CardId(1));
+        assert!(model.notification("item/completed", &params).is_empty());
+        let done = model.notification("turn/completed", &json!({"threadId":"t1","turn":{"status":"completed"}}));
+        assert!(!done.iter().any(|e| matches!(e, Effect::Clear { .. } | Effect::Card { .. })));
+        let effects = model.answered("t1", CardId(1), &answer(Some(0), Some("Postgres"), None));
+        let [Effect::AsyncReply { key, text, .. }] = effects.as_slice() else { panic!("{effects:?}"); };
+        assert_eq!(key, "[\"request_user_input_async\",\"call_async\",0]");
+        let body: Value = serde_json::from_str(text.trim().strip_prefix("<send_user_message_question_reply>").unwrap()
+            .strip_suffix("</send_user_message_question_reply>").unwrap()).unwrap();
+        assert_eq!(body, json!([{"answer":"Postgres (Recommended)","question":"Which database?","questionItemId":key}]));
+        // A failed delivery restores the same question, with a fresh card.
+        let retry = card_spec(&model.async_reply_finished("t1", key, false));
+        assert_eq!(retry, first);
+        model.carded("t1", &retry.request, CardId(2));
+        model.answered("t1", CardId(2), &answer(Some(0), None, None));
+        let second = card_spec(&model.async_reply_finished("t1", key, true));
+        assert_eq!(second.text, "Project name?");
+        assert!(second.choices.is_empty() && second.free_text);
+        model.carded("t1", &second.request, CardId(3));
+        let effects = model.answered("t1", CardId(3), &answer(None, None, Some("My \"project\"\n第二行")));
+        let [Effect::AsyncReply { key, text, .. }] = effects.as_slice() else { panic!("{effects:?}"); };
+        assert!(text.contains("My \\\"project\\\"\\n第二行"));
+        assert!(!model.async_reply_finished("t1", key, true).iter().any(|e| matches!(e, Effect::Card { .. })));
+        assert!(model.notification("item/completed", &params).is_empty());
+        assert!(model.answered("t1", CardId(1), &answer(Some(1), None, None)).is_empty());
+    }
+
+    #[test]
+    fn permissions_take_priority_then_return_to_unanswered_async_questions() {
+        let mut model = Model::default();
+        model.loaded(&[loaded("t1", None, false)]);
+        let first = card_spec(&model.notification("item/completed", &json!({"threadId":"t1","item":async_item()})));
+        model.carded("t1", &first.request, CardId(1));
+        let effects = model.server_request(&json!(42), "item/commandExecution/requestApproval", &json!({"threadId":"t1","command":"ls"}));
+        assert!(matches!(effects.first(), Some(Effect::Clear { card: CardId(1), .. })));
+        let approval = card_spec(&effects);
+        assert_eq!(approval.origin, OriginKind::Permission);
+        model.carded("t1", &approval.request, CardId(2));
+        let effects = model.answered("t1", CardId(2), &answer(Some(2), None, None));
+        assert!(matches!(&effects[0], Effect::Respond { result, .. } if result["decision"] == "decline"));
+        assert_eq!(card_spec(&effects), first);
+    }
+
+    #[test]
+    fn history_restores_only_pending_questions_and_external_answers_clear_them() {
+        let key = json!(["request_user_input_async","call_async",0]).to_string();
+        let reply = format!("<send_user_message_question_reply>\n{}\n</send_user_message_question_reply>",
+            json!([{"answer":"SQLite","question":"Which database?","questionItemId":key}]));
+        let thread = LoadedThread::from_thread(&json!({"id":"t1","status":{"type":"active"},"turns":[
+            {"id":"old","status":"completed","items":[async_item(),{"id":"reply","type":"userMessage","content":[{"type":"text","text":reply}]}]},
+            {"id":"running","status":"inProgress","items":[]}
+        ]})).unwrap();
+        let mut model = Model::default();
+        let effects = model.loaded(std::slice::from_ref(&thread));
+        let spec = card_spec(&effects);
+        assert_eq!(spec.text, "Project name?");
+        assert_eq!(model.active_turn("t1"), Some("running"));
+        assert!(!model.loaded(&[thread]).iter().any(|e| matches!(e, Effect::Card { .. })));
+        model.carded("t1", &spec.request, CardId(5));
+        let reply = format!("<send_user_message_question_reply>{}</send_user_message_question_reply>",
+            json!([{"answer":"Walkie","question":"Project name?","questionItemId":spec.request}]));
+        let params = json!({"threadId":"t1","item":{"id":"elsewhere","type":"userMessage","content":[{"type":"text","text":reply}]}});
+        let effects = model.notification("item/started", &params);
+        assert!(effects.iter().any(|e| matches!(e, Effect::Clear { card: CardId(5), .. })));
+        assert!(!effects.iter().any(|e| matches!(e, Effect::Card { .. })));
+        assert!(model.notification("item/completed", &params).is_empty());
+        assert!(model.answered("t1", CardId(5), &answer(None, None, Some("stale"))).is_empty());
     }
 
     #[test]

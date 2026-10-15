@@ -300,6 +300,15 @@ the daemon client drives is one the hooks leave alone (`{}`); the hooks
 remain for `codex --no-daemon` and older CLIs. `[codex] daemon = false`
 turns the client off.
 
+Codex's nonblocking pending questions (`agentMessage` items with `delivery:
+"async"` and `questions`) also appear on the deck. They queue one at a time,
+remain available across turn completion, and return after a permission prompt
+is answered. Choices and spoken replies use the question's original identity
+to resolve the same entry in Codex; replies made in Codex clear the device card.
+On reconnect, thread history restores unanswered questions without reviving
+answered ones. These cards do not expire, and a failed send restores the card
+for another attempt.
+
 Nothing about a CLI's prompt is ever hostage to a bug of ours. Every failure
 path — an unparseable payload, a refused card, a full core, a daemon that is
 not running — answers `{}` and lets the terminal dialog appear. Holding a

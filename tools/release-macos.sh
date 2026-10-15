@@ -38,28 +38,4 @@ expected=$(tr -d '\r\n' < packaging/macos/sparkle-public-key.txt)
 actual=$(swift tools/sparkle-public-key.swift "$temporary/sparkle-key")
 if [[ "$actual" != "$expected" ]]; then echo 'Sparkle secret does not match the embedded public key' >&2; exit 1; fi
 REQUIRE_SIGNING=1 OWT_MACOS_ARCH="$arch" bash tools/package-macos.sh dist/macos
-version=${tag#v}
-dmg="OpenWalkieTalkie-$version-macos-$arch.dmg"
-jq -e '.distributable == true and .notarized == true and .bundle.signature == "developer-id"' dist/macos/release-manifest.json >/dev/null
-xcrun stapler validate "dist/macos/$dmg"
-spctl --assess --type open --context context:primary-signature --verbose=2 "dist/macos/$dmg"
-mv dist/macos/release-manifest.json "dist/macos/package-manifest-$arch.json"
-
-sparkle="$root/target/sparkle/2.9.6"
-mkdir "$temporary/updates"
-cp "dist/macos/$dmg" "$temporary/updates/$dmg"
-feed="$root/dist/macos/appcast-$arch.xml"
-"$sparkle/bin/generate_appcast" --ed-key-file "$temporary/sparkle-key" \
-    --download-url-prefix "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/" \
-    --link "https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag" \
-    --maximum-deltas 0 -o "$feed" "$temporary/updates"
-xmllint --noout "$feed"
-signature=$(sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p' "$feed" | head -1)
-length=$(sed -n 's/.*length="\([0-9]*\)".*/\1/p' "$feed" | head -1)
-test "$length" = "$(stat -f %z "dist/macos/$dmg")"
-grep -F "<sparkle:version>$version</sparkle:version>" "$feed"
-grep -F "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/$dmg" "$feed"
-"$sparkle/bin/sign_update" --verify --ed-key-file "$temporary/sparkle-key" "dist/macos/$dmg" "$signature"
-"$sparkle/bin/sign_update" --verify --ed-key-file "$temporary/sparkle-key" "$feed"
-jq '.sparkle.appcast_signed = true' "dist/macos/package-manifest-$arch.json" > "$temporary/package-manifest.json"
-mv "$temporary/package-manifest.json" "dist/macos/package-manifest-$arch.json"
+bash tools/finalize-macos-release.sh "$arch" "$tag" dist/macos "$temporary/sparkle-key"

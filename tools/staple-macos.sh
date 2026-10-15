@@ -3,12 +3,14 @@
 # Retry the same archive; never treat acceptance alone as a stapled release.
 set -euo pipefail
 dmg=${1:?DMG path required}
+mode=${2:-staple}
+case "$mode" in staple|--validate-only) ;; *) exit 2 ;; esac
 for delay in 0 10 20 30 60 60; do
     if (( delay > 0 )); then
         printf 'Retrying Apple ticket attachment in %s seconds...\n' "$delay"
         sleep "$delay"
     fi
-    if xcrun stapler staple "$dmg" && xcrun stapler validate "$dmg"; then
+    if { [[ "$mode" == --validate-only ]] || xcrun stapler staple "$dmg"; } && xcrun stapler validate "$dmg"; then
         exit 0
     fi
 done

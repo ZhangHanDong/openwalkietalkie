@@ -1,0 +1,133 @@
+name: Recover notarized release
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Failed Release run containing the notarized packages
+        required: true
+        type: string
+      tag:
+        description: Existing release tag, such as v0.3.0
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release-refs/tags/${{ inputs.tag }}
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify the source release and its completed checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          python3 tools/release.py validate "$TAG"
+          sha=$(git rev-parse "$TAG^{commit}")
+          gh api "repos/$GH_REPO/actions/runs/$SOURCE_RUN" > /tmp/source-run.json
+          jq -e --arg sha "$sha" --arg tag "$TAG" \
+            '.path == ".github/workflows/release.yml" and .event == "push" and
+             .head_sha == $sha and .head_branch == $tag and .status == "completed"' /tmp/source-run.json
+          gh run view "$SOURCE_RUN" --json jobs > /tmp/source-jobs.json
+          python3 - <<'PY'
+          import json
+          jobs = {j['name']: j['conclusion'] for j in json.load(open('/tmp/source-jobs.json'))['jobs']}
+          required = ['validate', 'checks / macOS host'] + ['checks / Firmware (' + b + ')' for b in ('lilygo', 'hw-a', 'hw-b')]
+          assert all(jobs.get(name) == 'success' for name in required), jobs
+          PY
+          gh release view "$TAG" --json isDraft --jq '.isDraft' | grep -x true
+  recover:
+    needs: validate
+    runs-on: macos-15
+    environment: release
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+          path: dist/source-artifacts
+          digest-mismatch: error
+      - name: Revalidate notarized packages and sign update feeds
+        env:
+          TAG: ${{ inputs.tag }}
+          SPARKLE_ED25519_PRIVATE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SPARKLE_ED25519_PRIVATE_KEY"
+          umask 077
+          temporary=$(mktemp -d "$RUNNER_TEMP/owt-recover.XXXXXX")
+          trap 'rm -rf "$temporary"' EXIT
+          printf '%s' "$SPARKLE_ED25519_PRIVATE_KEY" > "$temporary/sparkle-key"
+          bash tools/fetch-sparkle.sh target/sparkle/2.9.6
+          mkdir -p dist/release
+          for arch in aarch64 x86_64; do
+            directory="dist/source-artifacts/macos-$arch"
+            if [[ ! -d "$directory" ]]; then directory="dist/source-artifacts/notarization-recovery-$arch"; fi
+            bash tools/finalize-macos-release.sh "$arch" "$TAG" "$directory" "$temporary/sparkle-key"
+            cp "$directory"/*.dmg "$directory/appcast-$arch.xml" "$directory/package-manifest-$arch.json" dist/release/
+          done
+          for board in hw-a hw-b; do cp dist/source-artifacts/firmware-$board/* dist/release/; done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: recovered-release
+          path: dist/release/*
+          if-no-files-found: error
+          compression-level: 0
+  publish:
+    needs: recover
+    runs-on: ubuntu-24.04
+    environment: release
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: recovered-release
+          path: dist/release
+          digest-mismatch: error
+      - name: Create the updater manifest and checksums
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          python3 tools/release.py manifest "$TAG" dist/release
+          cd dist/release
+          sha256sum --check SHA256SUMS
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/release/*
+      - name: Publish the recovered release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json isDraft --jq '.isDraft' | grep -x true
+          gh release upload "$TAG" dist/release/* --clobber
+          gh release edit "$TAG" --draft=false --latest

@@ -25,6 +25,27 @@ use gpui_component::{h_flex, v_flex};
 use std::rc::Rc;
 use std::time::Duration;
 
+/// The website's pixel radio, shared by every product identity surface.
+pub fn brand_mark(size: f32) -> Div {
+    div().size(px(size)).flex_none().child(
+        gpui::img("branding/radio.png").size_full().object_fit(gpui::ObjectFit::Contain),
+    )
+}
+
+pub fn project_credit(p: &Palette) -> Div {
+    h_flex().gap(px(6.)).text_color(p.muted).ts(11., 16.)
+        .child(icon("icons/cohdl-mark.svg", 17., p.muted))
+        .child("A COHDL project")
+}
+
+pub fn brand_lockup(p: &Palette) -> Div {
+    h_flex().gap(px(12.)).child(brand_mark(44.)).child(
+        v_flex().gap(px(4.))
+            .child(div().ts(17., 22.).medium().child("OpenWalkieTalkie"))
+            .child(project_credit(p)),
+    )
+}
+
 /// The icons the window draws, by asset path (see [`crate::assets`]).
 pub mod ic {
     pub const ADD: &str = "icons/add-circle.svg";

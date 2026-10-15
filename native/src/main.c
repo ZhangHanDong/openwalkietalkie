@@ -65,7 +65,7 @@ int main(void)
     uint32_t splash_at = rt_tick_get_millisecond();
     uint32_t splash_duration = owt_core_splash_duration();
     bool splash_visible = true;
-    rt_kprintf("UI: CoHDL boot splash ready\n");
+    rt_kprintf("UI: OpenWalkieTalkie boot splash ready\n");
     rt_kprintf("openwalkietalkie: Bluetooth microphone + speaker + HID\n");
     uint32_t devices = owt_core_init();
     rt_kprintf("board: charger=%u keypad=%u touch=%u direct_inputs=%u\n", !!(devices & 1),

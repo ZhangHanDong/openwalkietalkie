@@ -25,6 +25,10 @@
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>OpenWalkieTalkie</string>
+    <key>CFBundleIconFile</key>
+    <string>OpenWalkieTalkie.icns</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>A COHDL project · Open-source software under the MIT license.</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

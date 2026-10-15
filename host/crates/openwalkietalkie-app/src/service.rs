@@ -288,6 +288,12 @@ impl Shell {
                     ))
                 }))
                 .child(self.render_updates(dim, cx))
+                .child(ui::section("About", v_flex().gap(px(12.))
+                    .child(ui::brand_lockup(&p))
+                    .child(div().text_color(p.muted).child(format!("Version {}", env!("CARGO_PKG_VERSION"))))
+                    .child(Btn::new("about-website", "openwalkietalkie.org")
+                        .icon(ic::EXTERNAL)
+                        .on_click(|_, _, cx| cx.open_url("https://openwalkietalkie.org/"))), &p))
                 .child(self.render_lifecycle(&p))
                 .child(self.render_door(dim, cx))
                 .child(self.render_log(dim, cx)),

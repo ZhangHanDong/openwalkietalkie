@@ -86,7 +86,7 @@ async fn main(spawner: Spawner) {
         if let Err(e) = panel.show().await {
             logln!("boot: display-on failed: {:?}", e);
         }
-        logln!("boot: CoHDL splash ready");
+        logln!("boot: OpenWalkieTalkie splash ready");
         embassy_time::Timer::after_millis(ui::splash::DURATION_MS as u64).await;
     }
 

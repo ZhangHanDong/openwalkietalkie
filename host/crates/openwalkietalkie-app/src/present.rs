@@ -1772,24 +1772,15 @@ pub const TRAY_ICON_PX: u32 = 36;
 pub fn tray_icon_rgba(dot: Tone) -> Vec<u8> {
     let size = TRAY_ICON_PX as f32;
     let mut pixels = vec![0u8; (TRAY_ICON_PX * TRAY_ICON_PX * 4) as usize];
-    // The glyph is the deck: a rounded square with the dial in the middle of
-    // it, drawn as a distance field rather than as strokes so the whole
-    // thing is one pass and the edges are anti-aliased for free.
-    let half = size / 2.0;
-    let body = half - 4.5;
-    let dial = size * 0.20;
+    // The website radio's silhouette, with its screen and keys cut out.
+    // The existing badge keeps all five aggregate states distinguishable.
+    let radio = include_bytes!("../../../../assets/branding/radio-template.alpha");
     let dot_c = (size - size * 0.24, size - size * 0.24);
     let dot_r = size * 0.22;
     for y in 0..TRAY_ICON_PX {
         for x in 0..TRAY_ICON_PX {
             let (px, py) = (x as f32 + 0.5, y as f32 + 0.5);
-            let (dx, dy) = ((px - half).abs(), (py - half).abs());
-            // A square ring 3 px thick.
-            let square = (dx.max(dy) - body).abs();
-            let ring = coverage(3.0 - square * 2.0);
-            let centre = ((px - half).powi(2) + (py - half).powi(2)).sqrt();
-            let disc = coverage(dial - centre);
-            let mut alpha = ring.max(disc);
+            let mut alpha = f32::from(radio[(y * TRAY_ICON_PX + x) as usize]) / 255.0;
             // The aggregate dot sits over the corner, with a hole punched in
             // the glyph behind it so it reads as a badge and not as a blob.
             let from_dot = ((px - dot_c.0).powi(2) + (py - dot_c.1).powi(2)).sqrt();

@@ -5,7 +5,7 @@ use super::text::Text;
 
 /// The firmware version the deck reports: `hello.fw` and Settings/About. The
 /// channel-2 (`sys.version`) version strings of the two runtimes start with it.
-pub const FW_VERSION: &str = "0.2.0";
+pub const FW_VERSION: &str = "0.2.1";
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum AgentKind {

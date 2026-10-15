@@ -953,6 +953,13 @@ impl Shell {
             .border_color(p.border)
             .child(self.titlebar_band("sidebar-titlebar"))
             .child(
+                h_flex().px(px(16.)).py(px(14.)).gap(px(10.))
+                    .child(ui::brand_mark(32.))
+                    .child(v_flex().ts(12., 16.).medium()
+                        .child("OpenWalkie")
+                        .child("Talkie")),
+            )
+            .child(
                 v_flex()
                     .px(px(8.))
                     .pt(px(6.))

@@ -196,7 +196,7 @@
 				)
 			)
 		)
-		(property "Description" "TI bq24073 1-cell Li-ion linear charger with power path (DPPM), VQFN-16 3x3 RGT; USB500, ISET 2.55k, TD/CE/EN2 low, EN1=OUT, TMR open"
+		(property "Description" "TI bq24073 1-cell Li-ion linear charger with power path (DPPM), VQFN-16 3x3 RGT; USB500, ISET 3.6k (247 mA, 0.5 C of the 500 mAh cell), TD/CE/EN2 low, EN1=OUT, TMR open"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -2573,7 +2573,7 @@
 				)
 			)
 		)
-		(property "Value" "2.55kohm"
+		(property "Value" "3.6kohm"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(uuid "1ea46bda-09a5-4fe4-96cf-a07ae70e6a41")
@@ -2633,7 +2633,7 @@
 			(uuid "168e9bc4-597f-491f-9f71-9b79871b6a0c")
 		)
 		(embedded_fonts no)
-		(model "${KIPRJMOD}/../models/RC0402FR-072K55L.step"
+		(model "${KIPRJMOD}/../models/RC0402FR-073K6L.step"
 			(offset
 				(xyz 0 0 0)
 			)

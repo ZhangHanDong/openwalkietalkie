@@ -14,7 +14,7 @@
  "boards": {
   "main": {
    "file": "main/main-revb.kicad_pcb",
-   "sha256": "5af87eda008ece6885898e20b01f31e93bc2696dc0bb44840f893ab3319fc5cf",
+   "sha256": "f9e8375c8ab7c64007a48d8d68c403fa7f1b0f661020226ed5e83dabe346aa7e",
    "copper_layers": 4,
    "stackup": "JLC04101H-3313 (prepreg 0.0994 mm, core 0.7 mm)",
    "thickness_mm": 1.0,
@@ -63,7 +63,7 @@
   }
  },
  "fab": {
-  "main-bom-jlcpcb.csv": "6cd843801ca2892c3704e1a91c70fedd570993bf23270fd9141cd6f83ec1f8f3",
+  "main-bom-jlcpcb.csv": "23c8a19d552e31a9887dd4c57c47ecfffff223f061906deb48927dcc59296a20",
   "main-cpl-jlcpcb.csv": "1c98b2728e2983cdacf2f2d6172a903c62397188eed6f92f4389bd657725e8e4",
   "main-orientation-check.csv": "3ed897427dc719da7f07c7eb76545527480815766c3fd268c14762bad34bfd95",
   "main-revb-jlcpcb-gerber.zip": "f2b1903858f5db569f18d6adc83ef351620548fa9b284f65101e274b0de0c93c"
@@ -76,13 +76,13 @@
  },
  "verification": {
   "main-revb-drc.json": "1e41ff8ae7acca6773a3c86977b53665634e07a89bc08be6535ff810a3e76178",
-  "main-revb-drc.rpt": "d79e3bebd8cbe5ec4dce5d78eff173fddde7d5d52392b6eb0c17cd099d9d9004",
+  "main-revb-drc.rpt": "81f25b9dcc6264bb3d0e0031f55d50b1c72d30759e711f825ece170563b902c7",
   "audio-xtalk.md": "5ffb823dfc17bda94ec064e98ba682cff0784895594f2f4d8e662f45c0258b97",
   "audio-xtalk.json": "2ecaa7b438bf8d2502a646fcb790d06654ad13bb531c088834bf62c12633dbb3",
   "placement-check.md": "3d316ae5247bb183d76c3aacc8ec8026982955242e95ac1dfc3a4e496367a964",
   "final-checks.txt": "c0b2c0bb649e8e2ad07c162d550d15e4105ac6aecb72d4ea3301e802cd95e8cc",
   "netlist-diff-vs-r6.txt": "88c7ab989a4cae9e42ca64a4ba29f81050e1d0add7cc6226a214d177e03795b1",
   "bodyv6.13-fit-model-report.json": "9cda65ff0be8783fa3b2d01e8a71e84c3d7f208806c87d3853dd6a07a7e2ca81",
-  "review-2026-10-05.md": "885db5be19f5c68b9570eb941ffd99e9f4db7777ce80a2e95b51dc17122df8f2"
+  "review-2026-10-05.md": "8afea288c1fa931a2606608e195588f0060936763b676d2aed8afb11d0b58f85"
  }
 }

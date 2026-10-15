@@ -28,6 +28,7 @@ add('R45', '100kohm', 'C25741', 'RC0402FR-07100KL', 'Yageo', 'UniOhm 0402WGF1003
 add('R46', '100kohm', 'C25741', 'RC0402FR-07100KL', 'Yageo', 'UniOhm 0402WGF1003TCE 100k 1% 0402 (JLC Basic)', 'Rev B: CHG_STATUS pull-up to IO_3V3 (charger CHG -> MCU PA33).')
 add('R40,R47', '0ohm', 'C17168', 'RC0402JR-070RL', 'Yageo', 'UniOhm 0402WGF0000TCE 0R 0402 (JLC Basic)', 'Rev B: antenna-side match S1/S2 (0R until tuned; Johanson eval values S1 1.2 pF, S2 3.3 nH).')
 add('R48', '0ohm', 'C17168', 'RC0402JR-070RL', 'Yageo', 'UniOhm 0402WGF0000TCE 0R 0402 (JLC Basic)', 'Rev B: ties display TP_VCC (U3 pin 6) to IO_3V3; remove to float the pin as on r6.')
+add('R37', '3.6kohm', 'C137990', 'RC0402FR-073K6L', 'Yageo', '', 'Exact. About 590k in stock at JLCPCB on 2026-10-10. Sets the BQ24073 charge current: 890/3.6k = 247 mA, 0.5 C of the 500 mAh cell (changed 2026-10-10; r6 had 2.55k = 349 mA).')
 
 b = pcbnew.LoadBoard(sys.argv[1])
 out = sys.argv[2]

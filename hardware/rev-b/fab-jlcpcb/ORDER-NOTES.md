@@ -84,7 +84,8 @@ Open or tented vias there would wick solder:
 |---|---|
 | Y1 E1SB48E001G00E (48 MHz crystal) | Not at LCSC/JLC (same as r6). Either use global sourcing, or review C54561124 (TKD SX20Y048000B81T001: 48 MHz, 8 pF, ±10 ppm, ESR not listed) against SiFli's limits (CL 7–12 pF, ESR ≤ 30 Ω). Leaving Y1 unmatched makes JLC ask about it at the BOM step. Do not let it go out as "do not place": the MCU has no 48 MHz reference without it. |
 | J3 Molex 53261-0371 (LCSC C293630) | New part (MX1.25 / PicoBlade 1.25 mm, 3 positions, SMT right angle). Check stock at upload. It mates with a Molex 51021-0300 housing. **The harness must be pin 1 VCELL, pin 2 NTC (10k 103AT, B ≈ 3435), pin 3 GND.** MX1.25 does not fix polarity and nothing on the board protects against a reversed pack. Without an NTC the charger will not charge; fit R44 for such packs. |
-| AE1 2450AT18B100E, SW3/SW4 PTS636SM25SMTRLFS, U5 SF32LB525UC6, R32 604k, R37 2.55k, U6 BQ24073RGTR, U7/U8 RT6150BGQW, MK1 MP34DT05TR-A | Same parts as r6. Check JLC stock when the BOM is matched; r6's stock notes are from 2026-09-23. |
+| AE1 2450AT18B100E, SW3/SW4 PTS636SM25SMTRLFS, U5 SF32LB525UC6, R32 604k, U6 BQ24073RGTR, U7/U8 RT6150BGQW, MK1 MP34DT05TR-A | Same parts as r6. Check JLC stock when the BOM is matched; r6's stock notes are from 2026-09-23. |
+| R37 3.6k RC0402FR-073K6L (LCSC C137990) | New value (2026-10-10): 0.5 C charge for the 500 mAh cell, 890 / 3.6k = 247 mA (r6 had 2.55k, 349 mA). About 590k in JLC stock on 2026-10-10. If it runs out, 3.57k (Yageo C137991 or UniOhm 0402WGF3571TCE C270609, 249 mA) or UniOhm 0402WGF3601TCE (C25891, 3.6k) also work; the charge current is 890 / R37. |
 | C57 15 pF C0G (C1548), R40/R47 0R | The RF match ships as 15 pF series plus 0R / 0R, with the shunts open. Expect to tune S1/S2 (R40/R47) and the shunts (C52, C53, L6, C58) after a VNA measurement in the closed case. |
 
 ## After assembly (bring-up notes)

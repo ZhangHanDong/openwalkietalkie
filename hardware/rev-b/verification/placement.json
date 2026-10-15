@@ -3017,7 +3017,7 @@
 ]
 },
 "R37": {
-"value": "2.55kohm",
+"value": "3.6kohm",
 "fpid": "passive-CHIP_0402",
 "side": "F",
 "x": 14.25,
@@ -3085,7 +3085,7 @@
 }
 ],
 "models": [
-"RC0402FR-072K55L.step"
+"RC0402FR-073K6L.step"
 ]
 },
 "TP3": {

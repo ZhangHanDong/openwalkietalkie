@@ -32,7 +32,7 @@ MP34DT05TR-A,MK1,FP_ST_MP34DT05_HCLGA_3x4,C2688664,1,MP34DT05TR-A,STMicroelectro
 10kohm,"R28,R29",CHIP_0402,C25744,2,RC0402FR-0710KL,Yageo,UniOhm 0402WGF1002TCE 10k 1% 0402 (JLC Basic),Basic substitute with identical specs.
 86.6kohm,R31,CHIP_0402,C477807,1,RC0402FR-0786K6L,Yageo,,Exact.
 604kohm,R32,CHIP_0402,C327334,1,RC0402FR-07604KL,Yageo,,Exact. Out of stock at LCSC; JLC stock was low.
-2.55kohm,R37,CHIP_0402,C185431,1,RC0402FR-072K55L,Yageo,,Exact. About 700 in stock at LCSC on 2026-09-23. Sets the BQ24073 charge current (890/2.55k = 349 mA).
+3.6kohm,R37,CHIP_0402,C137990,1,RC0402FR-073K6L,Yageo,,"Exact. About 590k in stock at JLCPCB on 2026-10-10. Sets the BQ24073 charge current: 890/3.6k = 247 mA, 0.5 C of the 500 mAh cell (changed 2026-10-10; r6 had 2.55k = 349 mA)."
 3.3kohm,R38,CHIP_0402,C25890,1,RC0402FR-073K3L,Yageo,UniOhm 0402WGF3301TCE 3.3k 1% 0402,"Same value/tolerance/size in the UniOhm series used for the other 0402 resistors; about 1.46 M in stock at LCSC on 2026-09-23. ILIM resistor: only sets the input limit in ILIM mode, the board runs in USB500 mode."
 0ohm,"R40,R47",CHIP_0402,C17168,2,RC0402JR-070RL,Yageo,UniOhm 0402WGF0000TCE 0R 0402 (JLC Basic),"Rev B: antenna-side match S1/S2 (0R until tuned; Johanson eval values S1 1.2 pF, S2 3.3 nH)."
 180kohm,R43,CHIP_0402,C25760,1,RC0402FR-07180KL,Yageo,UniOhm 0402WGF1803TCE 180k 1% 0402,"Same value/tolerance/size in the UniOhm series used for the other 0402 resistors; about 165,000 in stock at LCSC on 2026-09-24. U7 feedback divider bottom resistor."

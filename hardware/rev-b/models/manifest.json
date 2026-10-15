@@ -582,9 +582,9 @@
    "valid": true,
    "sha256": "7a1cd94144695d000b11e159fa755f8094b658b7f23f1a59a4a0bc82bb148761"
   },
-  "RC0402FR-072K55L": {
-   "mpn": "RC0402FR-072K55L",
-   "file": "RC0402FR-072K55L.step",
+  "RC0402FR-073K6L": {
+   "mpn": "RC0402FR-073K6L",
+   "file": "RC0402FR-073K6L.step",
    "kind": "conservative simplified envelope, NOT vendor CAD",
    "evidence": "https://www.yageogroup.com/component-documentation/download/specsheet/RC0402FR-07100KL?lang=en",
    "bounds_mm": [
@@ -601,7 +601,7 @@
    ],
    "valid": true,
    "sha256": "3cd4a0cdef2c7eacaff9162891b98d8daec9449f846652774bbddee98e7e5f33",
-   "note": "same 0402 envelope file as RC0402FR-0791KL (added 2026-09-23 for the BQ24073 charger change)"
+   "note": "same 0402 envelope file as RC0402FR-0791KL (added 2026-09-23 as RC0402FR-072K55L for the BQ24073 charger change; renamed 2026-10-10 when R37 went to 3.6k for 0.5 C charging of the 500 mAh cell)"
   },
   "RC0402FR-073K3L": {
    "mpn": "RC0402FR-073K3L",
@@ -962,7 +962,7 @@
    "R34": "RC0402FR-071ML",
    "R35": "RC0402FR-071KL",
    "R36": "RC0402FR-071ML",
-   "R37": "RC0402FR-072K55L",
+   "R37": "RC0402FR-073K6L",
    "R38": "RC0402FR-073K3L",
    "R39": "RC0402FR-071ML",
    "R4": "RC0402FR-0722KL",

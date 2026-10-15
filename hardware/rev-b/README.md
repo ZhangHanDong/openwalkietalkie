@@ -27,7 +27,7 @@ Status (2026-10-06):
 
 An independent six-part review was run and its findings were fixed or written
 down (see [Verification](#verification)). **Before ordering, read
-[Known limitations](#known-limitations) and [Firmware changes](#firmware-changes-needed-before-bring-up).**
+[Known limitations](#known-limitations) and [Firmware](#firmware).**
 
 ## Files
 
@@ -57,6 +57,7 @@ normal. The F (battery) face is at Y 8.275 and the B face at Y 9.275.
 | 5 | Audio crosstalk with the flash SPI | **Placement:** the flash leaves U5's north face, and the DAC filter leaves the east face at 90° to it. The amplifier U1 is on F with R4/R5 at its input pins, so AMP_INP/AMP_INN are 1.5 mm long with no vias. Both inner layers are solid GND (r6's In2 carried the flash beside AMP_INN). **Routing:** fast nets keep ≥ 0.5 mm from the analog nets on the same layer and never run under them on an adjacent layer. In1/In2 cover 98–100 % of every audio track. The flash's 100 nF now sits at its own VCC pin instead of feeding through the audio-supply node. **Result** ([`verification/audio-xtalk.md`](verification/audio-xtalk.md)): 0 errors. Estimated coupling into the amplifier from fast nets is 0.01 fF·MΩ, against 307.8 fF·MΩ for r6 (about 90 dB less). |
 | 6 | Battery with integrated NTC, MX1.25 3-pin connector | J3 is a **Molex 53261-0371** (PicoBlade/MX1.25, 3 positions, SMT right angle; mates with 51021-0300), in r6's J3 position. **Pin 1 CELL, pin 2 NTC → BQ24073 TS, pin 3 GND.** J4 (wire pads) is gone. The cell needs a **10k 103AT (B ≈ 3435) NTC**; without one, TS floats and charging stops. R44 10k (DNP) can stand in on the bench. |
 | 7 | TP_VCC connected to 3V3 | U3 pin 6 (TP_VCC) → R48 0R → IO_3V3, decoupled by C20 at pin 8. Lift R48 to float the pin as on r6. |
+| 8 | Charge the 500 mAh cell at 0.5 C (2026-10-10) | R37 (BQ24073 ISET) is **3.6k** (Yageo RC0402FR-073K6L, LCSC C137990) instead of r6's 2.55k: 890 / 3.6k = **247 mA**. The input limit stays USB500 (500 mA), so about 250 mA is left for the system before DPPM throttles charging (150 mA before). Termination is the chip's fixed 10 % of ISET, about 25 mA (0.05 C); the BQ24073 has no ITERM pin. Value-only change: copper, gerbers and the CPL are unchanged; BOM, position file, placement check and the 3D model name were updated. |
 
 Carried over from the r6 notes:
 - R4/R5 are now at the NS4150B input pins, so the high-impedance summing
@@ -158,47 +159,71 @@ Carried over from the r6 notes:
 8. **Charger input limit.** As on r6, the BQ24073 has EN1 high and EN2 low
    (USB500). The input current is capped at 500 mA whatever the USB-C source
    offers, and R38 (ILIM) is not used in this mode. Charge current is
-   ISET-set at about 350 mA (R37 2.55k). Under heavy system load (speaker at
-   full volume), DPPM takes current back from charging first. The
-   no-cell brownout at max volume is partly this limit. Allowing more needs
-   ILIM mode (EN2 high, EN1 low) and a smaller R38 (its 3.3k would set only
-   about 470 mA) in a future revision.
+   ISET-set at about 250 mA (R37 3.6k: 890 / 3.6k = 247 mA, 0.5 C of the
+   500 mAh cell; changed 2026-10-10 from r6's 2.55k, 349 mA). Termination
+   is fixed at 10 % of that (about 25 mA, 0.05 C): the BQ24073 has no ITERM
+   pin. Under heavy system load (speaker at full volume), DPPM takes current
+   back from charging first. The no-cell brownout at max volume is partly
+   this limit. Allowing more needs ILIM mode (EN2 high, EN1 low) and a
+   smaller R38 (its 3.3k would set only about 470 mA) in a future revision.
 9. **Audio checker warnings.**
    - AC/AMP_VO/SPEAKER pairs are wider than the checker likes. This is set by
      pin and pad spacing.
    - AVDD33_AUD shares MCU_LDO1 with the flash VCC. This is a schematic choice
      inherited from r6; the flash now has its own bypass right at its pin.
 
-## Firmware changes needed before bring-up
+## Firmware
 
-Rev B needs a board variant (for example a `hw-b` feature next to `hw-a`, and
-an `OMD_BOARD_HW_B` define for the native build), because the pin map changed.
+Rev B is the firmware's `hw-b` board: `--features hw-b` for the Embassy
+image, `OWT_BOARD=hw-b tools/build-native.sh` for the native one (which
+defines `OWT_BOARD_HW_B` on the C side). `hw-b` implies `hw-a`, the main
+board as such, and overlays the three pins that moved:
 
-Speaker amplifier enable, **PA20 → PA01**:
-- `src/board.rs:382`: `Speaker::new(p.AUDPRC, p.DMAC1_CH1, p.PA20)` → `p.PA1`.
-- `src/audio/speaker.rs`: lines 18 and 61 (the `PA20` type) → `PA1`, or take a
-  generic pin.
-- `native/src/audio.c` lines 22, 23, 32, 34, 42: `rt_pin_*(20, …)` → pin 1, via
-  a per-board `OMD_AMP_PIN`.
-- `native/boards/openwalkietalkie/pinmux.c:122`: `HAL_PIN_Set(PAD_PA20, …)` →
-  `HAL_PIN_Set(PAD_PA01, GPIO_A1, PIN_PULLDOWN, 1)`. PA20 becomes a plain
-  pull-down.
+- **AMP_ENABLE PA20 → PA01.** `src/board.rs` hands the NS4150B's CTRL pin
+  to `src/audio/speaker.rs` (which takes any pin); `native/src/audio.c`
+  drives `OWT_AMP_PIN` and `pinmux.c` sets PA01 as a pull-down GPIO. PA20
+  stays a pull-down.
+- **CAL / TP3 on PA00.** Parked as a pull-down input by both images. Set
+  SiFli's calibration tool's signal pin to PA00.
+- **CHG_STATUS on PA33.** Both images read it (R46 is the pull-up; low =
+  charging). The Embassy image combines it with its USB link, because the
+  MCU's VBUS pin is not wired: low is *charging*; high with a USB host and
+  the cell within 80 mV of 4.2 V is a termination, which the battery
+  estimator confirms as 100 % after three samples over 30 s; high with a
+  host and a lower voltage is a charger that stopped for another reason
+  (its NTC window, its timer); high without a host is no input, so a charge
+  that ends on a charger-only supply holds the last figure. The native
+  image has no USB device and only tells charging from not charging. PA33
+  is not a wake pin: PMU slot 1 is free since CANCEL stopped waking the
+  deck, but a charger event waking it would only meet the 2 s PTT power-on
+  gate and go back to sleep.
+- **Board name.** Settings → About reads `Rev B`, the boot log `board:
+  OpenWalkieTalkie Rev B (BodyV6.13)` (native: `board: hw-b image`),
+  `sys.version` answers `"board": "Rev B"`, and `tools/flash-usb.py`
+  refuses a Rev A image for a deck that reports Rev B (and the reverse)
+  unless `--any-board` is passed. A `hw-a` image boots on Rev B with its
+  speaker silent and no charge state.
 
-Other pins and parts:
-- **CAL / TP3 on PA00:** park PA00 as a pull-down input on Rev B
-  (`HAL_PIN_Set(PAD_PA00, GPIO_A0, PIN_PULLDOWN, 1)`). Configure the
-  calibration tool's signal pin as PA00.
-- **Charger status on PA33:** read `Input::new(p.PA33, Pull::None)` (R46 is the
-  pull-up). Low means charging. High means done or no input, because PGOOD
-  is not wired; use the USB session to tell them apart. Native side: add
-  PA33 to pinmux and drop the I²C charger register reads at 0x03 from the
-  diagnostics. PA33 could take one of the two PMU wake slots (PA24–PA44),
-  but both are used by CANCEL and PTT (`src/pmu.rs`), so a charger event does
-  not wake the deck from soft-off.
-- **Touch:** U3 pin 6 is now powered, so the CST9220 runs from IO_3V3, which
-  stays on in soft-off. R45 holds it in reset whenever PA44 is undriven.
-  Before PMU shutdown, either put the touch controller to sleep or release
-  PA44. Then measure soft-off current with a cell connected.
+First flash: `tools/flash-new-board.sh` with the `hw-b` images
+(`OWT_BOARD=hw-b OWT_BOOT_IMAGES=1 tools/build-native.sh` for the flash
+table and bootloader, `cargo build --release --features hw-b` for the
+application), over the pads the [jig](jig/README.md) lands on. After that
+the application updates over USB-C.
+
+To check on the first board:
+- **Touch in soft-off.** U3 pin 6 is now powered, so the CST9220 runs from
+  IO_3V3, which stays on in soft-off; R45 holds it in reset while PA44 is
+  undriven (the HPSYS pads power down with the core). Measure the soft-off
+  current with a cell connected; put the controller to sleep before the PMU
+  shutdown if it is too high.
+- **Speaker.** The amplifier enables on PA01 (the native image logs
+  `speaker: enabled PA1`); the Rev A hiss fix (code run from PSRAM) applies
+  unchanged.
+- **Charging.** With the Mac on the cable, Settings → Battery shows
+  *charging* and later *full*; on a charger-only brick the figure holds at
+  the end of the charge.
+- **RF.** PANEL_D1/D3 run close to the antenna clearance; test BLE RSSI and
+  packet loss with the display streaming.
 
 ## Verification
 

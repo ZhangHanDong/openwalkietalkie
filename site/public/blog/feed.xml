@@ -5,8 +5,16 @@
   <id>https://openwalkietalkie.org/blog/</id>
   <link href="https://openwalkietalkie.org/blog/" />
   <link rel="self" type="application/atom+xml" href="https://openwalkietalkie.org/blog/feed.xml" />
-  <updated>2026-10-15T09:00:00Z</updated>
+  <updated>2026-10-15T14:20:00Z</updated>
   <author><name>Tony Huang</name></author>
+  <entry>
+    <title>OpenWalkieTalkie v0.3.0: images and pending questions</title>
+    <id>https://openwalkietalkie.org/blog/images-and-questions/</id>
+    <link href="https://openwalkietalkie.org/blog/images-and-questions/" />
+    <published>2026-10-15T14:20:00Z</published>
+    <updated>2026-10-15T14:20:00Z</updated>
+    <summary>Chat images on your Mac and deck, stable image previews, and Codex questions you can answer from the handheld.</summary>
+  </entry>
   <entry>
     <title>OpenWalkieTalkie v0.2.1: our radio, everywhere</title>
     <id>https://openwalkietalkie.org/blog/radio-branding/</id>

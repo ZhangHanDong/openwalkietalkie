@@ -33,8 +33,11 @@ pub mod uds {
     use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixStream;
 
-    /// A line may not exceed the daemon's cap.
-    pub const LINE_MAX: usize = 256 * 1024;
+    /// The longest line read from the daemon. Not the daemon's own
+    /// `conn::LINE_MAX` (which caps what it reads from clients): a hello
+    /// snapshot carries every agent's history (up to 512 KiB each), so a few
+    /// busy sessions already exceed that.
+    pub const LINE_MAX: usize = 16 * 1024 * 1024;
 
     /// Connect to the socket (no hello yet).
     pub async fn connect(path: &Path) -> Result<UnixStream, ClientError> {
@@ -106,8 +109,8 @@ pub mod ws {
     use tokio_tungstenite::tungstenite::{Error as WsError, Message};
     use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
-    /// A text frame may not exceed the daemon's cap.
-    pub const FRAME_MAX: usize = 256 * 1024;
+    /// The longest text frame read from the daemon; see `uds::LINE_MAX`.
+    pub const FRAME_MAX: usize = 16 * 1024 * 1024;
 
     pub type Socket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 

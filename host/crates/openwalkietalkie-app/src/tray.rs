@@ -110,9 +110,8 @@ pub fn install() -> Option<Tray> {
         .with_menu(Box::new(menu))
         .with_tooltip(QUIT_TOOLTIP)
         .with_icon(icon_for(deck_model::Tone::Gray)?)
-        // Not a template: the aggregate dot's colour is the information,
-        // and a template image is alpha-only. See `present::tray_icon_rgba`.
-        .with_icon_as_template(false)
+        // AppKit tints the alpha mask for the menu bar and its selected state.
+        .with_icon_as_template(true)
         .build()
         .map_err(|e| eprintln!("openwalkietalkie-app: no status item: {e}"))
         .ok()?;
@@ -141,9 +140,9 @@ impl Tray {
     pub fn update(&mut self, summary: &Summary) {
         if self.dot != Some(summary.dot) {
             if let Some(icon) = icon_for(summary.dot) {
-                let _ = self.icon.set_icon(Some(icon));
-                self.icon.set_icon_as_template(false);
-                self.dot = Some(summary.dot);
+                if self.icon.set_icon_with_as_template(Some(icon), true).is_ok() {
+                    self.dot = Some(summary.dot);
+                }
             }
         }
         let _ = self.icon.set_tooltip(Some(summary.tooltip()));

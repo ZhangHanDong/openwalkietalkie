@@ -1765,25 +1765,13 @@ pub fn transcript_line(transcript: Option<&Transcript>) -> String {
 /// resampling.
 pub const TRAY_ICON_PX: u32 = 36;
 
-/// The tray icon: the deck's glyph with §8.2's aggregate dot on it, as RGBA.
-///
-/// **It is not a template image, and that is a deliberate deviation from
-/// §8.2's "template icon".** A macOS template image is alpha-only — the
-/// system throws the colour away and tints what is left to match the menu
-/// bar — so a template icon and a coloured aggregate dot are mutually
-/// exclusive. Between the two, the dot is the half carrying the information
-/// (§8.2 spends a sentence on its five colours and none on the glyph), so the
-/// dot keeps its colour and the glyph is drawn in a neutral grey that is
-/// legible on a light menu bar and on a dark one. The alternative — a
-/// template glyph that adapts and a dot that cannot be told from any other
-/// dot — is a tray that looks right and says nothing.
+/// The deck glyph and a monochrome status badge, as a black alpha mask.
+/// AppKit tints this template image to match the other menu bar icons.
+/// Status uses shape: question mark, exclamation mark, check, solid dot,
+/// or hollow dot, while the tooltip supplies the complete status text.
 pub fn tray_icon_rgba(dot: Tone) -> Vec<u8> {
     let size = TRAY_ICON_PX as f32;
     let mut pixels = vec![0u8; (TRAY_ICON_PX * TRAY_ICON_PX * 4) as usize];
-    // Apple's systemGray, which sits between the two menu bars: dark enough
-    // to read on white, light enough to read on black.
-    let glyph = [0x8au8, 0x8a, 0x8e];
-    let dot_rgb = tray_dot_rgb(dot);
     // The glyph is the deck: a rounded square with the dial in the middle of
     // it, drawn as a distance field rather than as strokes so the whole
     // thing is one pass and the edges are anti-aliased for free.
@@ -1802,37 +1790,42 @@ pub fn tray_icon_rgba(dot: Tone) -> Vec<u8> {
             let centre = ((px - half).powi(2) + (py - half).powi(2)).sqrt();
             let disc = coverage(dial - centre);
             let mut alpha = ring.max(disc);
-            let mut rgb = glyph;
             // The aggregate dot sits over the corner, with a hole punched in
             // the glyph behind it so it reads as a badge and not as a blob.
             let from_dot = ((px - dot_c.0).powi(2) + (py - dot_c.1).powi(2)).sqrt();
             alpha *= 1.0 - coverage(dot_r + 2.0 - from_dot);
-            let badge = coverage(dot_r - from_dot);
-            if badge > 0.0 {
-                rgb = dot_rgb;
-                alpha = alpha.max(badge);
-            }
+            let badge = coverage(dot_r - from_dot)
+                * (1.0 - tray_badge_cutout(dot, px - dot_c.0, py - dot_c.1, dot_r));
+            alpha = alpha.max(badge);
             let i = ((y * TRAY_ICON_PX + x) * 4) as usize;
             // Straight (un-premultiplied) RGBA, which is what
             // `Icon::from_rgba` takes and what the PNG it builds expects.
-            pixels[i] = rgb[0];
-            pixels[i + 1] = rgb[1];
-            pixels[i + 2] = rgb[2];
             pixels[i + 3] = (alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
         }
     }
     pixels
 }
 
-/// §8.2's five dot colours as sRGB. They are fixed rather than read from the
-/// window's theme: the menu bar is not the window and does not follow it.
-pub const fn tray_dot_rgb(tone: Tone) -> [u8; 3] {
+/// Transparent marks inside the filled badge, in device pixels at 2x.
+fn tray_badge_cutout(tone: Tone, x: f32, y: f32, radius: f32) -> f32 {
+    let stroke = |a: (f32, f32), b: (f32, f32)| {
+        let (ax, ay) = (a.0 * radius, a.1 * radius);
+        let (dx, dy) = ((b.0 - a.0) * radius, (b.1 - a.1) * radius);
+        let t = (((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+        coverage(1.0 - (x - ax - t * dx).hypot(y - ay - t * dy))
+    };
+    let point = |cy: f32| coverage(1.1 - x.hypot(y - cy * radius));
     match tone {
-        Tone::Red => [0xff, 0x3b, 0x30],
-        Tone::Amber => [0xff, 0x9f, 0x0a],
-        Tone::Green => [0x34, 0xc7, 0x59],
-        Tone::Blue => [0x0a, 0x84, 0xff],
-        Tone::Gray => [0x8a, 0x8a, 0x8e],
+        Tone::Red => {
+            let hook = [(-0.30, -0.26), (-0.24, -0.42), (0.16, -0.42),
+                (0.32, -0.24), (0.24, -0.04), (0.0, 0.10), (0.0, 0.18)];
+            hook.windows(2).fold(point(0.48), |alpha, pair| alpha.max(stroke(pair[0], pair[1])))
+        }
+        Tone::Amber => stroke((0.0, -0.44), (0.0, 0.12)).max(point(0.48)),
+        Tone::Green => stroke((-0.45, 0.0), (-0.12, 0.33))
+            .max(stroke((-0.12, 0.33), (0.48, -0.34))),
+        Tone::Blue => 0.0,
+        Tone::Gray => coverage(radius - 2.0 - x.hypot(y)),
     }
 }
 

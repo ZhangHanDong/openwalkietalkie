@@ -273,23 +273,22 @@ fn the_tray_icon_is_a_real_bitmap_whose_dot_is_the_only_thing_that_changes() {
     // status item nobody can click.
     let opaque = grey.as_chunks::<4>().0.iter().filter(|p| p[3] > 0).count();
     assert!(opaque > px * 4, "{opaque} opaque pixels is not a glyph");
-    // The dot carries §8.2's colour, and the five are distinct: a tray whose
-    // "question" and "ready" looked alike would say nothing.
+    // Template images carry state in their alpha mask, so AppKit can tint
+    // every state consistently with the menu bar's appearance.
     let mut seen = Vec::new();
     for tone in [Tone::Red, Tone::Amber, Tone::Green, Tone::Blue, Tone::Gray] {
-        let rgb = present::tray_dot_rgb(tone);
-        assert!(!seen.contains(&rgb), "{tone:?} shares a colour");
-        seen.push(rgb);
         let bytes = present::tray_icon_rgba(tone);
         assert_eq!(bytes.len(), grey.len());
+        assert!(!seen.contains(&bytes), "{tone:?} shares a status symbol");
         assert!(
             bytes
                 .as_chunks::<4>()
                 .0
                 .iter()
-                .any(|p| p[3] > 0 && [p[0], p[1], p[2]] == rgb),
-            "{tone:?} is not on the icon"
+                .all(|p| p[..3] == [0, 0, 0]),
+            "{tone:?} has a fixed color instead of a template mask"
         );
+        seen.push(bytes);
     }
     // Only the dot moves: the glyph is the same drawing whatever the state.
     let red = present::tray_icon_rgba(Tone::Red);

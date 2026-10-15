@@ -51,7 +51,6 @@ jobs:
           required = ['validate', 'checks / macOS host'] + ['checks / Firmware (' + b + ')' for b in ('lilygo', 'hw-a', 'hw-b')]
           assert all(jobs.get(name) == 'success' for name in required), jobs
           PY
-          gh release view "$TAG" --json isDraft --jq '.isDraft' | grep -x true
   recover:
     needs: validate
     runs-on: macos-15

@@ -65,8 +65,14 @@ sent without a request, so older devices do not receive unknown image packets.
 
 The device accepts only matching, contiguous chunks with consistent dimensions
 and total size. It requests the next chunk after accepting the previous one,
-retries a request after six seconds, and stops after three attempts. Closing
-the viewer or changing the conversation invalidates pending chunks.
+retries a request after six seconds, and stops after three attempts. Normal
+heartbeats, same-session syncs, and chat revisions leave the preview open.
+The host resolves the first request against the displayed conversation, then
+retains one immutable device preview (at most 16.5 KiB) for subsequent chunks
+and retries. That transfer expires after two minutes without a valid request
+and cannot survive the agent leaving or its device slot being reassigned.
+Closing the viewer, changing channels, or connecting to a new host session
+invalidates pending chunks.
 
 Deterministic previews: `tools/preview-all.py --board hw-a channel-images
 image-preview image-loading image-error`, and app `--shots` scenes `images`

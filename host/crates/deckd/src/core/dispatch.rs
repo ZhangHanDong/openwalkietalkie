@@ -1578,7 +1578,7 @@ mod tests {
     }
 
     #[test]
-    fn image_reads_require_membership_and_device_requests_require_current_revision() {
+    fn image_reads_require_membership_and_device_transfers_survive_history_rollover() {
         use base64::Engine;
         let (mut c, ops, _lines, _debug, dir) = detached_core("image-reads");
         let now = Instant::now();
@@ -1587,11 +1587,12 @@ mod tests {
         let agent: AgentId = serde_json::from_value(registered["agent"].clone()).unwrap();
         let images = crate::chat_images::blocks(&serde_json::json!([{"type":"image","data":crate::chat_images::fixture()}]));
         let image = images[0].id.clone();
+        let expected = crate::chat_images::get(&image).unwrap().deck.clone();
         let params = serde_json::json!({"agent":agent,"image":image});
         assert!(c.call(ctx(2,&[Scope::ObserveContent]), "image.get", params.clone(), now).result.is_err());
         c.api_call(Principal::Uid(501), SessionId(2), false, Request::Reply(deck_model::ReplySet {
             agent:agent.clone(), text:String::new(), speak:false, announce:None, lane:None,
-            message:Some(deck_model::MessageMeta { images, id:"image".into(), role:deck_model::ChatRole::User, streaming:false, plan:None, runs:None, activity:None }),
+            message:Some(deck_model::MessageMeta { images: images.clone(), id:"image".into(), role:deck_model::ChatRole::User, streaming:false, plan:None, runs:None, activity:None }),
         }), now).unwrap();
         let result = c.call(ctx(2,&[Scope::ObserveContent]), "image.get", params, now).result.unwrap();
         let bytes = base64::engine::general_purpose::STANDARD.decode(result["data"].as_str().unwrap()).unwrap();
@@ -1600,10 +1601,60 @@ mod tests {
         let a = &c.store.snapshot().agents[&agent];
         let (slot, rev) = (a.slot.unwrap().0, a.chat_rev);
         while ops.try_recv().is_ok() {}
-        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, now);
-        assert!(ops.try_iter().any(|op| matches!(op, deck_model::DeviceOp::Control(deck_model::Control::Image(deck_proto::HostLine::Image { total, .. })) if total > 0)));
+        let image_bytes = || ops.try_iter().find_map(|op| match op {
+            deck_model::DeviceOp::Control(deck_model::Control::Image(deck_proto::HostLine::Image { total, data, .. })) => {
+                Some((total, base64::engine::general_purpose::STANDARD.decode(data).unwrap()))
+            }
+            _ => None,
+        }).expect("an image response");
         c.on_device_line(deck_proto::DeviceLine::Image { slot, rev:rev+1, index:0, offset:0 }, now);
-        assert!(ops.try_iter().any(|op| matches!(op, deck_model::DeviceOp::Control(deck_model::Control::Image(deck_proto::HostLine::Image { total:0, .. })))));
+        assert_eq!(image_bytes(), (0, Vec::new()), "a stale initial selection is refused");
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, now);
+        let (total, mut received) = image_bytes();
+        assert_eq!(usize::from(total), expected.len());
+        assert_eq!(received, expected[..384]);
+        for n in 0..65 {
+            c.api_call(Principal::Uid(501), SessionId(2), false, Request::Reply(deck_model::ReplySet {
+                agent:agent.clone(), text:format!("New message {n}"), speak:false, announce:None, lane:None,
+                message:Some(deck_model::MessageMeta { images:Vec::new(), id:format!("message-{n}"), role:deck_model::ChatRole::Assistant, streaming:false, plan:None, runs:None, activity:None }),
+            }), now).unwrap();
+        }
+        let owner = &c.store.snapshot().agents[&agent];
+        assert_ne!(owner.chat_rev, rev);
+        assert!(owner.messages.iter().all(|m| m.message.images.is_empty()));
+        // Both a retried first chunk and subsequent chunks remain the image
+        // selected before the 64-message history rolled over.
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, now);
+        assert_eq!(image_bytes().1, received);
+        while received.len() < expected.len() {
+            c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:received.len() as u16 }, now);
+            let (total, chunk) = image_bytes();
+            assert_eq!(usize::from(total), expected.len());
+            assert!(!chunk.is_empty());
+            received.extend(chunk);
+        }
+        assert!(received == expected, "every chunk belongs to the originally selected image");
+        let later = now + std::time::Duration::from_secs(121);
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:384 }, later);
+        assert_eq!(image_bytes(), (0, Vec::new()), "an abandoned transfer expires");
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, later);
+        assert_eq!(image_bytes(), (0, Vec::new()), "an expired transfer cannot reopen an old index");
+
+        c.api_call(Principal::Uid(501), SessionId(2), false, Request::Reply(deck_model::ReplySet {
+            agent:agent.clone(), text:String::new(), speak:false, announce:None, lane:None,
+            message:Some(deck_model::MessageMeta { images, id:"another-image".into(), role:deck_model::ChatRole::User, streaming:false, plan:None, runs:None, activity:None }),
+        }), later).unwrap();
+        let rev = c.store.snapshot().agents[&agent].chat_rev;
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, later);
+        assert_eq!(image_bytes().1, expected[..384]);
+        c.api_call(Principal::Uid(501), SessionId(2), false,
+            Request::AgentRelease { agent, reason: None }, later).unwrap();
+        let replacement = c.api_call(Principal::Uid(501), SessionId(2), false,
+            Request::AgentRegister(register("replacement", None)), later).unwrap();
+        let replacement: AgentId = serde_json::from_value(replacement["agent"].clone()).unwrap();
+        assert_eq!(c.store.snapshot().agents[&replacement].slot.unwrap().0, slot);
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:384 }, later);
+        assert_eq!(image_bytes(), (0, Vec::new()), "a reused slot must not retain another agent's image");
         std::fs::remove_dir_all(dir).unwrap();
     }
 

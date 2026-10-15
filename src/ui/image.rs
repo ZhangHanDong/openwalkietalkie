@@ -23,6 +23,7 @@ const CLOSE: Rect = Rect::new(24, 410, 432, 48);
 pub struct View {
     pub open: bool,
     agent: u8,
+    sid: u32,
     rev: u16,
     index: u8,
     received: u16,
@@ -39,6 +40,7 @@ impl View {
         Self {
             open: false,
             agent: 0,
+            sid: 0,
             rev: 0,
             index: 0,
             received: 0,
@@ -56,6 +58,7 @@ pub fn open(ui: &mut UiState, index: u8, rev: u16, at: u32, out: &mut Update) {
     let v = &mut ui.image;
     v.open = true;
     v.agent = ui.agents.agent;
+    v.sid = ui.deck.sid;
     v.rev = rev;
     v.index = index;
     v.received = 0;
@@ -72,11 +75,11 @@ pub fn tick(ui: &mut UiState, at: u32, out: &mut Update) {
     if !ui.image.open {
         return;
     }
+    // The request identifies the image the user opened, not the latest chat
+    // window. The host pins that preview while messages continue arriving.
     if ui.image.agent != ui.agents.agent
-        || ui
-            .deck
-            .agent(ui.image.agent)
-            .is_none_or(|a| a.reply_rev != ui.image.rev)
+        || ui.deck.sid != ui.image.sid
+        || ui.deck.agent(ui.image.agent).is_none()
     {
         ui.image.open = false;
         out.dirty = true;
@@ -114,8 +117,11 @@ pub fn tick(ui: &mut UiState, at: u32, out: &mut Update) {
     v.retries += 1;
 }
 pub fn host(ui: &mut UiState, msg: &HostMsg, out: &mut Update) {
-    if matches!(msg, HostMsg::Synced | HostMsg::Hello { .. }) {
+    // Hello is also the normal five-second heartbeat. Only a different host
+    // session invalidates the transfer; a same-session sync is harmless too.
+    if ui.image.open && matches!(msg, HostMsg::Hello { sid, .. } if *sid != ui.image.sid) {
         ui.image.open = false;
+        out.dirty = true;
         return;
     }
     let HostMsg::Image {
@@ -257,6 +263,93 @@ pub fn signature(ui: &UiState, sig: &mut super::signature::SigBuilder) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn hosted() -> std::boxed::Box<UiState> {
+        let mut ui = std::boxed::Box::new(UiState::new());
+        ui.reset();
+        ui.host(&HostMsg::Hello { v: 1, sid: 7, minute_of_day: None }, 0, &mut Update::new());
+        ui.agents.view = crate::ui::state::AgentsView::Channel;
+        ui.agents.agent = 1;
+        ui.deck.agents[0].id = 1;
+        ui.deck.agents[0].present = true;
+        ui.deck.agents[0].reply_rev = 3;
+        ui
+    }
+
+    #[test]
+    fn full_transfer_and_preview_survive_heartbeats_sync_and_chat_updates() {
+        for update_chat in [false, true] {
+            let mut ui = hosted();
+            let mut out = Update::new();
+            open(&mut ui, 0, 3, 1, &mut out);
+            let pixels: std::vec::Vec<u8> = (0..CAP).map(|i| i as u8).collect();
+            // Deliberately stretch a full-size transfer across several normal
+            // heartbeats. Exercise UiState's real message/timer dispatch.
+            for (i, chunk) in pixels.chunks(384).enumerate() {
+                let at = (i as u32 + 1) * 500;
+                if at % 5000 == 0 {
+                    ui.host(&HostMsg::Hello { v: 1, sid: 7, minute_of_day: None }, at, &mut Update::new());
+                }
+                if at == 10000 {
+                    ui.host(&HostMsg::Synced, at, &mut Update::new());
+                }
+                if update_chat && at == 3000 {
+                    ui.host(&HostMsg::Reply { agent: 1, text: crate::deck::text::Text::new(), rev: 4 }, at, &mut Update::new());
+                }
+                assert!(out.deck.iter().flatten().any(|event| matches!(event,
+                    Event::Image { agent: 1, rev: 3, index: 0, offset } if usize::from(*offset) == i * 384)));
+                let mut data = [0; 384];
+                data[..chunk.len()].copy_from_slice(chunk);
+                ui.host(&HostMsg::Image {
+                    agent: 1, rev: 3, index: 0, offset: (i * 384) as u16,
+                    total: CAP as u16, width: 128, height: 128,
+                    len: chunk.len() as u16, data,
+                }, at, &mut Update::new());
+                out = Update::new();
+                ui.tick(at + 1, 0, true, &mut out);
+                assert!(ui.image.open, "preview closed at {at} ms; chat updates: {update_chat}");
+                assert!(!ui.image.failed);
+            }
+            assert_eq!(usize::from(ui.image.received), CAP);
+            assert_eq!(ui.image.pixels.as_slice(), pixels.as_slice());
+            assert!(!out.deck.iter().flatten().any(|e| matches!(e, Event::Image { .. })));
+            ui.host(&HostMsg::Hello { v: 1, sid: 7, minute_of_day: None }, 25000, &mut Update::new());
+            ui.tick(25001, 0, true, &mut Update::new());
+            assert!(ui.image.open, "a completed preview stays visible too");
+        }
+    }
+
+    #[test]
+    fn a_new_host_session_or_a_different_channel_closes_the_preview() {
+        let mut ui = hosted();
+        open(&mut ui, 0, 3, 1, &mut Update::new());
+        let mut out = Update::new();
+        ui.host(&HostMsg::Hello { v: 1, sid: 8, minute_of_day: None }, 2, &mut out);
+        assert!(!ui.image.open);
+        assert!(out.dirty);
+
+        let mut ui = hosted();
+        open(&mut ui, 0, 3, 1, &mut Update::new());
+        ui.agents.agent = 2;
+        ui.tick(2, 0, true, &mut Update::new());
+        assert!(!ui.image.open);
+    }
+
+    #[test]
+    fn unavailable_image_keeps_the_preview_open_with_an_error() {
+        let mut ui = hosted();
+        open(&mut ui, 0, 3, 1, &mut Update::new());
+        ui.host(&HostMsg::Image {
+            agent: 1, rev: 3, index: 0, offset: 0, total: 0,
+            width: 0, height: 0, len: 0, data: [0; 384],
+        }, 2, &mut Update::new());
+        ui.host(&HostMsg::Hello { v: 1, sid: 7, minute_of_day: None }, 5000, &mut Update::new());
+        let mut out = Update::new();
+        ui.tick(5001, 0, true, &mut out);
+        assert!(ui.image.open && ui.image.failed);
+        assert!(!out.deck.iter().flatten().any(|e| matches!(e, Event::Image { .. })));
+    }
+
     #[test]
     fn chunks_are_ordered_and_bound_to_the_view() {
         let mut ui = UiState::new();

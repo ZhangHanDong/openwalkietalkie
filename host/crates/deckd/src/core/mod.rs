@@ -10,6 +10,7 @@ pub mod dispatch;
 pub mod guard;
 pub mod handle;
 pub mod holds;
+mod images;
 pub mod sessions;
 
 pub use handle::{
@@ -155,6 +156,8 @@ pub struct Core {
     audio_dropped: u64,
     /// The device press and Claude talk target, retained through finalization.
     device_channel_tip_target: Option<(u16, AgentId)>,
+    /// One bounded preview retained while the device pulls its chunks.
+    device_image: Option<images::Transfer>,
     /// The `[voice]` device selection last pushed (B14), so a reload that
     /// changed something else does not re-select a device mid-session.
     audio_devices: Option<deck_model::AudioCmd>,
@@ -296,6 +299,7 @@ impl Core {
             audio_retry: VecDeque::new(),
             audio_dropped: 0,
             device_channel_tip_target: None,
+            device_image: None,
             audio_devices: None,
             audio_policy: None,
             tts_settings: Arc::new(arc_swap::ArcSwap::from_pointee(crate::audio::cloud::Settings::default())),
@@ -1754,18 +1758,7 @@ impl Core {
     /// A device line: the store first, then the demo client's reaction.
     pub fn on_device_line(&mut self, line: DeviceLine, now: Instant) -> Vec<Event> {
         if let DeviceLine::Image { slot, rev, index, offset } = &line {
-            use base64::Engine;
-            let preview = self.store.snapshot().agents.values()
-                .find(|a| a.slot == Some(deck_model::Slot(*slot)) && a.chat_rev == *rev)
-                .and_then(|a| a.messages.iter().flat_map(|m| &m.message.images).nth(*index as usize))
-                .and_then(|i| crate::chat_images::get(&i.id));
-            let mut response = deck_proto::HostLine::Image { slot: *slot, rev: *rev, index: *index, offset: *offset, total: 0, width: 0, height: 0, data: String::new() };
-            if let Some(p) = preview.filter(|p| usize::from(*offset) < p.deck.len() && usize::from(*offset) % crate::chat_images::CHUNK == 0) {
-                let start = usize::from(*offset);
-                let end = (start + crate::chat_images::CHUNK).min(p.deck.len());
-                response = deck_proto::HostLine::Image { slot: *slot, rev: *rev, index: *index, offset: *offset, total: p.deck.len() as u16, width: p.width, height: p.height, data: base64::engine::general_purpose::STANDARD.encode(&p.deck[start..end]) };
-            }
-            self.send_op(deck_model::DeviceOp::Control(Control::Image(response)));
+            self.on_device_image(*slot, *rev, *index, *offset, now);
             return Vec::new();
         }
         let events = self.step(Command::Device(line), now);

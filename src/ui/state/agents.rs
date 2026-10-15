@@ -259,6 +259,7 @@ pub(super) fn on_reset(ui: &mut UiState) {
 
 /// Back to the roster (home jump, idle-home, the viewed agent left).
 pub(super) fn show_roster(ui: &mut UiState, _at_ms: u32) {
+    ui.image.open = false;
     ui.agents.settings.open = false;
     ui.agents.view = AgentsView::Roster;
     ui.agents.pressed = None;
@@ -304,6 +305,7 @@ pub(super) fn show_card(ui: &mut UiState, agent: u8, at_ms: u32) {
     let Some(card) = ui.deck.card(agent) else {
         return;
     };
+    ui.image.open = false;
     ui.agents.choice = match card.kind {
         CardKind::Question => Some(card.recommended.unwrap_or(0)),
         CardKind::Ready => None,

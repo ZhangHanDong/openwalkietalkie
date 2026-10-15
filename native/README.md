@@ -416,27 +416,28 @@ writes with ATT error 0x0d before the application callback runs.
 
 ## Touch interface and preview
 
-Both targets show the supplied `assets/CoHDL-透明白2k.svg` logo at boot: a
-centered, antialiased white mark and wordmark on black, with no extra text.
+Both targets show the website's yellow pixel-radio icon and stacked
+“OPEN / WALKIE / TALKIE” hero title at boot, in cream and gold on black.
+A small symbol from `assets/CoHDL-透明白2k.svg` sits beside “A COHDL PROJECT”
+at the bottom.
 The panel stays off until all ten splash bands have replaced its startup
 contents. The logo is visible for 1.2 seconds before the Agents face appears.
 On the native target, peripheral initialization and Bluetooth processing run
 during that interval; touch interpretation starts with the first UI frame.
-The splash reuses the existing 48-row framebuffer and adds a 54 KB alpha mask
-in flash, without allocating a full-screen buffer or parsing SVG on-device.
+The splash reuses the existing 48-row framebuffer and stores about 34 KB of
+bitmaps in flash, without allocating a full-screen buffer or parsing SVG or
+fonts on-device.
 
-Splash validation on 2026-09-09: both firmware targets build, all 53 native core
-host tests pass, and the rendered preview preserves the supplied logo. The
-native image passes the flash-boundary check and was flashed with verification.
-Its startup log reaches `CoHDL boot splash ready`, then the normal controls;
-touch, keypad and charger initialize, and HFP/A2DP reconnect to the Mac.
-
-Regenerate the mask with `python3 tools/generate-splash.py` (CairoSVG and Pillow
-required). The generator trims only transparent margins, preserves the SVG's
-proportions and records the source SHA-256 in `src/ui/splash_asset.rs`. On macOS
+Regenerate the assets with `python3 tools/generate-splash.py` (CairoSVG, Pillow
+and `fontTools[woff]` required). Sources are the website's `logo-64.png`, its
+OFL-licensed Press Start 2P font (license in `site/public/fonts/PressStart2P-OFL.txt`),
+and the supplied COHDL SVG. The radio keeps its original pixel grid; the COHDL
+symbol keeps its proportions. Source hashes are recorded in
+`src/ui/splash_asset.rs`. On macOS
 with Homebrew Cairo, set `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/opt/cairo/lib`
 if CairoSVG cannot locate the library. Normal firmware builds use the generated
-asset directly and do not require Python graphics packages.
+assets directly and do not require Python graphics packages. Preview the exact
+firmware rendering with `python3 tools/preview-all.py splash`.
 
 Both firmware targets draw the same Agent Command Deck (see the
 [top-level README](../README.md#faces)).

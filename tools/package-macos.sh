@@ -126,6 +126,7 @@ say ok "built deckd + openwalkietalkie-app ($rust_target)"
 # resource with no identity of its own. Do not "tidy" this.
 install -m 755 "$built/openwalkietalkie-app" "$contents/MacOS/OpenWalkieTalkie"
 install -m 755 "$built/deckd" "$contents/MacOS/deckd"
+install -m 644 "$root/assets/branding/OpenWalkieTalkie.icns" "$resources/OpenWalkieTalkie.icns"
 install -m 644 "$packaging/$label.plist" "$agents/$label.plist"
 ditto "$sparkle_root/Sparkle.framework" "$frameworks/Sparkle.framework"
 install -m 644 "$sparkle_root/LICENSE" "$resources/licenses/Sparkle-LICENSE.txt"
@@ -134,6 +135,7 @@ install -m 644 "$root/host/crates/openwalkietalkie-app/assets/fonts/OFL.txt" "$r
 install -m 644 "$root/assets/fonts/OFL.txt" "$resources/licenses/NotoSans-OFL.txt"
 install -m 644 "$root/assets/fonts/NotoSansMono-OFL.txt" "$resources/licenses/NotoSansMono-OFL.txt"
 install -m 644 "$root/assets/lucide/LICENSE" "$resources/licenses/Lucide-LICENSE.txt"
+install -m 644 "$root/site/public/fonts/PressStart2P-OFL.txt" "$resources/licenses/PressStart2P-OFL.txt"
 # Each release carries both board images. The daemon verifies the manifest
 # hash again before using a bundled image.
 firmware_dir=${OWT_FIRMWARE_DIR:-$root/dist/firmware}

@@ -376,7 +376,8 @@ fn change_the_port_and_repair_the_hooks_is_the_way_out_of_a_squatted_port() {
         .iter()
         .filter(|f| f.contains("claude-marketplace"))
         .collect();
-    assert_eq!(plugin_files.len(), 3, "{files:?}");
+    // Marketplace, plugin manifest, command hooks, and the stdio MCP config.
+    assert_eq!(plugin_files.len(), 4, "{files:?}");
     for file in &plugin_files {
         let text = std::fs::read_to_string(file).unwrap_or_else(|e| panic!("{file}: {e}"));
         assert!(

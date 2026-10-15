@@ -132,6 +132,7 @@ impl Shell {
             640.,
             v_flex()
                 .pt(px(8.))
+                .child(div().mb(px(22.)).child(ui::brand_lockup(&p)))
                 .child(
                     h_flex()
                         .gap(px(12.))

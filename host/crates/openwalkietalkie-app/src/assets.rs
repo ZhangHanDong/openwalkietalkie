@@ -60,6 +60,7 @@ pub const ICONS: &[(&str, &str)] = embed![
     "close-circle",
     "close",
     "copy",
+    "cohdl-mark",
     "danger-triangle",
     "dial",
     "document",
@@ -136,6 +137,9 @@ impl Assets {
 
 impl AssetSource for Assets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
+        if path == "branding/radio.png" {
+            return Ok(Some(Cow::Borrowed(include_bytes!("../../../../assets/branding/radio.png"))));
+        }
         Ok(Assets::get(path).map(|svg| Cow::Borrowed(svg.as_bytes())))
     }
 

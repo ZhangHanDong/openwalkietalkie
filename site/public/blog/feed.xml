@@ -5,8 +5,16 @@
   <id>https://openwalkietalkie.org/blog/</id>
   <link href="https://openwalkietalkie.org/blog/" />
   <link rel="self" type="application/atom+xml" href="https://openwalkietalkie.org/blog/feed.xml" />
-  <updated>2026-10-13T14:00:00Z</updated>
+  <updated>2026-10-15T09:00:00Z</updated>
   <author><name>Tony Huang</name></author>
+  <entry>
+    <title>OpenWalkieTalkie v0.2.1: our radio, everywhere</title>
+    <id>https://openwalkietalkie.org/blog/radio-branding/</id>
+    <link href="https://openwalkietalkie.org/blog/radio-branding/" />
+    <published>2026-10-15T09:00:00Z</published>
+    <updated>2026-10-15T09:00:00Z</updated>
+    <summary>The website radio comes to the app icon, menu bar, device splash and About screen. A COHDL project.</summary>
+  </entry>
   <entry>
     <title>OpenWalkieTalkie v0.2.0: workflows at a glance</title>
     <id>https://openwalkietalkie.org/blog/workflows-and-usage/</id>

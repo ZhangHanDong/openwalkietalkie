@@ -1782,3 +1782,6 @@ html[data-theme="night"] .deck { box-shadow:
   .dkey { height: 40px; }
   .dkey__cap { font-size: 5px; }
 }
+
+.project-credit { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+html[data-theme="night"] .project-credit img { filter: brightness(1.8); }

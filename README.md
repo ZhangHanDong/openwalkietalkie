@@ -65,8 +65,12 @@ is there and Bluetooth otherwise. The
 [native audio target](native/README.md) instead presents the display board's
 microphone and speaker as Bluetooth Classic audio (HFP/A2DP) alongside the
 same UI.
-Both targets show the supplied CoHDL logo on a black boot splash for 1.2 seconds,
-then the Agents face.
+Both targets show the website's pixel-radio icon and stacked OpenWalkieTalkie
+title on a black boot splash, with a small COHDL mark and “A COHDL PROJECT”
+credit. After 1.2 seconds, the Agents face appears.
+The same radio appears in Settings → About and in the Mac app, Dock, menu bar
+and updater. Regenerate the desktop assets with `python3 tools/generate-branding.py`
+(Pillow); normal builds use the checked-in images.
 
 Embassy boot log, abridged:
 
@@ -79,7 +83,7 @@ board: bringing up I2C1 (SCL PA38 / SDA PA37) at 400000 Hz
 display: CO5300 initialised (480x480, rotation=0deg)
 board: display ready
 board: ready
-boot: CoHDL splash ready
+boot: OpenWalkieTalkie splash ready
 boot: I2C1 before keyboard power-up:
   0x22 XL9555 GPIO expander (keyboard board)
   0x25 AW21009 keypad LED driver (keyboard board)

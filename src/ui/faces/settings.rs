@@ -139,6 +139,7 @@ pub fn firmware_value() -> Value {
 /// Toggle pill inside a row: its rect relative to the row's origin.
 const TOGGLE: Rect = Rect::new(layout::SETTING_VALUE_RIGHT - 44, 17, 44, 24);
 const TABS: Rect = Rect::new(theme::MARGIN, 68, theme::SCREEN - 2 * theme::MARGIN, 34);
+const ABOUT_BRAND: Rect = Rect::new(32, 376, 416, 52);
 
 const HINTS: [kit::Hint<'static>; 3] = [
     kit::Hint { key: "SCROLL", label: "select" },
@@ -267,6 +268,11 @@ pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
             draw_row(band, rect, row, focused, adjusting, ui.settings.pressed == Some(PRESSED_ROW + index));
         }
     }
+    if panel == 5 && kit::visible(band, ABOUT_BRAND) {
+        crate::ui::splash::draw_radio(band, 72, 380, 3);
+        font::draw(band, Font::Small, 124, 394, "OpenWalkieTalkie", theme::TEXT_PRIMARY, Some(theme::CANVAS), 300, Align::Left);
+        crate::ui::splash::draw_credit(band, 204, 397, theme::TEXT_LABEL);
+    }
     kit::hint_bar(band, if ui.settings.adjusting { &ADJUST_HINTS } else { &HINTS });
 }
 
@@ -302,6 +308,7 @@ pub fn signature(ui: &UiState, instance: u8, sig: &mut SigBuilder) {
         });
     }
     sig.region(layout::HINT_BAR, u32::from(ui.settings.adjusting));
+    sig.region(ABOUT_BRAND, u32::from(panel == 5));
 }
 
 #[cfg(test)]

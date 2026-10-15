@@ -170,7 +170,8 @@ impl Shell {
                 .child(
                     h_flex()
                         .gap_2()
-                        .child(div().flex_1().child("Deck firmware"))
+                        .child(ui::brand_mark(28.))
+                        .child(div().flex_1().child("OpenWalkieTalkie firmware"))
                         .child(
                             Btn::new("firmware-check", "Check firmware")
                                 .disabled(dim || active)

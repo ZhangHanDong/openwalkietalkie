@@ -214,7 +214,7 @@ impl Core {
                 match crate::chat_images::get(id) {
                     Some(p) => {
                         let offset = params.get("offset").and_then(|n| n.as_u64()).unwrap_or(0) as usize;
-                        if offset >= p.png.len() || offset % (48*1024) != 0 { return Reply::err(ApiError::invalid_params("invalid image offset")); }
+                        if offset >= p.png.len() || !offset.is_multiple_of(48 * 1024) { return Reply::err(ApiError::invalid_params("invalid image offset")); }
                         let end = (offset + 48*1024).min(p.png.len());
                         Reply::ok(serde_json::json!({"mime":"image/png", "offset":offset, "total":p.png.len(), "data":base64::engine::general_purpose::STANDARD.encode(&p.png[offset..end])}))
                     },

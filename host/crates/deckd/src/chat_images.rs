@@ -76,7 +76,7 @@ fn ingest(bytes: &[u8], label: &str) -> Option<ChatImage> {
     }
     let quant = color_quant::NeuQuant::new(10, 256, small.as_raw());
     let mut deck = Vec::with_capacity(512 + small.len() / 4);
-    for c in quant.color_map_rgb().chunks_exact(3) {
+    for c in quant.color_map_rgb().as_chunks::<3>().0 {
         let rgb =
             ((u16::from(c[0]) >> 3) << 11) | ((u16::from(c[1]) >> 2) << 5) | (u16::from(c[2]) >> 3);
         deck.extend_from_slice(&rgb.to_le_bytes());

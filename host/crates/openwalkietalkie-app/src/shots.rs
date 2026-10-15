@@ -35,7 +35,7 @@ impl Shots {
     pub fn synthetic_only(&self) -> bool {
         std::env::var("OPENWALKIETALKIE_SHOTS_ONLY").ok().is_some_and(|list| {
             !list.is_empty() && list.split(',').all(|scene| matches!(scene.trim(),
-                "usage-fable" | "workflow" | "workflow-runs" | "workflow-expanded" | "workflow-complete"))
+                "images" | "image-expanded" | "usage-fable" | "workflow" | "workflow-runs" | "workflow-expanded" | "workflow-complete"))
         })
     }
 
@@ -56,6 +56,8 @@ impl Shots {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scene {
     Deck,
+    Images,
+    ImageExpanded,
     Workflow,
     WorkflowRuns,
     UsageFable,
@@ -77,8 +79,10 @@ pub enum Scene {
 }
 
 /// Every scene, with the name its file gets.
-pub const SCENES: [(Scene, &str); 20] = [
+pub const SCENES: [(Scene, &str); 22] = [
     (Scene::Deck, "deck"),
+    (Scene::Images, "images"),
+    (Scene::ImageExpanded, "image-expanded"),
     (Scene::Workflow, "workflow"),
     (Scene::WorkflowRuns, "workflow-runs"),
     (Scene::UsageFable, "usage-fable"),
@@ -205,7 +209,7 @@ impl Shell {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
             }
-            Scene::Workflow | Scene::WorkflowRuns | Scene::WorkflowExpanded | Scene::WorkflowComplete => {
+            Scene::Images | Scene::ImageExpanded | Scene::Workflow | Scene::WorkflowRuns | Scene::WorkflowExpanded | Scene::WorkflowComplete => {
                 self.go(Screen::Deck, window, cx);
                 self.select_for_shots();
                 self.stage_workflow(scene);
@@ -311,7 +315,7 @@ impl Shell {
             ("Bash", "{\"command\":\"cargo test workflow\"}", "Running workflow checks…")]
             .into_iter().enumerate().map(|(i, (name, input, output))| {
                 let running = !complete && i == 2;
-                ChatMessage { message: MessageMeta { id: format!("preview-tool-{i}"), role: ChatRole::Tool, streaming: running,
+                ChatMessage { message: MessageMeta { images: Vec::new(), id: format!("preview-tool-{i}"), role: ChatRole::Tool, streaming: running,
                     activity: Some(if running { ActivityStatus::Running } else { ActivityStatus::Completed }), runs: None, plan: None },
                     text: format!("**{name}**\n\n```json\n{input}\n```\n\n{output}"), at: crate::present::now() }
             }).collect();
@@ -331,6 +335,12 @@ impl Shell {
         self.deck.workflow = Default::default();
         if scene == Scene::WorkflowExpanded {
             self.deck.workflow.toggle_tool(&agent.id, "preview-tool-2");
+        }
+        if matches!(scene, Scene::Images | Scene::ImageExpanded) {
+            agent.name = "Image preview".into(); agent.title = Some("Review the device screen".into());
+            agent.state = AgentState::Ready; agent.workflow = None; agent.workflow_runs.clear();
+            agent.messages = vec![ChatMessage { message:MessageMeta { images:vec![deck_model::ChatImage { id:"preview-image".into(), label:"Device screen.png".into(), width:480, height:480 }], id:"preview-message".into(), role:ChatRole::Assistant, streaming:false, plan:None, runs:None, activity:None }, text:"Here is the device screen.".into(), at:crate::present::now() }];
+            self.deck.images = crate::images::View::preview(id.clone(), scene == Scene::ImageExpanded);
         }
         snapshot.agents.insert(id, agent);
         self.state.handle_event(AppEvent::Api(ApiEvent::Connected { snapshot }));

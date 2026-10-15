@@ -154,6 +154,12 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
     let mut w = Writer::new(&mut out);
     w.begin(line.m());
     match line {
+        HostLine::Image { slot, rev, index, offset, total, width, height, data } => {
+            if data.len() > 512 || *width > 128 || *height > 128 || *total > 16896 { return Err(EncodeError::Range { field: "image" }); }
+            w.num("agent", u64::from(slot_id(*slot, "agent")?));
+            for (k, v) in [("r", *rev), ("i", u16::from(*index)), ("o", *offset), ("n", *total), ("w", *width), ("h", *height)] { w.num(k, u64::from(v)); }
+            w.key("data"); w.string(data);
+        }
         HostLine::SessionMenu(menu) => {
             if menu.field > 2 || menu.page > 63 || menu.status > 3 || menu.choices.len() > 4
                 || usize::from(menu.page) * 4 + menu.choices.len() > usize::from(menu.total)

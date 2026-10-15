@@ -207,6 +207,7 @@ impl ConfigValue {
 /// ([`crate::admin`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UiAction {
+    ImageGet { agent: AgentId, image: String, offset: usize },
     Answer {
         agent: AgentId,
         card: CardId,
@@ -408,6 +409,7 @@ impl UiAction {
             ),
             UiAction::VoiceEngines => ("voice.engines", serde_json::json!({})),
             UiAction::VoiceTest { what } => ("voice.test", serde_json::json!({"what": what})),
+            UiAction::ImageGet { agent, image, offset } => ("image.get", serde_json::json!({"agent":agent,"image":image,"offset":offset})),
             UiAction::FirmwareStatus => ("firmware.status", serde_json::json!({})),
             UiAction::FirmwareCheck { force } => ("firmware.check", serde_json::json!({"force": force})),
             UiAction::FirmwareInstall { board, serial, version } => ("firmware.install", serde_json::json!({"board":board,"serial":serial,"version":version})),

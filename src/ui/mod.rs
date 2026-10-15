@@ -24,6 +24,7 @@ pub mod layout;
 pub mod overlay;
 pub mod scene;
 pub mod session;
+pub mod image;
 pub mod signature;
 pub mod splash;
 pub mod state;

@@ -246,8 +246,7 @@ impl Model {
         let Some(model) = value["model"].as_str() else { return Vec::new(); };
         let controls = SessionControls {
             model: model.into(),
-            effort: value.get("effort").or_else(|| value.get("reasoningEffort"))
-                .and_then(Value::as_str).unwrap_or_default().into(),
+            effort: value.get("effort").and_then(Value::as_str).or_else(|| value.get("reasoningEffort").and_then(Value::as_str)).unwrap_or_default().into(),
             models: self.catalog.clone(),
             editable: !self.settings_unavailable && !self.catalog.is_empty(),
             note: if self.settings_unavailable { "Update Codex to enable model and effort selection.".into() }
@@ -303,7 +302,7 @@ impl Model {
                     return;
                 }
                 let text = plan.text();
-                self.record_message(thread, deck_model::MessageMeta {
+                self.record_message(thread, deck_model::MessageMeta { images: Vec::new(),
                     activity: None,
                     id: format!("plan:{turn}"),
                     role: deck_model::ChatRole::Tool,
@@ -319,7 +318,7 @@ impl Model {
             let Some(id) = params["itemId"].as_str() else { return; };
             let Some(delta) = params["delta"].as_str() else { return; };
             let previous = self.threads.get(thread).and_then(|t| t.messages.iter().find(|(m, _)| m.id == id)).cloned();
-            let (meta, mut text) = previous.unwrap_or_else(|| (deck_model::MessageMeta {
+            let (meta, mut text) = previous.unwrap_or_else(|| (deck_model::MessageMeta { images: Vec::new(),
                 activity: None,
                 runs: None, plan: None,
                 id: id.into(), role: if method == "item/agentMessage/delta" { deck_model::ChatRole::Assistant } else { deck_model::ChatRole::Tool }, streaming: true,
@@ -842,8 +841,9 @@ impl Model {
 fn chat_item(item: &Value, streaming: bool) -> Option<(deck_model::MessageMeta, String)> {
     use deck_model::ChatRole;
     let id = item["id"].as_str()?.to_string();
+    let images = crate::chat_images::codex(item);
     let (role, text) = match item["type"].as_str()? {
-        "userMessage" | "user_message" => (ChatRole::User, user_message_text(item)?),
+        "userMessage" | "user_message" => (ChatRole::User, user_message_text(item).or_else(|| (!images.is_empty()).then(String::new)).or_else(|| crate::chat_images::has_images(&item["content"]).then(|| "[Image preview unavailable]".into()))?),
         "agentMessage" | "agent_message" => (ChatRole::Assistant, item["text"].as_str().filter(|s| !s.is_empty()).unwrap_or("Working…").to_string()),
         "commandExecution" => {
             let command = item["command"].as_str().unwrap_or("Command");
@@ -865,11 +865,12 @@ fn chat_item(item: &Value, streaming: bool) -> Option<(deck_model::MessageMeta, 
             let output = item["result"]["content"].as_array().into_iter().flatten().filter_map(|c| c["text"].as_str()).collect::<Vec<_>>().join("\n");
             (ChatRole::Tool, format!("**{name} · {status}**\n\n{}", sanitize::cut(&output, 8192)))
         }
+        "imageView" | "imageGeneration" => (ChatRole::Tool, "**Image**".into()),
         "webSearch" => (ChatRole::Tool, format!("**Web search**\n\n{}", item["query"].as_str().unwrap_or("Searching the web"))),
         _ => return None,
     };
     let activity = (role == ChatRole::Tool).then(|| deck_model::workflow::ActivityStatus::provider(item["status"].as_str(), streaming));
-    Some((deck_model::MessageMeta { activity, runs: None, plan: None, id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
+    Some((deck_model::MessageMeta { images, activity, runs: None, plan: None, id, role, streaming: streaming && role != ChatRole::User }, sanitize::cut(&text, 64 * 1024)))
 }
 
 /// One row of the daemon's loaded-thread list, as [`Model::loaded`] takes it.
@@ -902,10 +903,10 @@ impl LoadedThread {
                 }),
             cwd: value["cwd"].as_str().map(str::to_string),
             active: value["status"]["type"].as_str() == Some("active"),
-            messages: value["turns"].as_array().into_iter().flatten()
-                .flat_map(|turn| turn["items"].as_array().into_iter().flatten())
+            messages: value["turns"].as_array().into_iter().flatten().rev()
+                .flat_map(|turn| turn["items"].as_array().into_iter().flatten().rev())
                 .filter_map(|item| chat_item(item, item["status"].as_str() == Some("inProgress")))
-                .collect::<Vec<_>>().into_iter().rev().take(64).collect::<Vec<_>>().into_iter().rev().collect(),
+                .take(64).collect::<Vec<_>>().into_iter().rev().collect(),
         })
     }
 }
@@ -1471,7 +1472,7 @@ async fn session(
                         if let Ok(catalog) = read_models(&rpc).await { model.catalog = catalog; }
                         catalog_read = std::time::Instant::now();
                     }
-                    match loaded_threads(&rpc).await {
+                    match loaded_threads(&rpc, &model).await {
                         Ok(listed) => {
                             let effects = model.loaded(&listed);
                             apply(api, &rpc, &principal, session_id, &mut model, &mail_tx, &mut waiters, &mut steering, effects).await;
@@ -1611,7 +1612,7 @@ async fn change_settings(rpc: &Rpc, model: &mut Model, thread: &str, params: Val
 
 /// `thread/loaded/list`, then `thread/resume` on each id for its name and
 /// status — resume is also what subscribes this connection to the thread.
-async fn loaded_threads(rpc: &Rpc) -> Result<Vec<LoadedThread>, String> {
+async fn loaded_threads(rpc: &Rpc, model: &Model) -> Result<Vec<LoadedThread>, String> {
     let listed = rpc.request("thread/loaded/list", json!({})).await?;
     let ids: Vec<String> = listed["data"]
         .as_array()
@@ -1623,17 +1624,17 @@ async fn loaded_threads(rpc: &Rpc) -> Result<Vec<LoadedThread>, String> {
         .collect();
     let mut out = Vec::new();
     for id in ids {
-        match rpc.request("thread/resume", json!({"threadId": id})).await {
+        match rpc.request("thread/resume", json!({"threadId": id, "excludeTurns": model.threads.contains_key(&id)})).await {
             Ok(result) => {
-                let thread = result.get("thread").cloned().unwrap_or_else(|| result.clone());
-                let mut loaded = LoadedThread::from_thread(&thread).unwrap_or(LoadedThread { settings: None,
+                let thread = result.get("thread").unwrap_or(&result);
+                let mut loaded = LoadedThread::from_thread(thread).unwrap_or(LoadedThread { settings: None,
                     id: id.clone(),
                     name: None,
                     cwd: None,
                     active: false,
                     messages: Vec::new(),
                 });
-                loaded.settings = Some(result);
+                loaded.settings = Some(json!({"model":result["model"],"reasoningEffort":result["reasoningEffort"],"effort":result["effort"]}));
                 out.push(loaded);
             }
             Err(why) => {
@@ -2013,6 +2014,21 @@ async fn apply(
 mod tests {
     use super::*;
     use deck_model::{AnswerSource, Principal};
+
+    #[test]
+    fn codex_image_only_input_tool_results_and_generations_keep_previews() {
+        let data = crate::chat_images::fixture();
+        for item in [
+            json!({"id":"u","type":"userMessage","content":[{"type":"image","url":format!("data:image/png;base64,{data}")}]}),
+            json!({"id":"m","type":"mcpToolCall","result":{"content":[{"type":"image","data":data}]}}),
+            json!({"id":"g","type":"imageGeneration","result":data}),
+            json!({"id":"d","type":"dynamicToolCall","contentItems":[{"type":"inputImage","imageUrl":format!("data:image/png;base64,{data}")}]}),
+        ] {
+            let (meta,text) = chat_item(&item,false).unwrap();
+            assert_eq!(meta.images.len(),1);
+            assert!(!text.contains(&data));
+        }
+    }
 
     #[test]
     fn workflow_plans_coalesce_and_route_by_turn_without_accepting_a_stale_turn() {

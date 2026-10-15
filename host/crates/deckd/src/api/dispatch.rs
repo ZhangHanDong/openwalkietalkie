@@ -43,6 +43,7 @@ pub const METHODS: &[MethodSpec] = &[
     m("state.events", Some(Scope::Observe), false),
     m("agent.list", Some(Scope::Observe), false),
     m("agent.get", Some(Scope::Observe), false),
+    m("image.get", Some(Scope::ObserveContent), false),
     m("device.get", Some(Scope::Observe), false),
     m("voice.get", Some(Scope::Observe), false),
     m("service.info", Some(Scope::Observe), false),
@@ -445,6 +446,7 @@ mod tests {
                 spec.name
             );
         }
+        assert_eq!(method("image.get").unwrap().scope, Some(Scope::ObserveContent));
         assert_eq!(method("session.ping").unwrap().scope, None);
         assert_eq!(method("op.answer").unwrap().scope, Some(Scope::Operate));
         assert_eq!(method("device.flood").unwrap().scope, Some(Scope::Admin));
@@ -559,6 +561,8 @@ mod tests {
         let err = r.result.unwrap_err();
         assert_eq!(err.code, ApiError::FORBIDDEN);
         assert_eq!(err.data["need"], "operate");
+        let r = rt.block_on(dispatch(&ctx(core.clone(), &[Scope::Observe]), "image.get", serde_json::json!({"image":"anything"})));
+        assert_eq!(r.result.unwrap_err().code, ApiError::FORBIDDEN);
         let r = rt.block_on(dispatch(
             &ctx(core.clone(), &[Scope::Agent]),
             "agent.register",

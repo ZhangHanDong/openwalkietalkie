@@ -118,6 +118,7 @@ pub fn redact_event(event: &Event, scopes: &[Scope], own_agent: bool) -> Option<
             null_field(data, "announce");
             if let Some(message) = data.get_mut("message").and_then(Value::as_object_mut) {
                 null_field(message, "plan");
+                message.remove("images");
                 null_field(message, "runs");
             }
         }

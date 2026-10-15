@@ -10,7 +10,7 @@ fn send(sim: &mut Sim, agent: &AgentId, id: &str, role: ChatRole, streaming: boo
         Request::Reply(ReplySet {
             agent: agent.clone(),
             text: text.into(),
-            message: Some(MessageMeta {
+            message: Some(MessageMeta { images: Vec::new(),
                 activity: None,
                 runs: None, plan: None,
                 id: id.into(),
@@ -23,6 +23,24 @@ fn send(sim: &mut Sim, agent: &AgentId, id: &str, role: ChatRole, streaming: boo
         }),
     )
     .unwrap();
+}
+
+#[test]
+fn images_are_visible_with_collapsed_tools_and_invalidate_changed_indices() {
+    let mut sim = Sim::new();
+    let agent = sim.register(UID, SessionId(1), "bot", None);
+    let image = ChatImage { id: "a".repeat(64), label:"Screenshot".into(), width:640, height:480 };
+    let mut meta = MessageMeta { images:vec![image], id:"tool-1".into(), role:ChatRole::Tool, streaming:false, activity:None, runs:None, plan:None };
+    let mut submit = |meta: MessageMeta| { sim.api(UID, SessionId(1), Request::Reply(ReplySet { agent:agent.clone(), text:"**Read image**".into(), message:Some(meta), speak:false, announce:None, lane:None })).unwrap(); };
+    submit(meta.clone());
+    let before = sim.store.snapshot().agents[&agent].chat_rev;
+    let (_, lines) = crate::store::chat_lines(&sim.store.snapshot().agents[&agent], 0, None);
+    assert!(lines.iter().any(|line| line.starts_with("i000")));
+    meta.images.clear();
+    sim.api(UID, SessionId(1), Request::Reply(ReplySet { agent:agent.clone(), text:"**Read image**".into(), message:Some(meta), speak:false, announce:None, lane:None })).unwrap();
+    assert_ne!(sim.store.snapshot().agents[&agent].chat_rev, before);
+    let redacted = redact(sim.store.snapshot(), &[Scope::Observe]);
+    assert!(redacted.agents[&agent].messages.is_empty());
 }
 
 #[test]
@@ -205,7 +223,7 @@ fn plan_message(sim: &mut Sim, agent: &AgentId, id: &str, status: &str) {
     let plan = workflow::Plan::codex(&serde_json::json!({"plan":[{"step":"Inspect the input", "status":status}]})).unwrap();
     sim.api(UID, SessionId(1), Request::Reply(ReplySet {
         agent: agent.clone(), text: plan.text(),
-        message: Some(MessageMeta { id: id.into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
+        message: Some(MessageMeta { images: Vec::new(), id: id.into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
         speak: false, announce: None, lane: None,
     })).unwrap();
 }
@@ -277,7 +295,7 @@ fn device_workflow_disclosures_keep_outputs_collapsed_and_reject_stale_taps() {
     let plan = workflow::Plan::codex(&serde_json::json!({"plan":(0..8).map(|i|
         serde_json::json!({"step":format!("Step {i}"), "status":if i < 5 {"completed"} else if i == 5 {"inProgress"} else {"pending"}})).collect::<Vec<_>>()})).unwrap();
     sim.api(UID, SessionId(1), Request::Reply(ReplySet { agent: agent.clone(), text: plan.text(),
-        message: Some(MessageMeta { id: "p".into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
+        message: Some(MessageMeta { images: Vec::new(), id: "p".into(), role: ChatRole::Tool, streaming: false, runs: None, plan: Some(plan), activity: None }),
         speak: false, announce: None, lane: None })).unwrap();
     send(&mut sim, &agent, "t1", ChatRole::Tool, false, "**Bash · failed**\n\n```\ncargo test\n```\n\nprivate output");
     let rev = sim.store.snapshot().agents[&agent].chat_rev;
@@ -310,7 +328,7 @@ fn background_workflow_runs_survive_new_turns_update_the_device_and_are_redacted
     let runs = vec![workflow::Run { id: "wf_test".into(), name: "Parallel design checks".into(),
         status: workflow::ActivityStatus::Running, completed: 0, total: 9,
         elapsed_ms: 76_000, tokens: 488_100 }];
-    let meta = MessageMeta { id: "workflow:runs".into(), role: ChatRole::Tool, streaming: false,
+    let meta = MessageMeta { images: Vec::new(), id: "workflow:runs".into(), role: ChatRole::Tool, streaming: false,
         plan: None, activity: None, runs: Some(runs.clone()) };
     sim.api(UID, SessionId(1), Request::Reply(ReplySet {
         agent: agent.clone(), text: "Workflow runs".into(), message: Some(meta.clone()),

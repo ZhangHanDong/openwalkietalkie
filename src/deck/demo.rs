@@ -858,7 +858,8 @@ pub fn host(event: Event, ui: &mut UiState, now_ms: u32, out: &mut HostMsg) -> b
         // The flash is local; the rest never reaches a demo host or needs no
         // answer. `DocLines` never even arrives: the demo's cards carry no
         // wrapped window, so nothing on them scrolls.
-        Event::Macro { .. }
+        Event::Image { .. }
+        | Event::Macro { .. }
         | Event::MacroKey { .. }
         | Event::DocLines { .. }
         | Event::Tool { .. }

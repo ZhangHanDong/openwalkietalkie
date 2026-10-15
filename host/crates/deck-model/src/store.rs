@@ -984,6 +984,7 @@ impl Store {
                 id,
                 first,
             } => self.on_device_doc_lines(Slot(slot), doc, id, first),
+            DeviceLine::Image { .. } => {},
             DeviceLine::Session { slot, field, page, rev, choice } => self.on_device_session(slot, field, page, rev, choice),
             DeviceLine::Tool { slot, id, index } => self.on_device_tool(Slot(slot), id, index),
         }
@@ -1282,6 +1283,7 @@ pub(crate) fn chat_lines(agent: &crate::Agent, size: u8, expanded: Option<&std::
     let mut lines = Vec::new();
     let font = match size { 0 => deck_proto::DocFont::RichRow, 1 => deck_proto::DocFont::RichText, _ => deck_proto::DocFont::RichTitle };
     let mut i = 0;
+    let mut image_index = 0usize;
     while i < agent.messages.len() {
         let entry = &agent.messages[i];
         if entry.message.role == crate::ChatRole::Tool {
@@ -1306,6 +1308,7 @@ pub(crate) fn chat_lines(agent: &crate::Agent, size: u8, expanded: Option<&std::
                     lines.extend(deck_wrap::wrap_rich_reply(&item.text, size).1);
                 }
             }
+            for item in group { append_image_lines(&mut lines, &item.message.images, &mut image_index); }
             i = end;
             continue;
         }
@@ -1318,11 +1321,19 @@ pub(crate) fn chat_lines(agent: &crate::Agent, size: u8, expanded: Option<&std::
         // Parse each message independently: an unfinished code fence in a
         // streaming message must never consume the next message's heading.
         lines.extend(deck_wrap::wrap_rich_reply(&entry.text, size).1);
+        append_image_lines(&mut lines, &entry.message.images, &mut image_index);
         i += 1;
     }
     (font, lines)
 }
 
+
+fn append_image_lines(lines: &mut Vec<String>, images: &[crate::ChatImage], index: &mut usize) {
+    for image in images {
+        if *index < 256 { lines.push(format!("i0{:02x}Image · {} × {} · tap to view", *index, image.width, image.height)); }
+        *index += 1;
+    }
+}
 
 fn lines_window(slot: Slot, doc: DocKind, id: u16, first: u16, font: deck_proto::DocFont, lines: &[String]) -> Option<HostLine> {
     let caps = deck_proto::caps();

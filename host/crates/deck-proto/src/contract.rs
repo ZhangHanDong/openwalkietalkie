@@ -1556,3 +1556,23 @@ fn session_picker_round_trips_and_device_choices_fit_one_report() {
             DeviceLine::Session { slot: 8, field: 2, page: 63, rev: 65535, choice });
     }
 }
+
+#[test]
+fn image_chunks_round_trip_and_reject_bad_base64() {
+    let line = HostLine::Image { slot:8, rev:65535, index:255, offset:0, total:16896, width:128, height:128, data:"/wAA".repeat(128) };
+    let bytes = encode(&line).unwrap();
+    assert!(bytes.len() < 700);
+    assert_eq!(parse_host_line(&stripped(&bytes)).unwrap(), line);
+    let parsed = fw_parse(&stripped(&bytes)).unwrap();
+    let HostMsg::Image { len, data, .. } = *parsed else { panic!("image chunk") };
+    assert_eq!(len,384);
+    assert_eq!(&data[..6], &[255,0,0,255,0,0]);
+    for data in ["!AAA", "A=AA", "AA=A", "AAAA=", "AA==AAAA"] {
+        let bad = HostLine::Image { slot:1, rev:1, index:0, offset:0, total:513, width:1, height:1, data:data.into() };
+        assert!(fw_parse(&stripped(&encode(&bad).unwrap())).is_err());
+    }
+    let event = Event::Image { agent:8, rev:65535, index:255, offset:16512 };
+    let wire = fw_encode(event, &ui());
+    assert!(wire.len() <= PAYLOAD_MAX);
+    assert_eq!(parse_device_line(&stripped(&wire)).unwrap(), DeviceLine::Image { slot:8, rev:65535, index:255, offset:16512 });
+}

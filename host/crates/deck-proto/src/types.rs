@@ -304,6 +304,7 @@ pub struct SessionMenu {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "m", rename_all = "snake_case")]
 pub enum HostLine {
+    Image { slot: u8, rev: u16, index: u8, offset: u16, total: u16, width: u16, height: u16, data: String },
     SessionMenu(SessionMenu),
     Hello {
         sid: u32,
@@ -414,6 +415,7 @@ impl HostLine {
     /// The wire's `m` value.
     pub const fn m(&self) -> &'static str {
         match self {
+            HostLine::Image { .. } => "image",
             HostLine::SessionMenu(_) => "session",
             HostLine::Hello { .. } => "hello",
             HostLine::Synced => "synced",
@@ -440,6 +442,7 @@ impl HostLine {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "m", rename_all = "snake_case")]
 pub enum DeviceLine {
+    Image { slot: u8, rev: u16, index: u8, offset: u16 },
     /// choice 255 requests a page; other choices require the displayed revision.
     Session { slot: u8, field: u8, page: u8, rev: u16, choice: u8 },
     Hello {
@@ -534,6 +537,7 @@ impl DeviceLine {
     /// The wire's `m` value.
     pub const fn m(&self) -> &'static str {
         match self {
+            DeviceLine::Image { .. } => "image",
             DeviceLine::Session { .. } => "session",
             DeviceLine::Hello { .. } => "hello",
             DeviceLine::Key { .. } => "key",

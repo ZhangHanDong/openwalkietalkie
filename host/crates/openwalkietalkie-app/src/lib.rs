@@ -24,6 +24,7 @@ pub mod app;
 pub mod assets;
 pub mod confirm;
 pub mod deck;
+mod images;
 pub mod integrations;
 pub mod login_item;
 #[cfg(target_os = "macos")]

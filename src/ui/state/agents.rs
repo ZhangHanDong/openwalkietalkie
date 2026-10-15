@@ -250,6 +250,7 @@ fn page_agent(ui: &UiState, row: u8) -> Option<u8> {
 
 /// After `UiState::reset` loaded its data: put the highlight on the first row.
 pub(super) fn on_reset(ui: &mut UiState) {
+    ui.image.open = false;
     ui.agents.settings = crate::ui::session::View::new();
     let first = order(ui).first().copied().unwrap_or(0);
     set_highlight(ui, first);
@@ -285,6 +286,7 @@ fn toggle_workflow(ui: &mut UiState, at_ms: u32, out: &mut Update) {
 /// `agent`'s channel (ENTER, a sibling, a jump whose card is gone, focus).
 pub(super) fn show_channel(ui: &mut UiState, agent: u8, at_ms: u32) {
     // Slots can be reused after a session ends. Fetch settings on every entry.
+    ui.image.open = false;
     ui.agents.settings = crate::ui::session::View::new();
     ui.agents.view = AgentsView::Channel;
     ui.agents.agent = agent;
@@ -563,6 +565,7 @@ pub(super) fn on_control(
     at_ms: u32,
     out: &mut Update,
 ) -> bool {
+    if crate::ui::image::control(ui, control, out) { return true; }
     if crate::ui::session::control(ui, control, at_ms, out) { return true; }
     if ui.global.shift {
         if ui.agents.view == AgentsView::Channel && control == Control::Button(Button::Enter, Edge::Press) {
@@ -719,6 +722,7 @@ pub(super) fn on_control(
 }
 
 pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target> {
+    if ui.image.open { return crate::ui::image::hit(x, y); }
     if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
         return crate::ui::session::hit(ui, x, y);
     }
@@ -744,6 +748,9 @@ pub(super) fn hit(ui: &UiState, _instance: u8, x: i32, y: i32) -> Option<Target>
                         let row = (y - lane.top()) / lh;
                         if (row as usize) < faces::agents::reply_visible(ui, agent) {
                             let top = faces::agents::reply_clamp(ui, agent, ui.agents.reply_top);
+                            if let Some(index) = agent.reply.line(top as usize + row as usize).and_then(crate::ui::rich::image) {
+                                return Some(Target::tap(crate::ui::layout::Rect::new(lane.left(), lane.top() + row * lh, lane.width(), lh), 256 + index as u16));
+                            }
                             if let Some((index, _)) = agent.reply.line(top as usize + row as usize).and_then(crate::ui::rich::tool) {
                                 return Some(Target::tap(crate::ui::layout::Rect::new(lane.left(), lane.top() + row * lh, lane.width(), lh), 16 + index as u16));
                             }
@@ -785,6 +792,18 @@ pub(super) fn on_touch(
 ) {
     if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
         crate::ui::session::touch(ui, target, act, at_ms, out);
+        return;
+    }
+    if ui.image.open { crate::ui::image::touch(ui, act, out); return; }
+    if target.id >= 256 {
+        if matches!(act, TouchAct::Down) { ui.agents.tool_pressed_rev = ui.deck.agent(ui.agents.agent).map_or(0, |a| a.reply.id); }
+        if matches!(act, TouchAct::Activate) {
+            let (x, y) = target.rect.center();
+            if hit(ui, 0, x, y).is_some_and(|t| t.id == target.id)
+                && ui.deck.agent(ui.agents.agent).is_some_and(|a| a.reply.id == ui.agents.tool_pressed_rev) {
+                crate::ui::image::open(ui, (target.id - 256) as u8, ui.agents.tool_pressed_rev, at_ms, out);
+            }
+        }
         return;
     }
     let id = target.id as u8;
@@ -876,6 +895,7 @@ pub(super) fn on_host(
     out: &mut Update,
 ) {
     validate(ui, Some(fx), at_ms, out);
+    crate::ui::image::host(ui, msg, out);
     crate::ui::session::host(ui, msg, out);
     if matches!(msg, HostMsg::Synced) && ui.agents.view == AgentsView::Channel && reading_doc(ui) == DocKind::Workflow {
         if let Some(agent) = ui.deck.agent(ui.agents.agent) {
@@ -995,6 +1015,7 @@ fn validate(ui: &mut UiState, fx: Option<&Effects>, at_ms: u32, out: &mut Update
 /// Displayed ages roll over, the unacknowledged-answer timeout, the re-sort.
 pub(super) fn on_tick(ui: &mut UiState, now_ms: u32, out: &mut Update) {
     validate(ui, None, now_ms, out);
+    crate::ui::image::tick(ui, now_ms, out);
     crate::ui::session::tick(ui, now_ms, out);
     // A dropped or revision-stale mode request must not leave an empty view.
     if ui.agents.view == AgentsView::Channel {

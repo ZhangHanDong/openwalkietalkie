@@ -565,7 +565,7 @@ mod tests {
         let mut agent = crate::testkit::fixture_agent("ag_workflow", 1, AgentState::Working);
         agent.state = AgentState::Working;
         let message = |id: &str, role, activity| ChatMessage {
-            message: MessageMeta {
+            message: MessageMeta { images: Vec::new(),
                 id: id.into(),
                 role,
                 streaming: activity == Some(ActivityStatus::Running),

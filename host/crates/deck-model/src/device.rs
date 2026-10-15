@@ -117,6 +117,7 @@ pub enum SyncReason {
 /// One-shot lines that are not desired state: sent, not remembered.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub enum Control {
+    Image(HostLine),
     SessionMenu(deck_proto::SessionMenu),
     Hello,
     CardClear(Slot, u16),

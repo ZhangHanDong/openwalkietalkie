@@ -66,12 +66,14 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
             _ => continue,
         };
         let content = &v["message"]["content"];
-        let text = text_blocks(content);
-        if !text.trim().is_empty() {
+        let mut text = text_blocks(content);
+        let images = crate::chat_images::blocks(content);
+        if text.trim().is_empty() && images.is_empty() && crate::chat_images::has_images(content) { text = "[Image preview unavailable]".into(); }
+        if !text.trim().is_empty() || !images.is_empty() {
             let streaming = role == ChatRole::Assistant && v["message"]["stop_reason"].is_null();
             upsert(
                 &mut messages,
-                MessageMeta {
+                MessageMeta { images,
                     activity: None,
                     runs: None,
                     plan: None,
@@ -92,7 +94,7 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                     let input = deck_model::sanitize::cut(&block["input"].to_string(), 2048);
                     upsert(
                         &mut messages,
-                        MessageMeta {
+                        MessageMeta { images: Vec::new(),
                             activity: Some(deck_model::workflow::ActivityStatus::Running),
                             runs: None,
                             plan: (name == "TodoWrite")
@@ -115,6 +117,7 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                         "completed"
                     };
                     let text = text_blocks(&block["content"]);
+                    let images = crate::chat_images::blocks(&block["content"]);
                     let key = format!("tool:{id}");
                     let plan = messages
                         .iter()
@@ -135,7 +138,7 @@ fn transcript_messages(bytes: &[u8], session: &str) -> Vec<(MessageMeta, String)
                     );
                     upsert(
                         &mut messages,
-                        MessageMeta {
+                        MessageMeta { images,
                             activity: Some(deck_model::workflow::ActivityStatus::provider(
                                 Some(status),
                                 false,
@@ -177,7 +180,7 @@ fn upsert(messages: &mut Vec<(MessageMeta, String)>, meta: MessageMeta, text: St
 }
 
 async fn tail(path: &Path) -> std::io::Result<Vec<u8>> {
-    const MAX: u64 = 4 * 1024 * 1024;
+    const MAX: u64 = 12 * 1024 * 1024;
     let mut file = tokio::fs::File::open(path).await?;
     let start = file.metadata().await?.len().saturating_sub(MAX);
     file.seek(std::io::SeekFrom::Start(start)).await?;
@@ -242,15 +245,13 @@ pub(crate) async fn observe(
                 .get("tool_input")
                 .map(Value::to_string)
                 .unwrap_or_default();
-            let result = (!live)
-                .then(|| {
-                    payload
-                        .get("tool_response")
-                        .or_else(|| payload.get("error"))
-                })
-                .flatten()
-                .map(Value::to_string)
-                .unwrap_or_default();
+            let response = (!live).then(|| payload.get("tool_response").or_else(|| payload.get("error"))).flatten();
+            let image_content = response.map(|v| if v.is_array() { v } else { &v["content"] });
+            let images = image_content.map(crate::chat_images::blocks).unwrap_or_default();
+            let result = response.map(|v| {
+                if v.is_array() || v["content"].is_array() { text_blocks(if v.is_array() { v } else { &v["content"] }) }
+                else { v.to_string() }
+            }).unwrap_or_default();
             let details = format!(
                 "{}\n```\n\n{}",
                 deck_model::sanitize::cut(&input, 2048),
@@ -259,7 +260,7 @@ pub(crate) async fn observe(
             let req = ReplySet {
                 agent: agent.clone(),
                 text: format!("**{name} · {status}**\n\n```json\n{details}"),
-                message: Some(MessageMeta {
+                message: Some(MessageMeta { images,
                     activity: Some(deck_model::workflow::ActivityStatus::provider(
                         Some(status),
                         live,
@@ -390,7 +391,8 @@ fn start_watch(
                 let Ok(bytes) = tail(&watched).await else {
                     return;
                 };
-                updates = transcript_messages(&bytes, &session_name);
+                let session = session_name.clone();
+                updates = tokio::task::spawn_blocking(move || transcript_messages(&bytes, &session)).await.unwrap_or_default();
             }
             if poll == 0 {
                 let mut tracker = workflows.take().unwrap();
@@ -417,7 +419,7 @@ fn start_watch(
                             .join("\n")
                     };
                     updates.push((
-                        MessageMeta {
+                        MessageMeta { images: Vec::new(),
                             id: "workflow:runs".into(),
                             role: ChatRole::Tool,
                             streaming: false,
@@ -492,6 +494,18 @@ fn start_watch(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn image_only_messages_and_tool_results_are_preserved() {
+        let image = serde_json::json!({"type":"image","source":{"type":"base64","data":crate::chat_images::fixture()}});
+        let user = serde_json::json!({"type":"user","sessionId":"s","uuid":"u","message":{"content":[image.clone()]}});
+        let tool = serde_json::json!({"type":"user","sessionId":"s","uuid":"t","message":{"content":[{"type":"tool_result","tool_use_id":"x","content":[image]}]}});
+        let messages = transcript_messages(format!("{user}\n{tool}\n").as_bytes(), "s");
+        assert_eq!(messages.len(),2);
+        assert_eq!(messages[0].0.role, ChatRole::User);
+        assert_eq!(messages[1].0.role, ChatRole::Tool);
+        assert!(messages.iter().all(|(m,t)| m.images.len() == 1 && !t.contains("base64")));
+    }
+
     #[test]
     fn workflow_todowrite_keeps_its_plan_when_the_result_arrives() {
         let lines = [

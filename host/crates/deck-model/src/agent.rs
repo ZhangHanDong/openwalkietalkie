@@ -326,8 +326,19 @@ pub struct Reply {
 #[serde(rename_all = "lowercase")]
 pub enum ChatRole { User, Assistant, Tool }
 
+/// Small references only. Image bytes never enter snapshots or the event ring.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ChatImage {
+    pub id: String,
+    pub label: String,
+    pub width: u32,
+    pub height: u32,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct MessageMeta {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub images: Vec<ChatImage>,
     pub id: String,
     pub role: ChatRole,
     #[serde(default)]

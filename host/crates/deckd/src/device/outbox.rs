@@ -470,6 +470,7 @@ impl Outbox {
                 self.controls.retain(|c| !matches!(c,
                     Control::Transcript { press: old, last: false, .. } if old == press));
             }
+            Control::Image(_) => { self.controls.retain(|c| !matches!(c, Control::Image(_))); }
             Control::SessionMenu(_) => {
                 self.controls.retain(|c| !matches!(c, Control::SessionMenu(_)));
             }
@@ -855,6 +856,7 @@ impl Outbox {
                 text,
                 last, press, failed, channel_tip,
             },
+            Control::Image(line) => line,
             Control::SessionMenu(menu) => HostLine::SessionMenu(menu),
             Control::Name(text) => HostLine::Name { text },
             Control::Synced => HostLine::Synced,

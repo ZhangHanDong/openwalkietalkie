@@ -205,6 +205,22 @@ impl Core {
         ctx.own = self.owned_by(ctx.session);
         self.sessions.touch(ctx.session, now);
         match method {
+            "image.get" => {
+                use base64::Engine;
+                let id = params["image"].as_str().unwrap_or_default();
+                let valid = agent_param(&params).and_then(|a| self.store.snapshot().agents.get(&a))
+                    .is_some_and(|a| a.messages.iter().any(|m| m.message.images.iter().any(|i| i.id == id)));
+                if !valid { return Reply::err(ApiError::not_found("image")); }
+                match crate::chat_images::get(id) {
+                    Some(p) => {
+                        let offset = params.get("offset").and_then(|n| n.as_u64()).unwrap_or(0) as usize;
+                        if offset >= p.png.len() || offset % (48*1024) != 0 { return Reply::err(ApiError::invalid_params("invalid image offset")); }
+                        let end = (offset + 48*1024).min(p.png.len());
+                        Reply::ok(serde_json::json!({"mime":"image/png", "offset":offset, "total":p.png.len(), "data":base64::engine::general_purpose::STANDARD.encode(&p.png[offset..end])}))
+                    },
+                    None => Reply::err(ApiError::not_found("image preview expired")),
+                }
+            }
             "session.ping" => Reply::ok(serde_json::json!({"ts": wall_now()})),
             "state.get" => {
                 let snapshot = redact_for(self.store.snapshot(), &ctx.scopes, &ctx.own);
@@ -1559,6 +1575,36 @@ mod tests {
             trusted: false,
             own: BTreeSet::new(),
         }
+    }
+
+    #[test]
+    fn image_reads_require_membership_and_device_requests_require_current_revision() {
+        use base64::Engine;
+        let (mut c, ops, _lines, _debug, dir) = detached_core("image-reads");
+        let now = Instant::now();
+        let registered = c.api_call(Principal::Uid(501), SessionId(2), false,
+            Request::AgentRegister(register("image-test", None)), now).unwrap();
+        let agent: AgentId = serde_json::from_value(registered["agent"].clone()).unwrap();
+        let images = crate::chat_images::blocks(&serde_json::json!([{"type":"image","data":crate::chat_images::fixture()}]));
+        let image = images[0].id.clone();
+        let params = serde_json::json!({"agent":agent,"image":image});
+        assert!(c.call(ctx(2,&[Scope::ObserveContent]), "image.get", params.clone(), now).result.is_err());
+        c.api_call(Principal::Uid(501), SessionId(2), false, Request::Reply(deck_model::ReplySet {
+            agent:agent.clone(), text:String::new(), speak:false, announce:None, lane:None,
+            message:Some(deck_model::MessageMeta { images, id:"image".into(), role:deck_model::ChatRole::User, streaming:false, plan:None, runs:None, activity:None }),
+        }), now).unwrap();
+        let result = c.call(ctx(2,&[Scope::ObserveContent]), "image.get", params, now).result.unwrap();
+        let bytes = base64::engine::general_purpose::STANDARD.decode(result["data"].as_str().unwrap()).unwrap();
+        assert!(image::load_from_memory(&bytes).is_ok());
+        assert!(serde_json::to_vec(&result).unwrap().len() < 256*1024);
+        let a = &c.store.snapshot().agents[&agent];
+        let (slot, rev) = (a.slot.unwrap().0, a.chat_rev);
+        while ops.try_recv().is_ok() {}
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev, index:0, offset:0 }, now);
+        assert!(ops.try_iter().any(|op| matches!(op, deck_model::DeviceOp::Control(deck_model::Control::Image(deck_proto::HostLine::Image { total, .. })) if total > 0)));
+        c.on_device_line(deck_proto::DeviceLine::Image { slot, rev:rev+1, index:0, offset:0 }, now);
+        assert!(ops.try_iter().any(|op| matches!(op, deck_model::DeviceOp::Control(deck_model::Control::Image(deck_proto::HostLine::Image { total:0, .. })))));
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

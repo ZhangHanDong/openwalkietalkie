@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 80] = [
+const DECK_SCENES: [&str; 84] = [
     "roster",
     "roster-page2",
     "roster-offline",
@@ -47,6 +47,10 @@ const DECK_SCENES: [&str; 80] = [
     "channel-long-reply",
     "channel-full-reply",
     "channel-rich-chat",
+    "channel-images",
+    "image-preview",
+    "image-loading",
+    "image-error",
     "channel-tools",
     "channel-tool-open",
     "workflow",
@@ -278,7 +282,27 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             ui.agents.reply_follow = false;
             ui.global.active_channel = 1;
         }
-        "channel-rich-chat" | "channel-tools" | "channel-tool-open" => {
+        "image-preview" | "image-loading" | "image-error" => {
+            ui.deck.host_present = true;
+            let agent = &mut ui.deck.agents[0];
+            agent.has_card = false; agent.reply_rev = 1; agent.reply.id = 1;
+            ui.agents.view = AgentsView::Channel; ui.agents.agent = 1;
+            let mut out = ui::Update::new();
+            ui::image::open(ui, 0, 1, 100, &mut out);
+            let mut pixels = vec![0u8; 512+128*96];
+            for i in 0..256 {
+                let rgb = (((i / 32) as u16 * 31 / 7) << 11) | ((((i / 4) % 8) as u16 * 63 / 7) << 5) | ((i % 4) as u16 * 31 / 3);
+                pixels[2*i..2*i+2].copy_from_slice(&rgb.to_le_bytes());
+            }
+            for y in 0..96 { for x in 0..128 { pixels[512+y*128+x] = ((x/16)*32+(y/12)*4+((x+y)/32)%4) as u8; } }
+            for (i, chunk) in pixels.chunks(384).enumerate() {
+                if scene == "image-loading" && i >= 13 { break; }
+                let mut data = [0;384]; data[..chunk.len()].copy_from_slice(chunk);
+                ui::image::host(ui, &deck::msg::HostMsg::Image { agent:1, rev:1, index:0, offset:(i*384) as u16, total:pixels.len() as u16, width:128, height:96, len:chunk.len() as u16, data }, &mut out);
+            }
+            if scene == "image-error" { ui.deck.host_present = false; ui::image::tick(ui, 200, &mut out); }
+        }
+        "channel-rich-chat" | "channel-tools" | "channel-tool-open" | "channel-images" => {
             let agent = &mut ui.deck.agents[0];
             agent.has_card = false;
             agent.name.set("Conversation");
@@ -288,6 +312,7 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             agent.reply.id = 1;
             agent.reply.font = deck::msg::DocFont::RichRow;
             let lines: &[&str] = match scene {
+                "channel-images" => &["h0You", "p0What do you think of this design?", "i000Image · 1024 × 768 · tap to view", "b0", "h0Activity", "p0Generated a preview", "t001Show details · 1", "i001Image · 1024 × 1024 · tap to view"],
                 "channel-tools" => &[
                     "h0\u{e000}BYou · 1 · done",
                     "p0Check the transcription flow.",

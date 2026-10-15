@@ -36,6 +36,7 @@ answers out of band. `params` links the type the request carries.
 | `state.events` | `observe` | core | — (not in the `Request` enum) |
 | `agent.list` | `observe` | core | — (not in the `Request` enum) |
 | `agent.get` | `observe` | core | — (not in the `Request` enum) |
+| `image.get` | `observe:content` | core | — (not in the `Request` enum) |
 | `device.get` | `observe` | core | — (not in the `Request` enum) |
 | `voice.get` | `observe` | core | — (not in the `Request` enum) |
 | `service.info` | `observe` | core | — (not in the `Request` enum) |
@@ -158,7 +159,7 @@ From the hid thread (§6.2, §6.3): what happened to the link.
 
 ## Types
 
-The 77 named types the schemas above refer to.
+The 78 named types the schemas above refer to.
 
 ### `ActivityStatus`
 
@@ -304,6 +305,17 @@ One of: `q`, `r`.
 | `timeout_s` | uint32? | no | `null` |  |
 | `type` | [`CardKind`](#cardkind) | yes |  |  |
 
+### `ChatImage`
+
+Small references only. Image bytes never enter snapshots or the event ring.
+
+| field | type | required | default | description |
+|---|---|---|---|---|
+| `height` | uint32 | yes |  |  |
+| `id` | string | yes |  |  |
+| `label` | string | yes |  |  |
+| `width` | uint32 | yes |  |  |
+
 ### `ChatMessage`
 
 | field | type | required | default | description |
@@ -311,6 +323,7 @@ One of: `q`, `r`.
 | `activity` | [`ActivityStatus`](#activitystatus)? | no |  |  |
 | `at` | [`Ts`](#ts) | yes |  |  |
 | `id` | string | yes |  |  |
+| `images` | [`ChatImage`](#chatimage)[] | no |  |  |
 | `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
 | `runs` | array? | no |  | Public background workflow counters, independent of the parent turn. |
@@ -449,6 +462,7 @@ Who holds the TCP port when the daemon could not take it (§4.1's `lsof -nP -iTC
 |---|---|---|---|---|
 | `activity` | [`ActivityStatus`](#activitystatus)? | no |  |  |
 | `id` | string | yes |  |  |
+| `images` | [`ChatImage`](#chatimage)[] | no |  |  |
 | `plan` | [`Plan`](#plan)? | no |  | Explicit public plan updates; absent on ordinary chat/tool messages. |
 | `role` | [`ChatRole`](#chatrole) | yes |  |  |
 | `runs` | array? | no |  | Public background workflow counters, independent of the parent turn. |

@@ -46,6 +46,7 @@ pub struct DeckPane {
     pub(crate) selected: Option<AgentId>,
     answered: Answered,
     pub(crate) workflow: crate::workflow::ViewState,
+    pub(crate) images: crate::images::View,
 }
 
 impl DeckPane {
@@ -69,6 +70,7 @@ impl DeckPane {
                 selected: None,
                 answered: Answered::new(),
                 workflow: Default::default(),
+                images: Default::default(),
             },
             vec![enter],
         )
@@ -264,6 +266,7 @@ impl Shell {
             })
             .on_click(cx.listener(move |this, _, window, cx| {
                 this.deck.selected = Some(id.clone());
+                this.refresh_images(window, cx);
                 let placeholder = format!("Send an order to {name}\u{2026}");
                 this.deck.order.update(cx, |input, cx| {
                     input.set_placeholder(placeholder, window, cx);
@@ -349,6 +352,7 @@ impl Shell {
     fn render_detail(&self, dim: bool, cx: &Context<Self>) -> Stateful<Div> {
         let p = *palette(cx);
         let pane = div().id("detail").size_full().overflow_y_scroll();
+        if let Some(image) = self.expanded_image(cx) { return pane.child(image); }
         let Some(agent) = self
             .deck
             .selected
@@ -379,7 +383,7 @@ impl Shell {
                         .as_ref()
                         .map(|card| self.render_card(agent, card, now, dim, cx)),
                 )
-                .child(self.render_workflow(agent, dim, cx))
+                .when(agent.workflow.is_some() || !agent.workflow_runs.is_empty() || agent.messages.iter().any(|m| m.message.role == deck_model::ChatRole::Tool), |this| this.child(self.render_workflow(agent, dim, cx)))
                 .children(agent.reply.as_ref().map(|reply| {
                     ui::section(
                         "Reply",
@@ -393,6 +397,7 @@ impl Shell {
                         &p,
                     )
                 }))
+                .child(self.render_images(agent, cx))
                 .child(self.render_orders(agent, cx))
                 .child(self.render_about(agent, &p)),
         )

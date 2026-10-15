@@ -289,6 +289,7 @@ pub fn parse_device_line(bytes: &[u8]) -> Result<DeviceLine, DecodeError> {
             id: o.need_u16("id")?,
             first: o.need_u16("first")?,
         },
+        "image" => DeviceLine::Image { slot: slot(o.need_u8("agent", 8)?)?, rev: o.need_u16("r")?, index: o.need_u8("i", 255)?, offset: o.need_u16("o")? },
         "session" => DeviceLine::Session {
             slot: slot(o.need_u8("agent", 8)?)?,
             field: o.need_u8("f", 2)?, page: o.need_u8("p", 63)?,
@@ -495,6 +496,7 @@ pub fn parse_host_line(bytes: &[u8]) -> Result<HostLine, DecodeError> {
             text: o.need_str("text")?.to_string(),
             rev: o.need_u16("rev")?,
         },
+        "image" => HostLine::Image { slot: slot(o.need_u8("agent", 8)?)?, rev: o.need_u16("r")?, index: o.need_u8("i", 255)?, offset: o.need_u16("o")?, total: o.need_u16("n")?, width: o.need_u16("w")?, height: o.need_u16("h")?, data: o.need_str("data")?.to_string() },
         "session" => {
             if o.array("choices")?.is_some_and(|a| a.len() > 4) { return Err(DecodeError::Range("choices")); }
             let menu = crate::SessionMenu {

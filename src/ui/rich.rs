@@ -28,6 +28,13 @@ pub fn tool(line: &str) -> Option<(u8, bool)> {
     (index <= 65).then_some((index, b[0] == b'T'))
 }
 
+/// Image attachment index, valid only within this chat document revision.
+pub fn image(line: &str) -> Option<u8> {
+    let b = line.as_bytes();
+    if b.len() < 4 || &b[..2] != b"i0" { return None; }
+    Some((b[2] as char).to_digit(16)? as u8 * 16 + (b[3] as char).to_digit(16)? as u8)
+}
+
 /// A bounded plan progress row, carrying completed/total as two hex bytes.
 pub fn progress(line: &str) -> Option<(u8, u8)> {
     if !line.starts_with("w0") || line.len() != 6 { return None; }
@@ -39,6 +46,7 @@ pub fn progress(line: &str) -> Option<(u8, u8)> {
 }
 
 pub fn header(line: &str) -> (u8, i32, &str) {
+    if image(line).is_some() { return (b'i', 24, &line[4..]); }
     if progress(line).is_some() { return (b'w', 0, ""); }
     if tool(line).is_some() { return (line.as_bytes()[0], 24, &line[4..]); }
     let b = line.as_bytes();
@@ -92,8 +100,8 @@ pub fn draw(band: &mut Band, base: Font, x: i32, baseline: i32, width: i32, line
         return;
     }
     let disclosure = tool(line);
-    let bg = if kind == b'c' { theme::OUTLINE } else if disclosure.is_some() { theme::CHIP_FILL } else { theme::CANVAS };
-    if kind == b'c' || disclosure.is_some() { fill(band, x, top, width, height, bg); }
+    let bg = if kind == b'c' { theme::OUTLINE } else if disclosure.is_some() || kind == b'i' { theme::CHIP_FILL } else { theme::CANVAS };
+    if kind == b'c' || kind == b'i' || disclosure.is_some() { fill(band, x, top, width, height, bg); }
     if let Some((_, expanded)) = disclosure {
         let cy = top + height / 2;
         for i in 0..5 {
@@ -105,6 +113,12 @@ pub fn draw(band: &mut Band, base: Font, x: i32, baseline: i32, width: i32, line
                 fill(band, x + 7 + i, cy + 4 - i, 2, 2, theme::TEXT_SECONDARY);
             }
         }
+    }
+    if kind == b'i' {
+        fill(band, x+4, top+height/2-6, 15, 12, theme::BLUE);
+        fill(band, x+6, top+height/2-4, 11, 8, bg);
+        fill(band, x+8, top+height/2, 4, 3, theme::BLUE);
+        fill(band, x+13, top+height/2-2, 2, 2, theme::BLUE);
     }
     if kind == b'q' { fill(band, x, top + 3, 2, height - 6, theme::BLUE); }
     if kind == b'r' { fill(band, x, top + height / 2, width, 1, theme::OUTLINE_THUMB); }
@@ -120,7 +134,7 @@ pub fn draw(band: &mut Band, base: Font, x: i32, baseline: i32, width: i32, line
                 TYPE => 0x89DDFF,
                 _ => theme::TEXT_ROW,
             }
-        } else if flags & LINK != 0 { theme::BLUE }
+        } else if kind == b'i' || flags & LINK != 0 { theme::BLUE }
             else if flags & (BOLD | EMPHASIS) != 0 { theme::TEXT_PRIMARY }
             else { theme::TEXT_ROW };
         let advance = font::draw(band, face(base, flags), x + pen, baseline, text, color, Some(bg), width - pen, Align::Left);

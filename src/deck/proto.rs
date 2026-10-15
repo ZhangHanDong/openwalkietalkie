@@ -440,6 +440,17 @@ fn parse_into(line: &[u8], out: &mut HostMsg) -> Result<(), ErrWhy> {
             object.need("text")?.text_into(text)?;
             *rev = object.need("rev")?.u16()?;
         }
+        b"image" => {
+            *out = HostMsg::Image { agent: 0, rev: 0, index: 0, offset: 0, total: 0, width: 0, height: 0, len: 0, data: [0;384] };
+            let HostMsg::Image { agent, rev, index, offset, total, width, height, len, data } = out else { return Err(ErrWhy::Parse); };
+            *agent = agent_id(object.need("agent")?)?;
+            *rev = object.need("r")?.u16()?; *index = object.need("i")?.u8()?;
+            *offset = object.need("o")?.u16()?; *total = object.need("n")?.u16()?;
+            *width = object.need("w")?.u16()?; *height = object.need("h")?.u16()?;
+            let mut encoded = Text::<512>::new(); object.need("data")?.text_into(&mut encoded)?;
+            *len = decode_image_base64(encoded.as_str().as_bytes(), data)? as u16;
+            if *width > 128 || *height > 128 || *total > 16896 || usize::from(*offset) + usize::from(*len) > usize::from(*total) && *total != 0 { return Err(ErrWhy::Range); }
+        }
         b"session" => {
             *out = HostMsg::SessionMenu(super::msg::SessionMenu::EMPTY);
             let HostMsg::SessionMenu(menu) = out else { return Err(ErrWhy::Parse); };
@@ -716,6 +727,13 @@ pub fn encode(event: Event, ui: &UiState, out: &mut [u8; TX_MAX]) -> usize {
             json.key("d").string(doc_name(doc));
             json.key("id").number(id as u32);
             json.key("first").number(first as u32);
+        }
+        Event::Image { agent, rev, index, offset } => {
+            json.key("m").string("image");
+            json.key("agent").number(agent as u32);
+            json.key("r").number(rev as u32);
+            json.key("i").number(index as u32);
+            json.key("o").number(offset as u32);
         }
         Event::Session { agent, field, page, rev, choice } => {
             json.key("m").string("session");
@@ -1430,4 +1448,21 @@ mod tests {
         assert_eq!(keys[1].keys, Keystroke::parse("cmd+c").unwrap());
         assert_eq!(parsed(r#"{"m":"macro","f":3,"keys":[{"l":"b","k":"cmd+ptt"}]}"#).err(), Some(ErrWhy::Unknown));
     }
+}
+
+fn decode_image_base64(input: &[u8], out: &mut [u8;384]) -> Result<usize, ErrWhy> {
+    if input.len() % 4 != 0 { return Err(ErrWhy::Parse); }
+    let digit = |c: u8| match c { b'A'..=b'Z' => Ok(c-b'A'), b'a'..=b'z' => Ok(c-b'a'+26), b'0'..=b'9' => Ok(c-b'0'+52), b'+' => Ok(62), b'/' => Ok(63), _ => Err(ErrWhy::Parse) };
+    let mut n = 0;
+    for (i, chunk) in input.chunks_exact(4).enumerate() {
+        let pad = if chunk[2] == b'=' { if chunk[3] != b'=' { return Err(ErrWhy::Parse); } 2 } else if chunk[3] == b'=' { 1 } else { 0 };
+        if pad > 0 && (i+1)*4 != input.len() { return Err(ErrWhy::Parse); }
+        let a = digit(chunk[0])?; let b = digit(chunk[1])?;
+        let c = if pad == 2 {0} else {digit(chunk[2])?};
+        let d = if pad > 0 {0} else {digit(chunk[3])?};
+        for byte in [a<<2 | b>>4, b<<4 | c>>2, c<<6 | d].into_iter().take(3-pad) {
+            *out.get_mut(n).ok_or(ErrWhy::Range)? = byte; n += 1;
+        }
+    }
+    Ok(n)
 }

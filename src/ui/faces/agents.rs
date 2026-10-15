@@ -375,6 +375,7 @@ fn choices_viewport(ui: &UiState, card: &Card, visible: u8) -> Viewport {
 pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
     let _ = instance;
     band.fill(kit::rgb(theme::CANVAS));
+    if ui.image.open && ui.agents.view == AgentsView::Channel { crate::ui::image::draw(band, ui); return; }
     if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
         crate::ui::session::draw(band, ui); return;
     }
@@ -394,6 +395,7 @@ pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
 /// Regions of this face and the inputs of their pixels; see `signature.rs`.
 pub fn signature(ui: &UiState, instance: u8, sig: &mut SigBuilder) {
     let _ = instance;
+    if ui.image.open && ui.agents.view == AgentsView::Channel { crate::ui::image::signature(ui, sig); return; }
     if ui.agents.settings.open && ui.agents.view == AgentsView::Channel {
         crate::ui::session::signature(ui, sig); return;
     }

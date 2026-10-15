@@ -251,6 +251,7 @@ pub struct Visible {
 
 #[derive(Clone, Copy)]
 pub struct UiState {
+    pub image: crate::ui::image::View,
     pub battery: BatteryState,
     /// HID link.
     pub connected: bool,
@@ -276,6 +277,7 @@ impl UiState {
     /// For statics. An empty strip and no data: call `reset` before use.
     pub const fn new() -> Self {
         Self {
+            image: crate::ui::image::View::new(),
             battery: BatteryState::UNKNOWN,
             connected: false,
             now_ms: 0,
@@ -298,6 +300,7 @@ impl UiState {
     /// Power-on state, in place: the default strip on the Agents face, default
     /// settings, and the demo data those defaults ask for.
     pub fn reset(&mut self) {
+        self.image.open = false;
         self.battery = BatteryState::UNKNOWN;
         self.connected = false;
         self.now_ms = 0;
@@ -702,11 +705,9 @@ mod tests {
 
     #[test]
     fn state_and_update_stay_within_their_ram_budget() {
-        // Measured 2026-09-23: UiState 17,396 B, of which the Deck is 16,512
-        // — two thirds of that being windows of the host's layout (a card body
-        // and a reply per agent, plus the transcript). 5.5% of the 318 KB the
-        // main core reports free.
-        assert!(core::mem::size_of::<UiState>() <= 48 * 1024);
+        // Includes the 16.5 KiB indexed preview buffer. Never retain a full
+        // 480×480 image framebuffer alongside the chat windows.
+        assert!(core::mem::size_of::<UiState>() <= 64 * 1024);
         assert!(core::mem::size_of::<Update>() <= 160);
     }
 

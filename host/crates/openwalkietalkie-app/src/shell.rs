@@ -299,6 +299,7 @@ impl Shell {
         keys.extend(service_keys);
         keys.extend(voice_keys);
         keys.push(appearance);
+        keys.push(cx.on_release(|this, cx| this.deck.images.clear(cx)));
         Shell {
             updater: crate::updater::MacOsUpdater::new(),
             update_restart_attempted: false,
@@ -366,6 +367,7 @@ impl Shell {
                 Screen::Welcome => self.refresh_welcome(true, window, cx),
             }
         }
+        self.refresh_images(window, cx);
         self.was_connected = connected;
         self.update_tray(window, cx);
         cx.notify();
@@ -1203,6 +1205,7 @@ impl Render for Shell {
 /// What a failed call is called in a toast.
 fn action_name(action: &UiAction) -> &'static str {
     match action {
+        UiAction::ImageGet { .. } => "Load image",
         UiAction::Answer { .. } => "Answer",
         UiAction::Snooze { .. } => "Snooze",
         UiAction::Ack { .. } => "Acknowledge",

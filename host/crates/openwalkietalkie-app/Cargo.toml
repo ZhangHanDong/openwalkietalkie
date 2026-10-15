@@ -20,6 +20,7 @@ async-channel = { workspace = true }
 deck-client = { workspace = true }
 deck-model = { workspace = true }
 serde_json = { workspace = true }
+base64 = "=0.22.1"
 libc = { workspace = true }
 tokio = { workspace = true }
 # Week 5 (HOST-CONTRACT-W5 §1 M1/M2): the pin, features and all. Do not

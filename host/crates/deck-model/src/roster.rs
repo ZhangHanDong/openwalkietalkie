@@ -624,7 +624,7 @@ impl Store {
 
     pub(crate) fn reply(&mut self, r: ReplySet) -> ApiResult {
         let id = r.agent.clone();
-        if r.text.trim().is_empty() {
+        if r.text.trim().is_empty() && r.message.as_ref().is_none_or(|m| m.images.is_empty()) {
             return Err(ApiError::invalid("text", "empty"));
         }
         if r.message.as_ref().is_some_and(|m| m.id.is_empty() || m.id.len() > 256) {
@@ -634,13 +634,15 @@ impl Store {
         let Some(agent) = self.snapshot.agents.get_mut(&id) else {
             return Err(ApiError::not_found("agent"));
         };
-        let mut meta = r.message.clone().unwrap_or_else(|| crate::MessageMeta {
+        let mut meta = r.message.clone().unwrap_or_else(|| crate::MessageMeta { images: Vec::new(),
             activity: None,
             runs: None, plan: None,
             id: format!("reply-{}-{}", ts.0, agent.reply_rev),
             role: crate::ChatRole::Assistant,
             streaming: false,
         });
+        meta.images.truncate(4);
+        for image in &mut meta.images { image.id = crate::sanitize::cut(&image.id, 64); image.label = crate::sanitize::cut(&image.label, 96); }
         meta.plan = meta.plan.map(crate::workflow::Plan::bounded);
         meta.runs = meta.runs.map(|runs| runs.into_iter().take(crate::workflow::MAX_RUNS).map(crate::workflow::Run::bounded).collect());
         crate::workflow::observe(agent, &meta);
@@ -654,6 +656,7 @@ impl Store {
             if r.message.is_some() && agent.messages.last().is_some_and(|m| m.message.id.starts_with("reply-") && m.message.role == meta.role && m.text == text) {
                 if let Some(old) = agent.messages.last_mut() { old.message = meta.clone(); }
             } else if let Some(old) = agent.messages.iter_mut().find(|m| m.message.id == meta.id) {
+                if old.message.images != meta.images { agent.chat_rev = agent.chat_rev.wrapping_add(1).max(1); }
                 old.text = text;
                 old.message = meta.clone();
             } else {
@@ -681,7 +684,7 @@ impl Store {
             agent.chat_rev = agent.chat_rev.wrapping_add(1).max(1);
         }
         self.put_reply(&id);
-        if r.speak && meta.role == crate::ChatRole::Assistant && !meta.streaming {
+        if r.speak && meta.role == crate::ChatRole::Assistant && !meta.streaming && !r.text.trim().is_empty() {
             let lane = r.lane.as_deref().unwrap_or("chatter").to_string();
             self.say(r.text, Some(id), &lane);
         }

@@ -8,6 +8,7 @@ pub mod audio;
 pub mod ble;
 pub mod bus;
 mod chat;
+mod chat_images;
 mod claude_workflows;
 pub mod claude_channel;
 pub mod cli;

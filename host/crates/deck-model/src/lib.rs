@@ -39,7 +39,7 @@ pub use roster::{project_label, DISCONNECTED};
 pub use store::{DELIVERY_BUDGET, FINALIZE_BUDGET, PTT_CAP, USAGE_REFRESH_GRACE};
 
 pub use agent::{
-    ChatMessage, ChatRole, MessageMeta,
+    ChatImage, ChatMessage, ChatRole, MessageMeta,
     Agent, Answer, AnswerCap, AnswerSource, Caps, Card, CardStatus, Choice, Deliver, Group, Order,
     OrderCap, OrderSource, Origin, OriginKind, Owner, Page, PidKind, Reply, SessionInfo, Source,
     Terminal, TitleSource,

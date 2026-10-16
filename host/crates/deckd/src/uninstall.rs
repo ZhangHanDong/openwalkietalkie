@@ -33,8 +33,8 @@ use crate::config::Paths;
 use crate::integrations::{self, Launchctl, Status, Target, Verb};
 use std::path::{Path, PathBuf};
 
-/// The v1 targets that write into a CLI's own files.
-pub const CLI_TARGETS: [Target; 2] = [Target::Claude, Target::Codex];
+/// Targets with managed files to remove before deleting receipts and backups.
+pub const CLI_TARGETS: [Target; 3] = [Target::Claude, Target::Codex, Target::CodexDesktop];
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Options {

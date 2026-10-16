@@ -53,8 +53,6 @@ use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-/// The held `PermissionRequest` hook's timeout, in seconds.
-pub const HELD_TIMEOUT_S: u64 = 130;
 /// Every report-only hook.
 pub const REPORT_TIMEOUT_S: u64 = 2;
 /// `SessionEnd` and `Interrupt` are clamped to 3 s by Codex anyway.
@@ -71,7 +69,7 @@ const EVENTS: &[(&str, u64)] = &[
     ("SessionStart", REPORT_TIMEOUT_S),
     ("UserPromptSubmit", REPORT_TIMEOUT_S),
     ("PreToolUse", REPORT_TIMEOUT_S),
-    ("PermissionRequest", HELD_TIMEOUT_S),
+    ("PermissionRequest", REPORT_TIMEOUT_S),
     ("Stop", REPORT_TIMEOUT_S),
     ("Interrupt", REPORT_TIMEOUT_S),
     ("SessionEnd", SESSION_END_TIMEOUT_S),
@@ -1587,7 +1585,7 @@ mod tests {
         assert_eq!(rest, "hook codex");
         assert_eq!(
             file["hooks"]["PermissionRequest"][0]["hooks"][0]["timeout"],
-            130
+            REPORT_TIMEOUT_S
         );
         assert_eq!(file["hooks"]["SessionEnd"][0]["hooks"][0]["timeout"], 1);
     }

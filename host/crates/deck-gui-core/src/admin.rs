@@ -136,7 +136,7 @@ pub struct Detected {
 /// One row of `integrations.status`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Report {
-    /// The wire name: `claude`, `codex`, `gemini`, `claude-desktop`.
+    /// The wire name: `claude`, `codex`, `codex-desktop`, `gemini`, `claude-desktop`.
     pub target: String,
     pub status: Status,
     pub detected: Option<Detected>,

@@ -597,7 +597,13 @@ pub fn project_path(cwd: &str, home: Option<&str>) -> String {
 /// party the daemon did not report still gets a card saying it did not
 /// report — an integration that quietly vanished from the screen is the one
 /// failure mode this list exists to stop.
-pub const TARGETS: [&str; 4] = ["claude", "codex", "gemini", "claude-desktop"];
+pub const TARGETS: [&str; 5] = [
+    "claude",
+    "codex",
+    "codex-desktop",
+    "gemini",
+    "claude-desktop",
+];
 
 /// §8.2's name for a target. The words are ports of the daemon's own
 /// `Target::display_name`, not a second set: the card, the CLI's `--help`
@@ -606,6 +612,7 @@ pub fn party_name(target: &str) -> &str {
     match target {
         "claude" => "Claude Code",
         "codex" => "Codex CLI",
+        "codex-desktop" => "Codex Desktop",
         "gemini" => "Gemini CLI",
         "claude-desktop" => "Claude Desktop",
         other => other,
@@ -617,7 +624,8 @@ pub fn party_name(target: &str) -> &str {
 pub fn party_what(target: &str) -> &'static str {
     match target {
         "claude" => "http hooks in ~/.claude/settings.json, plus the chained statusLine",
-        "codex" => "command hooks in ~/.codex/hooks.json and notify in ~/.codex/config.toml",
+        "codex" => "shared local app-server connection, with command hooks in ~/.codex/hooks.json as fallback",
+        "codex-desktop" => "a launcher in ~/Applications that connects Codex Desktop to the shared local app server",
         "gemini" => "command hooks in ~/.gemini/settings.json",
         "claude-desktop" => "the openwalkietalkie-deck stdio entry in claude_desktop_config.json",
         _ => "",
@@ -654,9 +662,9 @@ pub fn status_word(status: &Status) -> &str {
 /// explained, because this build does not know what it means.
 pub fn status_help(status: &Status) -> &'static str {
     match status {
-        Status::Installed => "deckd's plugin (Claude) or hook entries (Codex) are in place and current.",
+        Status::Installed => "deckd's plugin, hook entries, or desktop launcher are in place and current.",
         Status::Outdated => "what is on disk differs from this build, Claude has not registered the plugin yet, or settings.json still carries the pre-plugin hooks; Update rewrites or migrates it.",
-        Status::Absent => "nothing of deckd's is installed for this CLI.",
+        Status::Absent => "nothing of deckd's is installed for this integration.",
         Status::Conflict => "a file deckd must read cannot be parsed, or holds a shape the CLI would reject. deckd never overwrites it.",
         Status::PathDrift => "the hooks name a binary that is not this app's any more; Repair rewrites them.",
         Status::HooksNotFiring => "Codex's own hooks/list reports none of deckd's hooks: they are on disk and dead.",
@@ -687,6 +695,9 @@ pub fn detected_line(target: &str, detected: Option<&Detected>) -> String {
         Some(d) => d.path.clone(),
         None if target == "claude-desktop" => {
             "no CLI to detect: this target is a file, not a binary".to_string()
+        }
+        None if target == "codex-desktop" => {
+            "Codex.app was not detected in Applications".to_string()
         }
         None => "not found on PATH".to_string(),
     }

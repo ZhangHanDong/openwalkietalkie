@@ -35,8 +35,8 @@
 //!
 //! What is deliberately *not* here: the hooks path is kept as the fallback
 //! (`--no-daemon` sessions, older CLIs); nothing is executed on the server's
-//! behalf; a request this client does not know is answered with a JSON-RPC
-//! "method not found" so the server never waits on us.
+//! behalf. Unhandled server requests are left to the native client: an
+//! unsolicited error from this subscriber would dismiss its prompt too.
 //!
 //! Content discipline (§11): thread names, prompts, commands and replies are
 //! content and never reach a log line; the log carries thread ids, methods
@@ -58,6 +58,7 @@ use std::time::Duration;
 use tokio::sync::{mpsc, oneshot, watch};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 
+mod history;
 mod questions;
 
 /// `TITLE_MAX` of §5.1 ("the first 64 B of the prompt"), shared with the
@@ -682,8 +683,8 @@ impl Model {
         }
     }
 
-    /// A request from the server. Unknown methods are declined with a JSON-RPC
-    /// error so the server never waits on this client.
+    /// A request shared with the native client. Only an explicit deck
+    /// answer may resolve it; unsupported prompts remain live in Codex.
     pub fn server_request(&mut self, id: &Value, method: &str, params: &Value) -> Vec<Effect> {
         let mut effects = self.server_request_inner(id, method, params);
         if effects.iter().any(|e| matches!(e, Effect::Card { .. })) {
@@ -701,10 +702,7 @@ impl Model {
     fn server_request_inner(&mut self, id: &Value, method: &str, params: &Value) -> Vec<Effect> {
         let thread = thread_id(method, params).unwrap_or_default();
         let Some(t) = self.threads.get_mut(&thread) else {
-            return vec![Effect::Respond {
-                id: id.clone(),
-                result: json!({"error": {"code": -32601, "message": format!("unknown thread for {method}")}}),
-            }];
+            return Vec::new();
         };
         self.seq += 1;
         let seq = self.seq;
@@ -752,10 +750,7 @@ impl Model {
             "item/tool/requestUserInput" => {
                 let questions = wire_questions(params);
                 if questions.is_empty() {
-                    return vec![Effect::Respond {
-                        id: id.clone(),
-                        result: json!({"answers": {}}),
-                    }];
+                    return Vec::new();
                 }
                 let first = question_card(seq, 0, &questions[0]);
                 t.pending.push(Pending {
@@ -771,10 +766,7 @@ impl Model {
                     spec: first,
                 }]
             }
-            _ => vec![Effect::Respond {
-                id: id.clone(),
-                result: json!({"error": {"code": -32601, "message": format!("unsupported method: {method}")}}),
-            }],
+            _ => Vec::new(),
         }
     }
 
@@ -1465,6 +1457,9 @@ async fn session(
     // Orders in flight as `turn/steer`, by thread, so a rejection can fall
     // back to `turn/start` with the same text.
     let mut steering: HashMap<String, String> = HashMap::new();
+    // History must never block live questions, answers, or connection upkeep.
+    // Dropping the set cancels outstanding hydration on disconnect.
+    let mut histories = tokio::task::JoinSet::new();
 
     // The reader is its own task: a request of ours is answered on the
     // same socket, so a loop that awaited a reply while also being the
@@ -1572,6 +1567,16 @@ async fn session(
                     }
                     match loaded_threads(&rpc, &model).await {
                         Ok(listed) => {
+                            for thread in &listed {
+                                if !model.threads.contains_key(&thread.id) {
+                                    let rpc = rpc.clone();
+                                    let id = thread.id.clone();
+                                    histories.spawn(async move {
+                                        let history = history::read(&rpc, &id).await;
+                                        (id, history)
+                                    });
+                                }
+                            }
                             let effects = model.loaded(&listed);
                             apply(api, &rpc, &principal, session_id, &mut model, &mail_tx, &mut waiters, &mut steering, effects).await;
                         }
@@ -1579,6 +1584,12 @@ async fn session(
                             tracing::debug!(why, "codexd: thread/loaded/list failed");
                             break 'run End::Error(why);
                         }
+                    }
+                }
+                history = histories.join_next(), if !histories.is_empty() => {
+                    if let Some(Ok((thread, history))) = history {
+                        let effects = model.hydrated(&thread, history);
+                        apply(api, &rpc, &principal, session_id, &mut model, &mail_tx, &mut waiters, &mut steering, effects).await;
                     }
                 }
                 mail = mail_rx.recv() => {
@@ -1710,7 +1721,7 @@ async fn change_settings(rpc: &Rpc, model: &mut Model, thread: &str, params: Val
 
 /// `thread/loaded/list`, then `thread/resume` on each id for its name and
 /// status — resume is also what subscribes this connection to the thread.
-async fn loaded_threads(rpc: &Rpc, model: &Model) -> Result<Vec<LoadedThread>, String> {
+async fn loaded_threads(rpc: &Rpc, _model: &Model) -> Result<Vec<LoadedThread>, String> {
     let listed = rpc.request("thread/loaded/list", json!({})).await?;
     let ids: Vec<String> = listed["data"]
         .as_array()
@@ -1722,18 +1733,37 @@ async fn loaded_threads(rpc: &Rpc, model: &Model) -> Result<Vec<LoadedThread>, S
         .collect();
     let mut out = Vec::new();
     for id in ids {
-        match rpc.request("thread/resume", json!({"threadId": id, "excludeTurns": model.threads.contains_key(&id)})).await {
+        match rpc
+            .request(
+                "thread/resume",
+                json!({"threadId": id, "excludeTurns": true,
+            "initialTurnsPage": {"limit": 1, "sortDirection": "desc", "itemsView": "notLoaded"}}),
+            )
+            .await
+        {
             Ok(result) => {
                 let thread = result.get("thread").unwrap_or(&result);
-                let mut loaded = LoadedThread::from_thread(thread).unwrap_or(LoadedThread { settings: None,
-                    async_questions: questions::Questions::default(), active_turn: None,
+                let mut loaded = LoadedThread::from_thread(thread).unwrap_or(LoadedThread {
+                    settings: None,
+                    async_questions: questions::Questions::default(),
+                    active_turn: None,
                     id: id.clone(),
                     name: None,
                     cwd: None,
                     active: false,
                     messages: Vec::new(),
                 });
-                loaded.settings = Some(json!({"model":result["model"],"reasoningEffort":result["reasoningEffort"],"effort":result["effort"]}));
+                loaded.active_turn = result["initialTurnsPage"]["data"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .find(|turn| turn["status"] == "inProgress")
+                    .and_then(|turn| turn["id"].as_str())
+                    .map(str::to_string)
+                    .or(loaded.active_turn);
+                loaded.settings = Some(
+                    json!({"model":result["model"],"reasoningEffort":result["reasoningEffort"],"effort":result["effort"]}),
+                );
                 out.push(loaded);
             }
             Err(why) => {
@@ -2644,7 +2674,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_server_requests_are_declined_and_unknown_notifications_ignored() {
+    fn unknown_server_requests_are_left_to_the_native_client() {
         let mut model = Model::default();
         model.loaded(&[loaded("t1", None, false)]);
         let out = model.server_request(
@@ -2652,11 +2682,24 @@ mod tests {
             "mcpServer/elicitation/request",
             &json!({"threadId": "t1"}),
         );
-        assert_eq!(out.len(), 1);
-        let Effect::Respond { result, .. } = &out[0] else {
-            panic!("{out:?}")
-        };
-        assert_eq!(result["error"]["code"], -32601);
+        assert!(
+            out.is_empty(),
+            "an error here would dismiss the native prompt"
+        );
+        assert!(model
+            .server_request(
+                &json!(2),
+                "item/tool/requestUserInput",
+                &json!({"threadId":"t1", "questions":[]})
+            )
+            .is_empty());
+        assert!(model
+            .server_request(
+                &json!(3),
+                "item/tool/requestUserInput",
+                &json!({"threadId":"not-yet-discovered"})
+            )
+            .is_empty());
         assert!(model
             .notification("thread/tokenUsage/updated", &json!({"threadId": "t1"}))
             .is_empty());

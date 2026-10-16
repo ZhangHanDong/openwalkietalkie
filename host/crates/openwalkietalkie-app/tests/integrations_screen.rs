@@ -64,6 +64,7 @@ fn status_reply() -> Value {
                 "backups": [],
                 "detail": "written, never reviewed in /hooks"
             },
+            {"target": "codex-desktop", "status": "installed", "files": ["/Users/t/Applications/Codex with OpenWalkieTalkie.app/Contents/Info.plist"]},
             {"target": "gemini", "status": "absent"},
             {"target": "claude-desktop", "status": "installed"}
         ],
@@ -74,7 +75,8 @@ fn status_reply() -> Value {
 #[test]
 fn every_party_gets_a_card_with_its_binary_its_status_word_and_its_limits() {
     let (rows, warnings) = Report::list(&status_reply());
-    assert_eq!(rows.len(), 4, "§8.2 lists four integrations.* parties");
+    assert_eq!(rows.len(),
+        5, "CLI and desktop integrations each get a card");
     assert_eq!(warnings, vec!["this bundle is outside /Applications"]);
     // The screen draws its cards from its own list, so every party has one
     // whatever the daemon answered.

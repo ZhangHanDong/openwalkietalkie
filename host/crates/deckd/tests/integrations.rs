@@ -1126,13 +1126,14 @@ fn status_writes_nothing_for_any_target() {
     }
     let before = snapshot_tree(dir.path());
     let reports = integrations::status(&env, None);
-    assert_eq!(reports.len(), 4, "one row per target");
+    assert_eq!(reports.len(), 5, "one row per target");
     assert_eq!(
         reports
             .iter()
             .map(|r| r.target.name())
             .collect::<Vec<&str>>(),
-        ["claude", "codex", "gemini", "claude-desktop"]
+        ["claude", "codex",
+            "codex-desktop", "gemini", "claude-desktop"]
     );
     assert_eq!(snapshot_tree(dir.path()), before, "status wrote something");
 }
@@ -1184,7 +1185,7 @@ fn install_refuses_when_this_binary_has_no_hook_subcommand() {
     // bad install back off with the build they have.
     integrations::run(&env, Target::Claude, Verb::Uninstall).expect("uninstall");
     integrations::run(&env, Target::Codex, Verb::Uninstall).expect("uninstall");
-    assert_eq!(integrations::status(&env, None).len(), 4);
+    assert_eq!(integrations::status(&env, None).len(), 5);
 
     // And with the subcommand answering, the same install goes through.
     std::fs::write(&env.exe, b"#!/bin/sh\nexit 0\n").unwrap();

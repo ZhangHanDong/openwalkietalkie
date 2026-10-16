@@ -11,14 +11,13 @@
 //! here reads or writes the user's `~/.codex`, and no real `codex` is run.
 mod common;
 
-use common::{http, Daemon, Options};
-use deck_model::{Deliver, OriginKind, Scope};
+use common::{Daemon, Options};
+use deck_model::Scope;
 use std::path::PathBuf;
 
 /// The CLI session id every fixture carries, and the roster key it makes.
 const SESSION: &str = "01a0bca9-1344-7d20-a793-10903639be67";
 const KEY: &str = "codex:01a0bca9-1344-7d20-a793-10903639be67";
-const TURN: &str = "01a0bcad-e001-7042-8668-78526755dd61";
 
 fn fixtures() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/hooks/codex")
@@ -83,304 +82,42 @@ fn untrusted() -> Options {
     }
 }
 
-/// Contract §6 row 7. A `PermissionRequest` parks a held card with
-/// `Allow`/`Deny` and nothing else — the hook protocol has no
-/// session-scoped approval (facts §4.2) — and the operator's `Deny` comes
-/// back as the exact object Codex parses, **with a message**: a denial
-/// with no reason is one the model retries verbatim.
+/// Even without an app-server connection, the hook must return before any
+/// user answer so Codex can draw its native approval dialog.
 #[tokio::test]
-async fn a_permission_request_becomes_a_held_card_and_deny_carries_its_message() {
+async fn permission_fallback_returns_without_waiting_for_an_answer() {
     let daemon = Daemon::with(untrusted()).await;
     let hooks = daemon.bearer("hooks", &[Scope::HooksIngest]);
-    let operate = daemon.bearer("op", &[Scope::Observe, Scope::Operate]);
     started(&daemon, &hooks).await;
-
-    // B1: the helper's walk reaches the roster, so liveness knows which
-    // pids it may poll.
-    let snapshot = daemon.api.bus.snapshot();
-    let agent = snapshot
-        .agents
-        .values()
-        .find(|a| a.session.key.as_deref() == Some(KEY))
-        .expect("the agent");
-    assert_eq!(agent.kind, deck_model::Kind::Codex);
-    assert_eq!(agent.name, "cohdl-api", "the cwd basename");
-    assert_eq!(agent.session.pid, Some(4242));
-    assert_eq!(
-        agent.session.pid_kind,
-        Some(deck_model::PidKind::Cli),
-        "only `cli` pids are polled, so the walk's verdict must arrive"
-    );
-    assert_eq!(
-        agent
-            .session
-            .terminal
-            .as_ref()
-            .and_then(|t| t.tty.as_deref()),
-        Some("/dev/ttys004")
-    );
-    drop(snapshot);
-
-    // The hook parks: its HTTP response does not come back until the card
-    // is answered, so it runs on its own task.
-    let port = daemon.port;
-    let hooks_header = hooks.clone();
-    let body = call("hooks.codex", fixture("permission-request"));
-    let parked = tokio::spawn(async move {
-        http(
-            port,
-            "POST",
-            "/v1/rpc",
-            &[("Authorization", &hooks_header)],
-            &body,
-        )
-        .await
-    });
-
-    daemon
-        .until("the permission card is on the deck", |s| {
-            s.agents
-                .values()
-                .any(|a| a.card.as_ref().is_some_and(|c| c.deliver == Deliver::Hold))
-        })
-        .await;
-    let (agent, card) = one_agent(&daemon);
-    let card = card.expect("a card");
-    assert_eq!(card.origin.kind, OriginKind::Permission);
-    assert_eq!(card.origin.tool.as_deref(), Some("Bash"));
-    assert_eq!(card.origin.request_id.as_deref(), Some(TURN));
-    assert_eq!(
-        card.choices
-            .iter()
-            .map(|c| c.label.as_str())
-            .collect::<Vec<_>>(),
-        vec!["Allow", "Deny"]
-    );
-    assert_eq!(card.rec, Some(0));
-    assert!(
-        card.text
-            .as_deref()
-            .is_some_and(|t| t.starts_with("Bash: ")),
-        "{:?}",
-        card.text
-    );
-
-    // Deny is not a guarded operation (only an allow is), so an untrusted
-    // token may choose it — and `op.answer` does not answer `delivered`
-    // until the adapter has written the hook's response.
-    let denied = daemon
-        .rpc(
-            &operate,
-            &serde_json::json!({
-                "jsonrpc": "2.0", "id": 2, "method": "op.answer",
-                "params": {"agent": agent, "card": card.id, "choice": 1}
-            })
-            .to_string(),
-        )
-        .await;
-    assert!(denied["error"].is_null(), "{denied}");
-    assert_eq!(denied["result"]["delivered"], true, "{denied}");
-    assert_eq!(denied["result"]["via"], "hold", "{denied}");
-
-    let (status, answer) = tokio::time::timeout(common::PATIENCE, parked)
-        .await
-        .expect("the held hook returns")
-        .expect("the hook task lives");
-    assert_eq!(status, 200);
-    let decision = &answer["result"]["hookSpecificOutput"];
-    assert_eq!(decision["hookEventName"], "PermissionRequest", "{answer}");
-    assert_eq!(decision["decision"]["behavior"], "deny", "{answer}");
-    assert_eq!(
-        decision["decision"]["message"], "Denied from the deck",
-        "a deny always says why: {answer}"
-    );
-
-    // The card is gone once the decision is written (`hold_written`).
-    daemon
-        .until("the card is cleared", |s| {
-            s.agents.values().all(|a| a.card.is_none())
-        })
-        .await;
-    daemon.shutdown().await;
-}
-
-/// The other half of row 7: `Allow` is the recommended row and writes the
-/// allow shape. It needs a trusted principal (the week-2 guard), so the
-/// verifier trusts this peer — which is what the deck itself is.
-#[tokio::test]
-async fn an_allow_from_a_trusted_principal_writes_the_allow_shape() {
-    let daemon = Daemon::with(Options {
-        verifier: deckd::trust::FakeVerifier {
-            trusted: true,
-            capped: false,
-        },
-        ..Options::default()
-    })
-    .await;
-    let hooks = daemon.bearer("hooks", &[Scope::HooksIngest]);
-    started(&daemon, &hooks).await;
-
-    let port = daemon.port;
-    let header = hooks.clone();
-    let body = call("hooks.codex", fixture("permission-request"));
-    let parked = tokio::spawn(async move {
-        http(
-            port,
-            "POST",
-            "/v1/rpc",
-            &[("Authorization", &header)],
-            &body,
-        )
-        .await
-    });
-    daemon
-        .until("the permission card is on the deck", |s| {
-            s.agents
-                .values()
-                .any(|a| a.card.as_ref().is_some_and(|c| c.deliver == Deliver::Hold))
-        })
-        .await;
-    let (agent, card) = one_agent(&daemon);
-    let card = card.expect("a card");
-
-    // A trusted UDS peer answers Allow.
-    let mut peer = daemon.connect().await;
-    peer.call(
-        "session.hello",
-        serde_json::json!({"client": {"name": "gui"}, "scopes": ["observe", "operate"]}),
+    let reply = tokio::time::timeout(
+        std::time::Duration::from_secs(1),
+        daemon.rpc(&hooks, &call("hooks.codex", fixture("permission-request"))),
     )
-    .await;
-    let allowed = peer
-        .call(
-            "op.answer",
-            serde_json::json!({"agent": agent, "card": card.id, "choice": 0}),
-        )
-        .await;
-    assert_eq!(allowed["delivered"], true, "{allowed}");
-
-    let (status, answer) = tokio::time::timeout(common::PATIENCE, parked)
-        .await
-        .expect("the held hook returns")
-        .expect("the hook task lives");
-    assert_eq!(status, 200);
-    assert_eq!(
-        answer["result"],
-        serde_json::json!({
-            "hookSpecificOutput": {
-                "hookEventName": "PermissionRequest",
-                "decision": {"behavior": "allow"}
-            }
-        }),
-        "the exact two-field shape 0.153.4 parses: {answer}"
-    );
-    daemon.shutdown().await;
-}
-
-/// §5.6: a hold released without a decision answers `{}` — Codex then
-/// runs its own approval flow — and the **same card id** stays on the
-/// deck as `⌨ … / Focus terminal`, so the Allow/Deny rows left in the
-/// drawer are replaced by a row that still does something.
-///
-/// The `⌨ ` belongs to the **wire encoder**, which writes one for every
-/// degraded card. An adapter that re-pushed the text with a prefix of its
-/// own put two on the line the deck received, so the card's stored text is
-/// asserted un-prefixed here and the device line is asserted to carry
-/// exactly one.
-#[tokio::test]
-async fn a_released_codex_hold_answers_empty_and_degrades_to_focus_terminal() {
-    let daemon = Daemon::with(untrusted()).await;
-    let hooks = daemon.bearer("hooks", &[Scope::HooksIngest]);
-    let operate = daemon.bearer("op", &[Scope::Observe, Scope::Operate]);
-    started(&daemon, &hooks).await;
-
-    let port = daemon.port;
-    let header = hooks.clone();
-    let body = call("hooks.codex", fixture("permission-request"));
-    let parked = tokio::spawn(async move {
-        http(
-            port,
-            "POST",
-            "/v1/rpc",
-            &[("Authorization", &header)],
-            &body,
-        )
-        .await
-    });
+    .await
+    .expect("permission hook must not wait for an answer");
+    assert_eq!(reply["result"], serde_json::json!({}));
     daemon
-        .until("the permission card is on the deck", |s| {
-            s.agents
-                .values()
-                .any(|a| a.card.as_ref().is_some_and(|c| c.deliver == Deliver::Hold))
-        })
-        .await;
-    let (agent, card) = one_agent(&daemon);
-    let card = card.expect("a card");
-
-    let snoozed = daemon
-        .rpc(
-            &operate,
-            &serde_json::json!({
-                "jsonrpc": "2.0", "id": 3, "method": "op.snooze",
-                "params": {"agent": agent, "card": card.id}
-            })
-            .to_string(),
-        )
-        .await;
-    assert!(snoozed["error"].is_null(), "{snoozed}");
-
-    let (status, answer) = tokio::time::timeout(common::PATIENCE, parked)
-        .await
-        .expect("the released hook returns")
-        .expect("the hook task lives");
-    assert_eq!(status, 200);
-    assert_eq!(
-        answer["result"],
-        serde_json::json!({}),
-        "a release decides nothing: {answer}"
-    );
-
-    daemon
-        .until("the card degrades to focus", |s| {
+        .until("attention is reported", |s| {
             s.agents.values().any(|a| {
-                a.card
-                    .as_ref()
-                    .is_some_and(|c| c.deliver == Deliver::Focus && c.id == card.id)
+                a.session.key.as_deref() == Some(KEY) && a.state == deck_model::AgentState::Question
             })
         })
         .await;
-    let (_, degraded) = one_agent(&daemon);
-    let degraded = degraded.expect("the degraded card");
-    assert_eq!(degraded.id, card.id, "the same id: no new chime");
-    assert_eq!(
-        degraded.status,
-        deck_model::CardStatus::Degraded { focused_at: None }
-    );
-    assert_eq!(degraded.text, card.text, "the ask is still what it says");
+    let (_, card) = one_agent(&daemon);
     assert!(
-        !degraded.text.as_deref().unwrap_or_default().contains('⌨'),
-        "the prefix is the encoder's, never the card's: {:?}",
-        degraded.text
+        card.is_none(),
+        "no unusable Allow/Deny card without an app-server"
     );
-
-    // What the deck is actually sent: one `⌨ `, one row that works.
-    let line = daemon
-        .device_ops()
-        .into_iter()
-        .rev()
-        .find_map(|op| match op {
-            deck_model::DeviceOp::Put(
-                deck_model::Key::Card(_, id),
-                deck_model::HostLine::Card { text, choices, .. },
-            ) if id == card.id.0 => Some((text, choices)),
-            _ => None,
+    daemon
+        .rpc(&hooks, &call("hooks.codex", fixture("pre-tool-use")))
+        .await;
+    daemon
+        .until("Codex continued after its native answer", |s| {
+            s.agents.values().any(|a| {
+                a.session.key.as_deref() == Some(KEY) && a.state == deck_model::AgentState::Working
+            })
         })
-        .expect("the degraded card reached the device");
-    assert_eq!(
-        line.0,
-        format!("⌨ {}", card.text.as_deref().unwrap_or_default()),
-        "exactly one prefix"
-    );
-    assert_eq!(line.1, vec!["Focus terminal".to_string()]);
+        .await;
     daemon.shutdown().await;
 }
 

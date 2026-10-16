@@ -214,6 +214,21 @@ fn uninstalling_twice_is_a_no_op_and_not_a_failure() {
     );
 }
 
+#[cfg(target_os = "macos")]
+#[test]
+fn full_uninstall_removes_the_desktop_launcher_before_purging_its_receipt() {
+    let dir = TestDir::new("x-uninstall-desktop");
+    let env = integrations::test_env(&dir);
+    let paths = paths_for(&env, &dir);
+    integrations::run(&env, Target::CodexDesktop, INSTALL).unwrap();
+    let app = integrations::codex_desktop::launcher(&env);
+    assert!(app.exists());
+    let outcome = uninstall::run(&env, &paths, Options { purge: true });
+    assert!(outcome.problems.is_empty(), "{:?}", outcome.problems);
+    assert!(!app.exists());
+    assert!(!paths.data.exists());
+}
+
 /// The constraint, as a test rather than as a comment in the module header:
 /// a test environment never talks to `launchctl`, so nothing here can stop
 /// the operator's own running service.

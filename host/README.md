@@ -297,8 +297,43 @@ started before deckd did — `turn/started`/`turn/completed` are its state,
 the server's own approval and `requestUserInput` requests are its cards, and
 an order is `turn/steer` while a turn runs or `turn/start` when idle. A thread
 the daemon client drives is one the hooks leave alone (`{}`); the hooks
-remain for `codex --no-daemon` and older CLIs. `[codex] daemon = false`
-turns the client off.
+remain for state reporting in `codex --no-daemon` and older CLIs.
+Permission hooks return immediately so Codex can always show its own prompt.
+Answering from the deck requires the shared app-server connection; either
+client can answer, and a native answer clears the deck's card. Unrecognized
+prompt types remain available in Codex. `[codex] daemon = false` turns the
+client off.
+
+**Codex Desktop (macOS)** can use that same connection through its experimental
+local-daemon mode. Install from the app's **Integrations → Codex Desktop** row,
+or run:
+
+```sh
+deckd integrations install codex-desktop --dry-run
+deckd integrations install codex-desktop
+open "$HOME/Applications/Codex with OpenWalkieTalkie.app"
+```
+
+Quit Codex Desktop before opening the launcher. The launcher uses the Codex CLI
+bundled in `~/Applications/Codex.app` or `/Applications/Codex.app` to start or
+reuse the shared daemon, then opens Desktop with
+`CODEX_APP_SERVER_USE_LOCAL_DAEMON=1` and the installer's `CODEX_HOME`. Keep
+deckd running with `[codex] daemon = true` (the default) and the default socket
+for that same home. Desktop's local sessions then use the existing roster,
+approval, question, session-control, and voice-order paths. No separate CLI
+installation or hook trust is needed. Use this launcher whenever you reopen
+Desktop; opening Codex normally does not opt into this mode.
+
+The launch switch was inspected in Codex Desktop **26.930.51102**, bundled CLI
+**0.160.0**. It is an experimental desktop interface: custom app config
+overrides or `codex_cli_command` can force its private stdio server, and builds
+with bundled Git cannot use this mode. Cloud and SSH sessions are outside this
+local integration. `installed` confirms the launcher files, not that Desktop
+has attached; confirm a local session appears in the roster. The launcher
+refuses to interrupt a running Desktop and never restarts an existing daemon.
+`deckd integrations uninstall codex-desktop` removes the launcher while leaving
+Codex, CLI hooks, and running sessions in place. Modified launcher files are
+preserved and reported as conflicts.
 
 Codex's nonblocking pending questions (`agentMessage` items with `delivery:
 "async"` and `questions`) also appear on the deck. They queue one at a time,
@@ -306,8 +341,9 @@ remain available across turn completion, and return after a permission prompt
 is answered. Choices and spoken replies use the question's original identity
 to resolve the same entry in Codex; replies made in Codex clear the device card.
 On reconnect, thread history restores unanswered questions without reviving
-answered ones. These cards do not expire, and a failed send restores the card
-for another attempt.
+answered ones. History loads in small background pages, so large conversations
+cannot delay live prompts with one oversized resume response. These cards do
+not expire, and a failed send restores the card for another attempt.
 
 Nothing about a CLI's prompt is ever hostage to a bug of ours. Every failure
 path — an unparseable payload, a refused card, a full core, a daemon that is
@@ -347,6 +383,7 @@ for byte.
 | --- | --- |
 | `claude` | Writes a one-plugin **marketplace** under `<data-dir>/claude-marketplace/` (`.claude-plugin/marketplace.json`, `plugins/openwalkietalkie/.claude-plugin/plugin.json`, `plugins/openwalkietalkie/hooks/hooks.json`: exec-form `deckd hook claude` command hooks for `SessionStart`, `PermissionRequest`, `PreToolUse{AskUserQuestion}`, `UserPromptSubmit`, `Stop`, `StopFailure`, `Notification`, `SessionEnd`, and `PostToolUse` with `[hooks.claude] tool_titles`), then runs `claude plugin marketplace add <dir> --scope user` and `claude plugin install openwalkietalkie@openwalkietalkie --scope user`. Claude records the marketplace and the `enabledPlugins` flag in its own files; deckd writes **nothing** into `settings.json`. A session already open loads the plugin after `/reload-plugins`. A settings file still carrying the pre-plugin http hooks, allowlist pattern, chained `statusLine` and inventory has exactly those taken back out in the same run |
 | `codex` | `$CODEX_HOME/hooks.json`: one handler group per event, appended **last**, whose `command` is a single shell-quoted string. `config.toml` is **not** written: an older install's `notify` and `tui.terminal_title` are removed when the receipt says deckd set them, and `--trust` records hook hashes under `[hooks.state]` |
+| `codex-desktop` | Creates `~/Applications/Codex with OpenWalkieTalkie.app`, a launcher for Desktop's shared local-daemon mode. No edits to the Codex bundle, global environment, hooks, or trust settings. Quit Desktop and open this launcher after installation. |
 
 What it refuses, each one measured rather than assumed:
 
@@ -503,7 +540,7 @@ deckd device dry-run --sid 314159 --hm 19:42 --flood 3 --send '{"m":"set","k":"b
 | `ctl [--scopes a,b] [--client N] [--timeout S] <method> [json]` | One API method over the UDS door; the result JSON is printed compact on stdout, a JSON-RPC error object on stderr. | 0 ok; 1 JSON-RPC error; 2 daemon unreachable; 3 `-32002 {need:"trusted"}` (the answer has to come from the deck or the app). |
 | `events [--kinds a,b] [--since REV] [--content] [--snapshot]` | One JSON line per event until Ctrl-C. `--kinds` are subscription globs (default `*`), `--since` replays the ring first, `--content` asks `observe:content`, `--snapshot` prints the snapshot first. Reconnects show as `{"type":"disconnected"}` / `{"type":"reconnected",…}` and a `{"type":"resync","rev"}` line means "call `state.get`". | 0; 2 when the daemon is unreachable at the start. |
 | `token create\|list\|revoke\|rotate` | Bearer tokens for the TCP door, in `tokens.toml` (mode 0600, blake3 hashes). `create` and `rotate` print the plaintext once, on stdout, and nothing else — it is never stored or logged. Edits the file directly, no daemon needed. | 0; 1 on a duplicate name, an unknown scope, a bad expiry or an unknown token. |
-| `integrations status [--json] [target]` \| `install <target> [--trust] [--dry-run]` \| `uninstall <target>` \| `repair <target>` | Reads and writes the CLIs' own config files (`claude`, `codex`; `gemini` and `claude-desktop` are v1.1). It edits them itself, so no daemon has to run; `status` writes nothing at all, `--dry-run` prints "What this writes". Every file is backed up by rename before it is replaced. | 0; 1 on a refusal (a translocated binary, a binary with no `deckd hook`, a plan that would void the file), which names what it refused and why. |
+| `integrations status [--json] [target]` \| `install <target> [--trust] [--dry-run]` \| `uninstall <target>` \| `repair <target>` | Manages `claude`, `codex`, and the macOS `codex-desktop` launcher (`gemini` and `claude-desktop` are v1.1). No daemon has to run; `status` writes nothing at all, `--dry-run` prints "What this writes". Every replaced file is backed up by rename first. | 0; 1 on a refusal (a translocated binary, a binary with no `deckd hook`, a plan that would void the file), which names what it refused and why. |
 | `hook <claude\|codex\|codex-notify\|claude-statusline\|gemini> [-- <cmd…>]` | What a CLI runs, not what a person runs: reads the event on stdin (or, for `codex-notify`, the last argument), adds the terminal environment and the CLI pid its parent walk found, and prints the daemon's answer. | **Always 0.** A non-zero exit from a hook blocks the CLI's tool call, so every failure prints `{}`, exits 0 and says one line on stderr. The `claude-statusline` passthrough is the exception that reports the user's own command's failure verbatim. |
 | `device flood N \| sync \| metrics` | `ctl` calls (`admin`) against the running service. | As `ctl`. |
 | `device dry-run …` | Frames the demo session offline, in `tools/deck-sim.py --dry-run`'s layout. No daemon, no HID. | 0. |

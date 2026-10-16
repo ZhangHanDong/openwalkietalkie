@@ -50,6 +50,7 @@ struct Fake {
     reject_settings: Arc<std::sync::atomic::AtomicBool>,
     reject_steer: Arc<std::sync::atomic::AtomicBool>,
     reject_turns: Arc<std::sync::atomic::AtomicBool>,
+    stall_history: Arc<std::sync::atomic::AtomicBool>,
     history: Arc<Mutex<Vec<Value>>>,
     seen: mpsc::UnboundedReceiver<Seen>,
     /// Push a server→client message (a notification or a request).
@@ -85,6 +86,8 @@ async fn fake_daemon(path: PathBuf) -> Fake {
     let steer_rejected = reject_steer.clone();
     let reject_turns = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let turns_rejected = reject_turns.clone();
+    let stall_history = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let history_stalled = stall_history.clone();
     let history: Arc<Mutex<Vec<Value>>> = Arc::default();
     let current_history = history.clone();
     tokio::spawn(async move {
@@ -111,6 +114,10 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                         (Some(method), Some(id)) => {
                             let params = value.get("params").cloned().unwrap_or(Value::Null);
                             observed.lock().unwrap().push(method.clone());
+                            if method == "thread/items/list" && history_stalled.load(std::sync::atomic::Ordering::SeqCst) {
+                                let _ = seen_tx.send(Seen::Request { id, method, params });
+                                continue;
+                            }
                             if (method == "turn/steer" && steer_rejected.load(std::sync::atomic::Ordering::SeqCst))
                                 || (matches!(method.as_str(), "turn/start" | "turn/steer") && turns_rejected.load(std::sync::atomic::Ordering::SeqCst)) {
                                 let _ = seen_tx.send(Seen::Request { id: id.clone(), method, params });
@@ -145,7 +152,22 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                                     json!({})
                                 }
                                 "thread/loaded/list" => json!({"data": ["t1"], "nextCursor": null}),
+                                "thread/items/list" => {
+                                    let history = current_history.lock().unwrap();
+                                    let mut entries: Vec<Value> = history.iter().flat_map(|turn| {
+                                        turn["items"].as_array().into_iter().flatten().map(|item|
+                                            json!({"turnId":turn["id"],"item":item})
+                                        )
+                                    }).collect();
+                                    if params["sortDirection"] == "desc" { entries.reverse(); }
+                                    let start = params["cursor"].as_str().and_then(|s| s.parse::<usize>().ok()).unwrap_or(0);
+                                    let limit = params["limit"].as_u64().unwrap_or(8) as usize;
+                                    assert!(limit <= 8, "history pages stay small");
+                                    let end = (start + limit).min(entries.len());
+                                    json!({"data":entries[start..end], "nextCursor":(end < entries.len()).then(|| end.to_string())})
+                                },
                                 "thread/resume" => {
+                                    assert_eq!(params["excludeTurns"], true, "never hydrate a whole thread in one frame");
                                     let selected = current_settings.lock().unwrap();
                                     json!({"model":selected.0, "reasoningEffort":selected.1, "thread": {
                                         "id": params["threadId"], "name": "Refactor UI",
@@ -176,7 +198,14 @@ async fn fake_daemon(path: PathBuf) -> Fake {
             }
         }
     });
-    Fake { methods, settings, reject_settings, reject_steer, reject_turns, history,
+    Fake {
+        methods,
+        settings,
+        reject_settings,
+        reject_steer,
+        reject_turns,
+        stall_history,
+        history,
         seen: seen_rx,
         push: push_tx,
         account,
@@ -195,6 +224,19 @@ async fn async_pending_questions_restore_deliver_and_resolve_across_clients() {
             {"title":"Already answered?","options":["Yes","No"]}, {"title":"Project name?","options":null}]},
         {"id":"old-reply","type":"userMessage","content":[{"type":"text","text":old_reply}]}
     ]})];
+    // Force the answer and original question onto separate history pages.
+    // A full resume response is forbidden by the fake above.
+    {
+        let mut history = fake.history.lock().unwrap();
+        let items = history[0]["items"].as_array_mut().unwrap();
+        let reply = items.pop().unwrap();
+        for i in 0..20 {
+            items.push(
+                json!({"id":format!("history-{i}"), "type":"agentMessage", "text":"Earlier work"}),
+            );
+        }
+        items.push(reply);
+    }
     let daemon = Daemon::with(Options {
         codex_socket: Some(path),
         verifier: deckd::trust::FakeVerifier { trusted: true, capped: false },
@@ -588,4 +630,59 @@ async fn a_loaded_thread_is_an_agent_its_approval_a_card_and_an_order_a_steer() 
     let _ = tokio::time::timeout(PATIENCE, client).await;
     daemon.shutdown().await;
     let _ = std::fs::remove_dir_all(path.parent().unwrap());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_slow_history_does_not_block_questions_or_native_answers() {
+    let path = socket_path("history-prompt");
+    let mut fake = fake_daemon(path.clone()).await;
+    fake.stall_history
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    let daemon = Daemon::with(Options {
+        codex_socket: Some(path),
+        ..Options::default()
+    })
+    .await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+    let agent = agent_with_key(&daemon, "codex:t1").await;
+    fake.request("thread/items/list").await;
+    fake.push.send(json!({"id":"native-question", "method":"item/tool/requestUserInput", "params":{
+        "threadId":"t1", "questions":[{"id":"q", "question":"Which database?", "options":[{"label":"SQLite"},{"label":"Postgres"}]}]
+    }})).unwrap();
+    daemon
+        .until("question available while history is stalled", |s| {
+            s.agents[&agent.id]
+                .card
+                .as_ref()
+                .is_some_and(|c| c.origin.kind == OriginKind::Question)
+        })
+        .await;
+    let card = daemon.api.bus.snapshot().agents[&agent.id]
+        .card
+        .clone()
+        .unwrap();
+    fake.push
+        .send(json!({"method":"serverRequest/resolved", "params":{
+            "threadId":"t1", "requestId":"native-question"
+        }}))
+        .unwrap();
+    daemon
+        .until("native answer clears the deck", |s| {
+            s.agents[&agent.id].card.is_none()
+        })
+        .await;
+    assert_eq!(card.status, CardStatus::Pending);
+    assert!(
+        tokio::time::timeout(
+            Duration::from_millis(100),
+            fake.response(&json!("native-question"))
+        )
+        .await
+        .is_err(),
+        "observing or clearing a native question must not answer it"
+    );
+    stop.send(true).unwrap();
+    client.await.unwrap();
+    daemon.shutdown().await;
 }

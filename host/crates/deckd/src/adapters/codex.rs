@@ -24,11 +24,11 @@
 //!   `Ingest::Nothing`: a hook that panicked on an unknown event would
 //!   take a tool call down with it.
 //!
-//! There are no question cards: Codex's `requestUserInput` is app-server
-//! only, so the hook path offers `Allow`/`Deny` and nothing else (facts
-//! §4.2: `updatedInput`/`updatedPermissions`/`interrupt` parse but fail
-//! closed, and there is no `acceptForSession` equivalent).
-use super::rt::{permission_card, Adapter, HookCtx, HookOutput, Ingest};
+//! Hooks only report state. A synchronous PermissionRequest hook runs
+//! before Codex presents its own approval UI; holding it hides that UI.
+//! Answers belong to the shared app-server connection, where the native
+//! client and deck receive the same request and the first answer wins.
+use super::rt::{Adapter, HookCtx, HookOutput, Ingest};
 // §5.6's PTT grammar is `deck_model::voice`'s, not this adapter's (B13).
 // This file used to carry its own list — the one with `sure` in it that
 // `adapters::claude`'s did not have, and without the `yep|yeah|nope` that
@@ -164,7 +164,7 @@ impl Adapter for Codex {
             // the roster drops them on `SessionEnd` or when the pid goes.
             lease_ttl_s: 0,
             caps: Caps {
-                answer: AnswerCap::Hold,
+                answer: AnswerCap::None,
                 order: OrderCap::Inject,
                 // Nothing to focus without a terminal (a Desktop-hosted
                 // thread), and §4.15 says an agent that does not claim it
@@ -202,17 +202,9 @@ impl Adapter for Codex {
                 Some(&summary(payload)),
                 TitleSource::Tool,
             )]),
-            Event::PermissionRequest => Ingest::Held {
-                cmd: permission_card(
-                    agent,
-                    &summary(payload),
-                    &[ALLOW, DENY],
-                    payload["tool_name"].as_str().map(str::to_string),
-                    turn_id(payload).map(str::to_string),
-                    ctx.hold_s,
-                ),
-                group: None,
-            },
+            // Always fall through to Codex's own approval flow, including
+            // while the app-server is reconnecting or discovering a new thread.
+            Event::PermissionRequest => Ingest::Report(vec![state(agent, AgentState::Question)]),
             Event::Stop | Event::TurnComplete => self.turn_complete(payload, ctx),
             // An interrupted turn is not a finished one: no reply, no
             // ready card, just a session that is waiting for its operator.
@@ -558,7 +550,7 @@ mod tests {
         assert_eq!(reg.pid, Some(4242), "the walk's pid, never $PPID");
         assert_eq!(reg.pid_kind, Some(deck_model::PidKind::Cli));
         assert_eq!(reg.lease_ttl_s, 0, "an adapter's agents never lease");
-        assert_eq!(reg.caps.answer, AnswerCap::Hold);
+        assert_eq!(reg.caps.answer, AnswerCap::None);
         assert!(reg.caps.focus, "there is a tty to focus");
         let terminal = reg.terminal.expect("a terminal");
         assert_eq!(terminal.program.as_deref(), Some("ghostty"));
@@ -578,31 +570,17 @@ mod tests {
     }
 
     #[test]
-    fn a_permission_request_becomes_a_held_allow_deny_card() {
+    fn a_permission_hook_reports_attention_without_holding_the_native_ui() {
         let codex = Codex::default();
-        let mut c = ctx("ag_1");
-        c.hold_s = 90;
         let payload = serde_json::json!({
-            "hook_event_name": "PermissionRequest",
-            "session_id": "u", "turn_id": "t1", "tool_name": "Bash",
-            "tool_input": {"command": "rm -rf build"}
+            "hook_event_name": "PermissionRequest", "session_id": "u",
+            "tool_name": "Bash", "tool_input": {"command": "ls"}
         });
-        let Ingest::Held { cmd, group } = codex.ingest(&payload, &c) else {
-            panic!("a permission request is held");
+        let Ingest::Report(requests) = codex.ingest(&payload, &ctx("ag_1")) else {
+            panic!("permission hooks must return immediately");
         };
-        assert!(group.is_none(), "Codex has no question groups in v1");
-        assert_eq!(cmd.text, "Bash: rm -rf build");
-        assert_eq!(
-            cmd.choices
-                .iter()
-                .map(|c| c.label.as_str())
-                .collect::<Vec<_>>(),
-            vec![ALLOW, DENY],
-            "no `Allow always`: the hook protocol has no session approval"
-        );
-        assert_eq!(cmd.timeout_s, Some(90));
-        assert_eq!(cmd.origin.tool.as_deref(), Some("Bash"));
-        assert_eq!(cmd.origin.request_id.as_deref(), Some("t1"));
+        assert!(matches!(requests.as_slice(), [Request::AgentUpdate(update)]
+            if update.state == Some(AgentState::Question)));
     }
 
     #[test]

@@ -16,6 +16,46 @@ pub(super) struct Question {
     options: Vec<String>,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ask(id: &str) -> Value {
+        json!({"type":"agentMessage", "delivery":"async", "id":id,
+            "questions":[{"title":id, "options":["Yes","No"]}]})
+    }
+
+    fn reply(id: &str) -> Value {
+        let key = json!(["request_user_input_async", id, 0]).to_string();
+        json!({"type":"userMessage", "content":[{"type":"text", "text":format!(
+            "{OPEN}{}{CLOSE}", json!([{"questionItemId":key,"answer":"Yes"}]))}]})
+    }
+
+    #[test]
+    fn history_resolves_questions_even_beyond_the_duplicate_window() {
+        let mut questions = Questions::default();
+        for i in 0..1100 {
+            questions.observe(&ask(&i.to_string()));
+        }
+        for i in 0..1100 {
+            questions.observe(&reply(&i.to_string()));
+        }
+        assert!(questions.pending.is_empty());
+    }
+
+    #[test]
+    fn an_answer_during_history_loading_is_never_resurrected() {
+        let mut old = Questions::default();
+        old.observe(&ask("old"));
+        let mut live = Questions::default();
+        live.observe(&reply("old"));
+        live.observe(&ask("new"));
+        live.merge_older(old);
+        assert_eq!(live.pending.len(), 1);
+        assert_eq!(live.pending[0].title, "new");
+    }
+}
+
 impl Question {
     pub fn reply(&self, answer: &Answer) -> Option<String> {
         let text = answer
@@ -109,6 +149,21 @@ impl Questions {
                 clear
             }
             _ => None,
+        }
+    }
+
+    /// Live events win over the snapshot fetched in the background. In
+    /// particular, a question answered during hydration must stay resolved.
+    pub fn merge_older(&mut self, older: Self) {
+        let mut pending: VecDeque<_> = older
+            .pending
+            .into_iter()
+            .filter(|q| !self.seen.contains(&q.key))
+            .collect();
+        pending.append(&mut self.pending);
+        self.pending = pending;
+        for key in older.seen {
+            self.remember(key);
         }
     }
 

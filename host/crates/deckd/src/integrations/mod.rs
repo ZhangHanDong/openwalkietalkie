@@ -1,7 +1,7 @@
 //! `deckd::integrations` — the hook installer (design §5.7, API §4.11).
 //!
-//! Four verbs (`status`, `install`, `uninstall`, `repair`) over four targets
-//! (`claude`, `codex`, `gemini`, `claude-desktop`). Every verb goes through the same three steps, and the order is the whole safety
+//! Four verbs (`status`, `install`, `uninstall`, `repair`) over five targets
+//! (`claude`, `codex`, `codex-desktop`, `gemini`, `claude-desktop`). Every verb goes through the same three steps, and the order is the whole safety
 //! argument:
 //!
 //! 1. **Plan.** Each target module reads the files it owns, merges its own
@@ -35,6 +35,7 @@ pub mod backup;
 pub mod claude;
 pub mod claude_legacy;
 pub mod codex;
+pub mod codex_desktop;
 pub mod markers;
 pub mod testdir;
 
@@ -50,14 +51,16 @@ use std::time::Duration;
 pub enum Target {
     Claude,
     Codex,
+    CodexDesktop,
     Gemini,
     ClaudeDesktop,
 }
 
 impl Target {
-    pub const ALL: [Target; 4] = [
+    pub const ALL: [Target; 5] = [
         Target::Claude,
         Target::Codex,
+        Target::CodexDesktop,
         Target::Gemini,
         Target::ClaudeDesktop,
     ];
@@ -66,6 +69,7 @@ impl Target {
         match self {
             Target::Claude => "claude",
             Target::Codex => "codex",
+            Target::CodexDesktop => "codex-desktop",
             Target::Gemini => "gemini",
             Target::ClaudeDesktop => "claude-desktop",
         }
@@ -75,6 +79,7 @@ impl Target {
         match self {
             Target::Claude => "Claude Code",
             Target::Codex => "Codex CLI",
+            Target::CodexDesktop => "Codex Desktop",
             Target::Gemini => "Gemini CLI",
             Target::ClaudeDesktop => "Claude Desktop",
         }
@@ -755,6 +760,7 @@ pub fn plan(env: &Env, target: Target, verb: Verb) -> Result<Plan, String> {
     match target {
         Target::Claude => claude::plan(env, verb, receipts.get(target)),
         Target::Codex => codex::plan(env, verb, receipts.get(target)),
+        Target::CodexDesktop => codex_desktop::plan(env, verb, receipts.get(target)),
         Target::Gemini | Target::ClaudeDesktop => Err(format!(
             "{} is designed but not built in v1 (design §5.3, §4.16); integrations status reports \
              it as absent",
@@ -795,6 +801,9 @@ pub fn apply(env: &Env, target: Target, verb: Verb, plan: Plan) -> Result<Receip
         }
     }
     let applied = backup::apply(writes, &env.backups())?;
+    if target == Target::CodexDesktop && verb.is_uninstall() {
+        codex_desktop::cleanup(env);
+    }
     // C24a: a settings file with a fatal diagnostic is discarded whole and in
     // silence. Re-read what the migration wrote and put the backup back rather
     // than report a success that voided the user's model, permissions and
@@ -902,6 +911,7 @@ pub fn status(env: &Env, only: Option<Target>) -> Vec<Report> {
         .map(|target| match target {
             Target::Claude => claude::status(env),
             Target::Codex => codex::status(env),
+            Target::CodexDesktop => codex_desktop::status(env),
             Target::Gemini | Target::ClaudeDesktop => Report::new(target, Status::Absent)
                 .with_detail(
                     "designed for v1.1 (design §5.3, §4.16); deckd writes nothing for it today",

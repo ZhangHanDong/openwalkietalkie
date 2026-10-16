@@ -484,7 +484,7 @@ pub enum IntegrationsCmd {
     Status {
         #[arg(long)]
         json: bool,
-        /// One of claude, codex, gemini, claude-desktop.
+        /// One of claude, codex, codex-desktop, gemini, claude-desktop.
         target: Option<String>,
     },
     /// Write deckd's hooks into a CLI's own config, backing up every file.

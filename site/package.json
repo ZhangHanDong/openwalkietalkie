@@ -1,0 +1,24 @@
+{
+  "name": "openwalkietalkie-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types --include-runtime=false",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/worker.test.mjs",
+    "test:browser": "playwright test",
+    "db:init:local": "wrangler d1 migrations apply openwalkietalkie-site --local",
+    "db:init": "wrangler d1 migrations apply openwalkietalkie-site --remote",
+    "waitlist:count": "wrangler d1 execute openwalkietalkie-site --remote --command='SELECT COUNT(*) AS signups FROM waitlist'",
+    "waitlist:export": "wrangler d1 execute openwalkietalkie-site --remote --command='SELECT email, created_at, consent_version FROM waitlist ORDER BY created_at' --json"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261016.1",
+    "@playwright/test": "1.64.1",
+    "typescript": "7.0.2",
+    "wrangler": "4.151.0"
+  }
+}

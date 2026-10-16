@@ -57,9 +57,7 @@
 }
 </script>
 
-<!-- PLACEHOLDER: analytics. openmicrokbd.org carries a Google tag here; this
-     site has no property yet. When one exists, paste the two gtag <script>
-     tags, then add the inline snippet's sha256 to script-src in _headers. -->
+<!-- No analytics scripts. Update the privacy notice before adding tracking. -->
 </head>
 <body>
 
@@ -77,7 +75,7 @@
     </a>
 
     <nav class="nav__links" aria-label="Sections">
-      <a href="#pile">The Pile</a>
+      <a href="#waitlist">Join the waitlist</a>
       <a href="#features">Features</a>
       <a href="#demo">Try It</a>
       <a href="#faces">Faces</a>
@@ -132,7 +130,7 @@
       <p class="hero__tagline">The open-source handheld radio for your AI agents.</p>
       <p class="hero__sub">A palm-sized deck with a touch screen, a scroll wheel and a push-to-talk key. It shows which agent needs you, and your voice goes to the one that does.</p>
       <div class="hero__cta">
-        <a class="btn btn--primary" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">Get the Source</a>
+        <a class="btn btn--primary" href="#waitlist">Join the waitlist</a>
         <a class="btn btn--ghost" href="#demo">Try It Live</a>
         <a class="btn btn--ghost" href="#download">Download for Mac</a>
       </div>
@@ -526,7 +524,7 @@
     <header class="section-head reveal">
       <p class="section-kicker">CHAPTER VI</p>
       <h2 class="section-title">THE BLUEPRINT</h2>
-      <p class="section-lede">Not a product you wait for — a repository you clone. The board, the firmware, the host service and the wire protocol, all in one tree.</p>
+      <p class="section-lede">Build your own from the open designs, or join the waitlist for a finished device. The board, firmware, host service and wire protocol are all in one tree.</p>
     </header>
 
     <div class="inv reveal">
@@ -637,6 +635,36 @@
   </div>
 </section>
 
+<!-- ============ HARDWARE WAITLIST ============ -->
+<section class="section waitlist" id="waitlist" aria-labelledby="waitlist-title">
+  <div class="wrap">
+    <div class="waitlist__panel">
+      <div class="waitlist__intro">
+        <p class="section-kicker">YOUR NEXT HANDHELD</p>
+        <h2 class="section-title" id="waitlist-title">WANT ONE<br />ON YOUR DESK?</h2>
+        <p>Join the waitlist for a finished OpenWalkieTalkie. We'll email you when it's available to buy.</p>
+        <p class="waitlist__note">No payment or commitment. Pricing and shipping dates will be announced when they're ready.</p>
+        <a class="waitlist__source" href="https://github.com/conol-ai/openwalkietalkie">Prefer to build your own? Get the source →</a>
+      </div>
+      <form class="waitlist__form" id="waitlist-form" action="/api/waitlist" method="post">
+        <label for="waitlist-email">Your email address</label>
+        <input id="waitlist-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" maxlength="254" required aria-describedby="waitlist-note" />
+        <div class="waitlist__trap" aria-hidden="true">
+          <label for="waitlist-company">Leave this field empty</label>
+          <input id="waitlist-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <label class="waitlist__consent" for="waitlist-consent">
+          <input id="waitlist-consent" name="consent" type="checkbox" value="yes" required />
+          <span>Email me about device availability. I've read the <a href="/privacy/">Privacy Policy</a>.</span>
+        </label>
+        <button class="btn btn--primary btn--big" type="submit">Join the waitlist</button>
+        <p class="waitlist__note" id="waitlist-note">Only device availability updates. Leave the list anytime by emailing <a href="mailto:privacy@cohdl.ai">privacy@cohdl.ai</a>.</p>
+        <p class="waitlist__status" id="waitlist-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
 <!-- ============ DOWNLOAD ============ -->
 <section class="section" id="download">
   <div class="wrap">
@@ -672,11 +700,15 @@
     <div class="footer__panel">
       <p class="footer__slogan">The open-source handheld radio for your AI agents.</p>
       <div class="footer__cta">
-        <a class="btn btn--primary" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">Get the Source</a>
+        <a class="btn btn--primary" href="#waitlist">Join the waitlist</a>
+        <a class="btn btn--ghost" href="https://github.com/conol-ai/openwalkietalkie" target="_blank" rel="noopener">Get the Source</a>
         <a class="btn btn--ghost" href="#demo">Try It</a>
         <a class="btn btn--ghost" href="#top">Back to Top ▲</a>
       </div>
       <nav class="footer__links" aria-label="Footer">
+        <a href="/privacy/">Privacy Policy</a>
+        <a href="/cookies/">Cookie information</a>
+        <a href="/cookies/" data-privacy-open>Privacy notice</a>
         <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/hardware" target="_blank" rel="noopener">hardware/</a>
         <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/src" target="_blank" rel="noopener">src/</a>
         <a href="https://github.com/conol-ai/openwalkietalkie/tree/main/host" target="_blank" rel="noopener">host/</a>
@@ -693,5 +725,7 @@
 </footer>
 
 <script src="/js/main.js"></script>
+<script src="/js/waitlist.js"></script>
+<script src="/js/privacy.js"></script>
 </body>
 </html>

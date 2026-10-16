@@ -20,3 +20,8 @@ __pycache__/
 
 # Cloudflare wrangler cache for the website
 /site/.wrangler/
+/site/node_modules/
+/site/.dev.vars*
+/site/.env*
+/site/test-results/
+/site/playwright-report/

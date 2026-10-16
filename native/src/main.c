@@ -118,6 +118,7 @@ int main(void)
             else owt_bluetooth_message(&message);
         }
         uint32_t now = rt_tick_get_millisecond();
+        owt_bluetooth_poll(now);
         owt_audio_poll(now);
         /* Continue host/audio work during the splash, but don't interpret
          * touches against controls that are not visible yet. */

@@ -13,6 +13,7 @@
 //! in `theme` colours at `layout` rectangles), `signature` + `damage` find what
 //! to redraw.
 
+pub mod bluetooth;
 pub mod damage;
 pub mod faces;
 pub mod font;

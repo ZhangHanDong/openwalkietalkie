@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 84] = [
+const DECK_SCENES: [&str; 88] = [
     "roster",
     "roster-page2",
     "roster-offline",
@@ -116,6 +116,10 @@ const DECK_SCENES: [&str; 84] = [
     "slide-50",
     "slide-75",
     "battery-low-header",
+    "bluetooth-strong",
+    "bluetooth-weak",
+    "bluetooth-unknown",
+    "bluetooth-disconnected",
 ];
 
 const LONG_QUESTION: &str = "The staging database has 3 pending migrations and the integration tests fail on main. Apply them before the deploy?";
@@ -147,6 +151,15 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
     ui.deck.host_present = true;
     ui.connected = true;
     match scene {
+        "bluetooth-strong" | "bluetooth-weak" | "bluetooth-unknown" | "bluetooth-disconnected" => {
+            use ui::bluetooth::{Level, Status};
+            ui.bluetooth = match scene {
+                "bluetooth-strong" => Status::Signal(Level::Strong),
+                "bluetooth-weak" => Status::Signal(Level::Weak),
+                "bluetooth-unknown" => Status::Unknown,
+                _ => Status::Disconnected,
+            };
+        }
         "session-settings" | "session-models" | "session-effort" | "session-claude" | "session-pending" | "session-offline" => {
             ui.agents.view = AgentsView::Channel;
             ui.agents.agent = 2;

@@ -508,6 +508,7 @@ fn every_manager_view_keeps_its_hint_bar_inside_and_fits_the_mockup_strings() {
     let frame = full(&manager_with(1, 0, false));
     let mockup_frame = full_draw(|band| {
         overlay::manager::draw(band, &manager_with(1, 0, false));
+        crate::ui::bluetooth::draw(band, crate::ui::bluetooth::Status::Disconnected);
     });
     assert_frame(&frame, &mockup_frame, "the overlay alone is the frame (opaque)");
 }
@@ -603,8 +604,11 @@ fn the_tutorial_pages_stay_inside_the_arcs_and_a_first_run_refreshes_partially()
         assert_eq!(lit_outside_safe_area(&frame), None, "{:?}", ui.tutorial.step);
         assert_hint_bar_fits(&frame, "tutorial");
         assert!(overlay::opaque(ui));
-        let alone = full_draw(|band| overlay::draw(band, ui));
-        assert_frame(&frame, &alone, "the tutorial alone is the frame");
+        let alone = full_draw(|band| {
+            overlay::draw(band, ui);
+            crate::ui::bluetooth::draw(band, ui.bluetooth);
+        });
+        assert_frame(&frame, &alone, "the tutorial plus Bluetooth is the frame");
     }
     // A scripted first run: every frame refreshes partially and equals a
     // full redraw.

@@ -3,7 +3,7 @@
 use super::*;
 use crate::{
     control::{Button, Control, Edge, Wheel},
-    ui::{overlay, state::{Overlay, PttSession, Toast, FACE_W, STRIP_ONE}, Update},
+    ui::{bluetooth, overlay, state::{Overlay, PttSession, Toast, FACE_W, STRIP_ONE}, Update},
 };
 
 const TEMPLATES: [Template; 5] = [
@@ -39,6 +39,7 @@ fn a_strip_at_rest_is_the_static_face_byte_for_byte() {
         let expected = full_draw(|band| {
             scene::draw_face(band, &ui, face);
             overlay::draw(band, &ui);
+            bluetooth::draw(band, ui.bluetooth);
         });
         assert_frame(&full(&ui), &expected, "a resting strip must be the face itself");
         let mut cut = on(face.template);
@@ -51,8 +52,10 @@ fn a_strip_at_rest_is_the_static_face_byte_for_byte() {
 fn a_slide_shows_the_two_neighbours_side_by_side() {
     let mut ui = quiet();
     for from in 0..ui.global.strip_len - 1 {
-        let left = full(&on_index(&ui, from));
-        let right = full(&on_index(&ui, from + 1));
+        // Face pixels move; the Bluetooth indicator remains fixed on top.
+        let left = full_draw(|band| scene::draw_face(band, &ui, ui.face_at(from).unwrap()));
+        let right = full_draw(|band| scene::draw_face(band, &ui, ui.face_at(from + 1).unwrap()));
+        let fixed = full(&on_index(&ui, from));
         for px in [1, 119, 240, 333, 479] {
             ui.global.current = from + 1;
             ui.global.strip_x = (from as i32 * FACE_W + px) * STRIP_ONE + 77;
@@ -60,7 +63,9 @@ fn a_slide_shows_the_two_neighbours_side_by_side() {
             let px = px as usize;
             for y in (0..480).step_by(7) {
                 for x in 0..480 {
-                    let expected = if x < 480 - px {
+                    let expected = if layout::BLUETOOTH.contains(x as i32, y as i32) {
+                        pixel(&fixed, x, y)
+                    } else if x < 480 - px {
                         pixel(&left, x + px, y)
                     } else {
                         pixel(&right, x - (480 - px), y)
@@ -84,10 +89,13 @@ fn beyond_the_ends_of_the_strip_is_canvas() {
     let mut ui = quiet();
     ui.global.strip_x = -12 * STRIP_ONE;
     let frame = full(&ui);
-    let home = full(&on_index(&ui, 0));
+    let home = full_draw(|band| scene::draw_face(band, &ui, ui.face_at(0).unwrap()));
+    let fixed = full(&on_index(&ui, 0));
     for y in (0..480).step_by(5) {
         for x in 0..480 {
-            let expected = if x < 12 { [0, 0] } else { pixel(&home, x - 12, y) };
+            let expected = if layout::BLUETOOTH.contains(x as i32, y as i32) {
+                pixel(&fixed, x, y)
+            } else if x < 12 { [0, 0] } else { pixel(&home, x - 12, y) };
             assert_eq!(pixel(&frame, x, y), expected);
         }
     }
@@ -227,7 +235,9 @@ fn an_opaque_overlay_owns_every_pixel_and_hides_the_face_from_damage() {
         );
         // Only the overlays register regions: a hidden face causes no damage.
         let mut overlays = Box::new(Signature::new());
-        overlay::signature(ui, &mut crate::ui::signature::SigBuilder::new(&mut overlays));
+        let mut builder = crate::ui::signature::SigBuilder::new(&mut overlays);
+        overlay::signature(ui, &mut builder);
+        bluetooth::signature(ui.bluetooth, &mut builder);
         assert_eq!(signature(ui).regions(), overlays.regions());
     }
     // The remove-confirm dialog and a toast are not opaque: the face still draws.

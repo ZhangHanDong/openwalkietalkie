@@ -104,6 +104,7 @@ impl I2c for Bus {
 
 struct Core {
     ui: UiState,
+    rssi: ui::bluetooth::RssiFilter,
     contact: touch_state::Contact,
     rx: wire::Reassembler,
     devices: u32,
@@ -132,6 +133,7 @@ impl Core {
     const fn new() -> Self {
         Self {
             ui: UiState::new(),
+            rssi: ui::bluetooth::RssiFilter::new(),
             contact: touch_state::Contact::new(),
             rx: wire::Reassembler::new(),
             devices: 0,
@@ -735,8 +737,23 @@ pub unsafe extern "C" fn owt_core_hid_connected(connected: bool) {
     let mut update = Update::new();
     core.ui.set_connected(connected, &mut update);
     core.redraw |= update.dirty;
+    core.rssi = ui::bluetooth::RssiFilter::new();
+    core.redraw |= core.ui.update_bluetooth(if connected {
+        ui::bluetooth::Status::Unknown
+    } else {
+        ui::bluetooth::Status::Disconnected
+    });
     core.rx.clear();
     (*core::ptr::addr_of_mut!(LINE)).clear();
+}
+
+/// Called on the app thread after the BLE worker queues a measurement.
+#[no_mangle]
+pub unsafe extern "C" fn owt_core_bluetooth_rssi(rssi: i8) {
+    let core = &mut *core::ptr::addr_of_mut!(CORE);
+    if core.ui.connected {
+        core.redraw |= core.ui.update_bluetooth(core.rssi.sample(Some(rssi)));
+    }
 }
 
 /// A channel-5 body, with or without its report id.

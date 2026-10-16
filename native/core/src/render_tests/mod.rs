@@ -21,6 +21,7 @@ use crate::{
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*, primitives::Rectangle};
 
 mod agents;
+mod bluetooth;
 mod fuzz;
 mod kit;
 mod macropad;

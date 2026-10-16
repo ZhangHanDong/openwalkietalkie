@@ -40,7 +40,10 @@ use crate::{
         proto,
     },
     logln,
-    ui::UiState,
+    ui::{
+        bluetooth::{RssiFilter, Status as BluetoothStatus},
+        UiState,
+    },
 };
 use core::{
     cell::{Cell, RefCell},
@@ -114,6 +117,8 @@ fn flags(link: Link) -> &'static Flags {
 
 /// Whether any link is up, for the UI.
 pub static UI_STATUS: Signal<CriticalSectionRawMutex, bool> = Signal::new();
+/// BLE has its own signal: USB remains usable when Bluetooth disconnects.
+pub static UI_BLUETOOTH: Signal<CriticalSectionRawMutex, BluetoothStatus> = Signal::new();
 /// Parsed channel-5 lines (or why one could not be), for the app task.
 pub static DECK_RX: Channel<CriticalSectionRawMutex, Result<HostMsg, ErrWhy>, 8> = Channel::new();
 
@@ -146,6 +151,9 @@ fn link_up(link: Link) {
     if flags(link).up.swap(true, Ordering::AcqRel) {
         return;
     }
+    if link == Link::Ble {
+        UI_BLUETOOTH.signal(BluetoothStatus::Unknown);
+    }
     UI_STATUS.signal(true);
 }
 
@@ -164,6 +172,9 @@ fn reset_hosts(link: Link) {
 /// A link went down: BLE disconnected, USB unconfigured or suspended.
 fn link_down(link: Link) {
     let was_up = flags(link).up.swap(false, Ordering::AcqRel);
+    if link == Link::Ble {
+        UI_BLUETOOTH.signal(BluetoothStatus::Disconnected);
+    }
     crate::audio::voice::link_lost(link);
     reset_hosts(link);
     if !was_up {
@@ -490,10 +501,11 @@ pub async fn task(p: RadioPeripherals, address: [u8; 6]) {
                     server: &server,
                     conn: &conn,
                 };
-                select3(
+                select4(
                     gatt_task(&server, &conn, &mut saved_bond),
                     transmit_task(Link::Ble, &mut sink),
                     voice_task(&stack, &server, &conn),
+                    rssi_task(&stack, &conn),
                 )
                 .await;
                 conn.raw().disconnect();
@@ -503,6 +515,23 @@ pub async fn task(p: RadioPeripherals, address: [u8; 6]) {
         },
     )
     .await;
+}
+
+/// Cancelled along with the other connection tasks on disconnect. A failed
+/// sample hides the old bars but must never terminate an otherwise good link.
+async fn rssi_task(
+    stack: &Stack<'_, BleController, DefaultPacketPool>,
+    conn: &GattConnection<'_, '_, DefaultPacketPool>,
+) {
+    let mut filter = RssiFilter::new();
+    loop {
+        let sample = with_timeout(Duration::from_secs(2), conn.raw().rssi(stack))
+            .await
+            .ok()
+            .and_then(Result::ok);
+        UI_BLUETOOTH.signal(filter.sample(sample));
+        Timer::after_secs(3).await;
+    }
 }
 
 async fn gatt_task(

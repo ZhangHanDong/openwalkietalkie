@@ -33,6 +33,9 @@ static uint8_t input_value[63], output_value[63];
 static uint8_t cccd[2], battery_cccd[2];
 static volatile uint8_t connection = 0xff;
 static volatile uint32_t connection_epoch;
+/* App-thread owned. A lost response clears the bars on the next poll. */
+static uint32_t rssi_at;
+static bool rssi_pending;
 static sibles_hdl hid, dis, bas;
 static char subscription_key[24];
 static uint8_t persisted_cccd = 0xff;
@@ -306,6 +309,18 @@ static int ble_event(uint16_t event, uint8_t *data, uint16_t length, uint32_t co
     case BLE_GAP_ENCRYPT_IND:
         rt_kprintf("BLE: link encrypted\n");
         message.type = OWT_ENCRYPTED; message.conn_idx = connection; break;
+    case BLE_GAP_REMOTE_RSSI_IND:
+        {
+            const ble_gap_remote_rssi_ind_t *sample = (const void *)data;
+            if (sample->conn_idx != connection || connection == 0xff) return 0;
+            message.type = OWT_RSSI;
+            message.conn_idx = sample->conn_idx;
+            message.data[0] = (uint8_t)sample->rssi;
+            message.epoch = connection_epoch;
+            /* A missed RSSI update must not disconnect a healthy HID link. */
+            owt_post(&message);
+            return 0;
+        }
     case SIBLES_MTU_EXCHANGE_IND:
         rt_kprintf("BLE: MTU=%u\n", ((sibles_mtu_exchange_ind_t *)data)->mtu);
         return 0;
@@ -348,6 +363,16 @@ void owt_bluetooth_start(void)
     sifli_ble_enable();
 }
 
+void owt_bluetooth_poll(uint32_t now)
+{
+    if (connection == 0xff || now - rssi_at < 3000) return;
+    rssi_at = now;
+    if (rssi_pending) owt_core_bluetooth_rssi(127);
+    ble_gap_get_rssi_t request = {.conn_idx = connection};
+    rssi_pending = ble_gap_get_remote_rssi(&request) == 0;
+    if (!rssi_pending) owt_core_bluetooth_rssi(127);
+}
+
 /* SDK hook runs after NVDS initialization and before controller startup. */
 ble_common_update_type_t ble_request_public_address(bd_addr_t *address)
 {
@@ -371,13 +396,21 @@ void owt_bluetooth_message(const struct owt_message *message)
     case OWT_BLE_READY: start_hid(); break;
     case OWT_CONNECTED:
         cccd[0] = battery_cccd[0] = 0; subscription_key[0] = 0; persisted_cccd = 0xff;
+        rssi_pending = false;
+        rssi_at = rt_tick_get_millisecond() - 3000;
         owt_core_hid_connected(true);
         rt_kprintf("BLE: connected\n"); break;
     case OWT_DISCONNECTED:
+        rssi_pending = false;
         owt_core_hid_connected(false);
         rt_kprintf("BLE: disconnected reason=0x%02x\n", message->data[0]); break;
     case OWT_ENCRYPTED:
         restore_subscription();
+        break;
+    case OWT_RSSI:
+        if (message->conn_idx != connection || !rssi_pending) break;
+        rssi_pending = false;
+        owt_core_bluetooth_rssi((int8_t)message->data[0]);
         break;
     case OWT_CCCD:
         if (message->conn_idx != connection) break;

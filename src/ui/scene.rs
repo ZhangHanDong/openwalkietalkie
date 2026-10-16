@@ -1,4 +1,4 @@
-//! The frame: one or two faces of the strip, then the overlays. `draw` and
+//! The frame: one or two faces, overlays, then Bluetooth status. `draw` and
 //! `signature` walk the same structure, so what is described is what is drawn.
 //!
 //! `draw` runs once per band and once per damage rectangle; the band's clip
@@ -28,6 +28,7 @@ pub fn draw(band: &mut Band, ui: &UiState) {
         band.restore(window);
     }
     overlay::draw(band, ui);
+    super::bluetooth::draw(band, ui.bluetooth);
 }
 
 // A caller may already have moved the origin (tests sweep it); slide inside.
@@ -79,4 +80,5 @@ pub fn signature(ui: &UiState, sig: &mut Signature) {
     }
     builder.set_origin_x(0);
     overlay::signature(ui, &mut builder);
+    super::bluetooth::signature(ui.bluetooth, &mut builder);
 }

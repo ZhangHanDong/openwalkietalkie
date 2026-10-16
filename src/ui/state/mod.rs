@@ -255,6 +255,8 @@ pub struct UiState {
     pub battery: BatteryState,
     /// HID link.
     pub connected: bool,
+    /// BLE quality only: a USB connection must not light the Bluetooth bars.
+    pub bluetooth: super::bluetooth::Status,
     /// The only clock `draw` may read.
     pub now_ms: u32,
     /// Bumped by every dirty update; the fallback signature hash.
@@ -280,6 +282,7 @@ impl UiState {
             image: crate::ui::image::View::new(),
             battery: BatteryState::UNKNOWN,
             connected: false,
+            bluetooth: super::bluetooth::Status::Disconnected,
             now_ms: 0,
             revision: 0,
             deck: Deck::new(),
@@ -303,6 +306,7 @@ impl UiState {
         self.image.open = false;
         self.battery = BatteryState::UNKNOWN;
         self.connected = false;
+        self.bluetooth = super::bluetooth::Status::Disconnected;
         self.now_ms = 0;
         self.revision = self.revision.wrapping_add(1);
         self.deck.reset();
@@ -564,6 +568,14 @@ impl UiState {
         if changed {
             self.invalidate();
         }
+        changed
+    }
+
+    /// A signal update redraws only the indicator and never wakes the panel.
+    /// Its own damage signature tracks changes without bumping `revision`.
+    pub fn update_bluetooth(&mut self, status: super::bluetooth::Status) -> bool {
+        let changed = self.bluetooth != status;
+        self.bluetooth = status;
         changed
     }
 

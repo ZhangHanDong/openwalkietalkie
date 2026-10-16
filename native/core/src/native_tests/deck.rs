@@ -13,6 +13,34 @@ extern "C" fn owt_hid_disconnect() {
 
 const AGENT: &[u8] = br#"{"m":"agent","id":1,"kind":"codex","name":"cohdl-api","state":"working"}"#;
 
+#[test]
+fn bluetooth_rssi_resets_on_reconnect_and_never_wakes_the_panel() {
+    use ui::bluetooth::{Level, Status};
+    let _guard = lock(&CORE_LOCK);
+    reset();
+    unsafe {
+        owt_core_hid_connected(true);
+        let core = &mut *core::ptr::addr_of_mut!(CORE);
+        core.power.tick(power::OFF_AFTER_MS + 1);
+        assert_eq!(core.power.screen(), power::Screen::Off);
+        assert_eq!(core.ui.bluetooth, Status::Unknown);
+        owt_core_bluetooth_rssi(-40);
+        assert_eq!(core.ui.bluetooth, Status::Signal(Level::Strong));
+        assert_eq!(core.power.screen(), power::Screen::Off);
+        owt_core_bluetooth_rssi(127);
+        assert_eq!(core.ui.bluetooth, Status::Unknown);
+        owt_core_bluetooth_rssi(-95);
+        assert_eq!(core.ui.bluetooth, Status::Signal(Level::Weak));
+        owt_core_hid_connected(false);
+        owt_core_bluetooth_rssi(-40);
+        assert_eq!(core.ui.bluetooth, Status::Disconnected);
+        owt_core_hid_connected(true);
+        assert_eq!(core.ui.bluetooth, Status::Unknown);
+        owt_core_bluetooth_rssi(-40);
+        assert_eq!(core.ui.bluetooth, Status::Signal(Level::Strong));
+    }
+}
+
 /// Fresh core on the Agents face, link up, keypad present, screen awake.
 fn connected() -> &'static mut Core {
     reset();

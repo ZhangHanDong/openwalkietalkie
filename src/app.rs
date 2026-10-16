@@ -10,7 +10,7 @@
 use crate::{
     battery::BATTERY,
     control::{now_ms, Stamped, CONTROLS},
-    deck::msg::{ErrWhy, HostMsg},
+    deck::msg::HostMsg,
     display::{Band, Co5300, BANDS, BAND_H},
     link::DECK_RX,
     logln,
@@ -18,7 +18,7 @@ use crate::{
     ui::{self, damage::Damage, signature::Signature, UiState, Update},
 };
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
-use embassy_futures::select::{select, select4, Either, Either4};
+use embassy_futures::select::{select3, select4, Either3, Either4};
 use sifli_hal::lcdc::Error;
 
 /// Set by `emit` when an update asks for the power-off; `run` acts on it
@@ -91,8 +91,9 @@ pub async fn run(mut display: Option<Co5300>, band: &'static mut Band) -> ! {
         dirty |= match select4(
             CONTROLS.receive(),
             BATTERY.wait(),
-            select(
+            select3(
                 crate::link::UI_STATUS.wait(),
+                crate::link::UI_BLUETOOTH.wait(),
                 embassy_time::Timer::after_millis(timeout as u64),
             ),
             // A parsed `HostMsg` is over half a kilobyte (one `cardtext`
@@ -108,19 +109,16 @@ pub async fn run(mut display: Option<Co5300>, band: &'static mut Band) -> ! {
                 crate::link::battery(battery);
                 state.update_battery(battery)
             }
-            Either4::Third(Either::First(connected)) => {
+            Either4::Third(Either3::First(connected)) => {
                 let mut update = Update::new();
                 if state.connected != connected {
                     state.set_connected(connected, &mut update);
                 }
                 emit(state, &mut power, scratch, &mut update)
             }
-            Either4::Third(Either::Second(())) => false,
-            Either4::Fourth(()) => match DECK_RX.try_receive() {
-                Ok(inbound) => host(state, &mut power, scratch, &inbound),
-                // Only this task receives, so the line is always still there.
-                Err(_) => false,
-            },
+            Either4::Third(Either3::Second(bluetooth)) => state.update_bluetooth(bluetooth),
+            Either4::Third(Either3::Third(())) => false,
+            Either4::Fourth(()) => host(state, &mut power, scratch),
         };
         dirty |= tick(state, &mut power, scratch);
         while let Ok(stamped) = CONTROLS.try_receive() {
@@ -429,14 +427,15 @@ fn apply(
     dirty | emit(state, power, scratch, &mut update)
 }
 /// One channel-5 line from the GATT task, or why it could not be parsed.
-fn host(
-    state: &mut UiState,
-    power: &mut Policy,
-    scratch: &mut HostMsg,
-    inbound: &Result<HostMsg, ErrWhy>,
-) -> bool {
+/// Keep the received HostMsg and Update out of the async dispatch frame.
+#[inline(never)]
+fn host(state: &mut UiState, power: &mut Policy, scratch: &mut HostMsg) -> bool {
+    // Only this task receives, so the line signalled ready is still there.
+    let Ok(inbound) = DECK_RX.try_receive() else {
+        return false;
+    };
     let mut update = Update::new();
-    match inbound {
+    match &inbound {
         Ok(msg) => state.host(msg, now_ms(), &mut update),
         Err(why) => state.reject(*why, now_ms(), &mut update),
     }

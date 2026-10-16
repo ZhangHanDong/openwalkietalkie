@@ -731,8 +731,9 @@ fn the_listening_overlay_owns_every_pixel_and_registers_five_lanes() {
     });
     assert_frame(&stale, &clean, "an opaque overlay must not let stale pixels through");
     let sig = signature(&ui);
-    // The notice lanes, then title, waveform, transcript, context and hint.
-    assert_eq!(sig.regions().len(), 2 + 5);
+    // Notice lanes, title/waveform/transcript/context/hint, then Bluetooth.
+    assert_eq!(sig.regions().len(), 2 + 5 + 1);
+    assert_eq!(sig.regions().last().unwrap().0, layout::BLUETOOTH);
     assert_eq!(sig.regions()[3].0, layout::PTT_WAVE);
     // The face beneath contributes nothing, so switching it changes no pixel.
     let mut other = Box::new(*ui);
@@ -753,7 +754,7 @@ fn signature_region_counts_are_fixed_per_view() {
     ];
     for (name, ui, lanes) in counts {
         let sig = signature(&ui);
-        assert_eq!(sig.regions().len(), lanes + 2, "{name}");
+        assert_eq!(sig.regions().len(), lanes + 2 + 1, "{name}");
         assert!(!sig.overflowed());
         assert!(sig.regions().iter().all(|(rect, _)| Rect::SCREEN.intersection(rect) == *rect));
     }

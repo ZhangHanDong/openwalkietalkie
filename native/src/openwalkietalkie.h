@@ -20,6 +20,7 @@ uint32_t owt_core_splash_duration(void);
 uint16_t owt_core_rotation(void);
 uint8_t owt_core_board(void);
 void owt_core_hid_connected(bool connected);
+void owt_core_bluetooth_rssi(int8_t rssi);
 void owt_core_hid_report(const uint8_t *data, size_t len);
 uint8_t owt_core_battery_percent(void);
 /* Write cached battery state into the 38-byte battery diagnostic core tail.
@@ -36,6 +37,7 @@ void owt_core_wake(uint32_t now);
 enum owt_message_type {
     OWT_BLE_READY, OWT_CONNECTED, OWT_DISCONNECTED, OWT_REPORT,
     OWT_CCCD, OWT_ENCRYPTED, OWT_BT_EVENT, OWT_WAKE_DISPLAY, OWT_DIAGNOSE,
+    OWT_RSSI,
 };
 struct owt_message {
     uint8_t type, conn_idx;
@@ -49,6 +51,7 @@ void owt_wake(void);
 void owt_bluetooth_start(void);
 void owt_bluetooth_message(const struct owt_message *message);
 void owt_bluetooth_battery(uint8_t percent);
+void owt_bluetooth_poll(uint32_t now);
 int owt_hid_notify(const uint8_t *data, size_t length);
 void owt_hid_disconnect(void);
 void owt_board_start(void);

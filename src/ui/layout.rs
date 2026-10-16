@@ -201,6 +201,8 @@ pub const HEADER_NAME_X: i32 = 60;
 pub const EDGE_ZONE_H: i32 = 48;
 /// Top-edge pill: a notice is waiting in the drawer.
 pub const INDICATOR: Rect = Rect::new(223, 10, 34, 5);
+/// Bluetooth rune and four RSSI bars; separate from the notification marker.
+pub const BLUETOOTH: Rect = Rect::new(374, 10, 52, 20);
 /// The toast's whole lane, including its slide-down travel from y = -60 and
 /// the header row it blanks on either side of the card.
 pub const TOAST_LANE: Rect = Rect::new(32, 0, 416, 68);

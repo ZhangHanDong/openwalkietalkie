@@ -329,6 +329,14 @@ the whole 48-row bands that contain a changed region, from one buffer. A face
 slide redraws everything. Startup and wake redraw the entire panel before
 enabling it. See [display performance](docs/display-performance.md).
 
+The Bluetooth indicator above the header shows four RSSI bars, sampled about
+every three seconds while connected. Bars are blue, or amber for a weak link;
+a gray rune and dash mean disconnected, and a blue rune with unlit bars means
+the reading is unavailable. USB connectivity does not change these bars.
+The initial bar thresholds are −85, −70 and −55 dBm; smoothing and 3 dB
+hysteresis keep small fluctuations from flickering. Signal updates do not
+wake the display. Both the Embassy and native firmware use the same indicator.
+
 The battery shows in every face's header (amber at 15% or below) and in
 Settings → About. Voltage comes from the SF32's internal VBAT ADC channel 7, using factory
 eFuse calibration when available. The SGM41562S at I2C address `0x03` supplies

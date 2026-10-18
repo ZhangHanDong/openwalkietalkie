@@ -90,7 +90,7 @@
   <h2>Chinese text and clearer agent conversations</h2>
   <p>A bundled Noto Sans CJK font adds simplified and traditional Chinese coverage. Codex clarification questions and answers appear as readable headings, question context, and answer text, instead of showing their transport envelope. This release also includes the Codex Desktop integration and Bluetooth signal-strength indicator added since 0.3.0.</p>
   <h2>What has been tested</h2>
-  <p>Both board variants build and pass software checks. An earlier 0.3.1 candidate completed the full original-0.3.0-to-new-bootloader GUI migration on Rev A in about five and a half minutes. Its recovery bootloader is byte-for-byte identical to the one in 0.4.0.</p>
+  <p>Both board variants build and pass software checks. An earlier 0.3.1 candidate completed the full original-0.3.0-to-new-bootloader GUI migration on Rev A in about five and a half minutes. It used the same recovery source. The CI release rebuild produces different bootloader bytes and has not been flashed in that test.</p>
   <p>The final 0.4.0 GUI rerun was blocked by local desktop automation before flashing. A shipped Rev B was unavailable, so its complete migration, display behavior, and pairing/settings preservation remain to be checked on hardware. These are pending checks, not completed validation. No device audio test was performed in this session.</p>
   <h2>Get v0.4.0</h2>
   <p>Use <strong>Check for Updates</strong> or <a href="/#download">download the signed and notarized Mac app</a> for Apple Silicon or Intel. macOS 13 or later is required.</p>

@@ -5,7 +5,9 @@
 //! pixel work: by its line box in y, then per glyph in x, then row by row.
 //! `bg = Some` writes a 16-step fg/bg ramp straight into the band rows;
 //! `bg = None` blends each pixel over what is there (about 3x the cost).
-//! Every codepoint the atlas lacks draws as the replacement box.
+//! Chinese uses the shared, scaled 2 bpp atlas in `font_cjk`. Codepoints
+//! missing from both atlases draw as the replacement box.
+use super::font_cjk;
 use super::font_data::{FontData, Glyph, FONTS, FONT_COUNT, REPLACEMENT};
 use super::theme::{font_spec, FontSpec, RAMP};
 use crate::display::Band;
@@ -40,7 +42,7 @@ fn data(font: Font) -> &'static FontData {
 
 /// The glyph for `c`, or the replacement box. ASCII is indexed directly (the
 /// generator emits it first, in order); the rest is a binary search.
-fn glyph(data: &'static FontData, c: char) -> &'static Glyph {
+fn glyph(data: &'static FontData, c: char) -> Glyph {
     let cp = c as u32;
     let glyphs = data.glyphs;
     let found = if (0x20..0x7F).contains(&cp) {
@@ -50,13 +52,14 @@ fn glyph(data: &'static FontData, c: char) -> &'static Glyph {
     } else {
         None
     };
-    found
-        .or_else(|| glyphs.binary_search_by_key(&REPLACEMENT, |g| g.cp).ok().and_then(|i| glyphs.get(i)))
-        .unwrap_or(&EMPTY)
+    found.copied()
+        .or_else(|| font_cjk::source(cp).map(|g| font_cjk::scaled(g, data.px)))
+        .or_else(|| glyphs.binary_search_by_key(&REPLACEMENT, |g| g.cp).ok().map(|i| glyphs[i]))
+        .unwrap_or(EMPTY)
 }
 
 /// Pen advance in half pixels: the glyph's plus the face's tracking.
-fn step(spec: &FontSpec, glyph: &Glyph) -> i32 {
+fn step(spec: &FontSpec, glyph: Glyph) -> i32 {
     glyph.advance as i32 * 2 + spec.tracking_half_px as i32
 }
 
@@ -160,6 +163,35 @@ fn blit(band: &mut Band, atlas: &[u8], glyph: &Glyph, gx: i32, gy: i32, fg: u32,
     }
 }
 
+/// Chinese uses the same clipping and blending contract as the Latin atlas.
+#[allow(clippy::too_many_arguments)]
+fn blit_cjk(band: &mut Band, source: &Glyph, glyph: &Glyph, gx: i32, gy: i32, fg: u32, ramp: Option<&[[u8; 2]; 16]>) {
+    let clip = band.bounding_box();
+    let x0 = gx.max(clip.top_left.x);
+    let x1 = (gx + glyph.w as i32).min(clip.top_left.x + clip.size.width as i32);
+    let y0 = gy.max(clip.top_left.y);
+    let y1 = (gy + glyph.h as i32).min(clip.top_left.y + clip.size.height as i32);
+    if x0 >= x1 || y0 >= y1 {
+        return;
+    }
+    for y in y0..y1 {
+        let coverage = |x: i32| font_cjk::coverage(source, glyph, (x - gx) as usize, (y - gy) as usize);
+        if let Some(ramp) = ramp {
+            if let Some(out) = band.row_mut(y, x0, x1) {
+                for (i, pixel) in out.chunks_exact_mut(2).enumerate() {
+                    let a = coverage(x0 + i as i32);
+                    if a != 0 { pixel.copy_from_slice(&ramp[a as usize]); }
+                }
+            }
+        } else {
+            for x in x0..x1 {
+                let a = coverage(x);
+                if a != 0 { band.blend_px(x, y, fg, a * 17); }
+            }
+        }
+    }
+}
+
 /// Draw one line. `baseline_y` is the text baseline. `bg`: `Some(colour)` when
 /// the text sits on that flat colour (fast path: a 16-step fg/bg ramp, no
 /// framebuffer reads), `None` to blend over whatever is there. Text wider
@@ -189,7 +221,9 @@ pub fn draw(
     let clip = band.bounding_box();
     let top = clip.top_left.y;
     let bottom = top + clip.size.height as i32;
-    if width == 0 || baseline_y - data.above as i32 >= bottom || baseline_y + data.below as i32 <= top {
+    let above = (data.above as i32).max(font_cjk::above(data.px));
+    let below = (data.below as i32).max(font_cjk::below(data.px));
+    if width == 0 || baseline_y - above >= bottom || baseline_y + below <= top {
         return width;
     }
     let left = clip.top_left.x;
@@ -211,7 +245,12 @@ pub fn draw(
         if glyph.w == 0 || glyph.h == 0 || gx + glyph.w as i32 <= left || gx >= right {
             continue;
         }
-        blit(band, data.atlas, glyph, gx, baseline_y - glyph.top as i32, fg, ramp.as_ref());
+        let gy = baseline_y - glyph.top as i32;
+        if let Some(source) = font_cjk::source(glyph.cp as u32) {
+            blit_cjk(band, &source, &glyph, gx, gy, fg, ramp.as_ref());
+        } else {
+            blit(band, data.atlas, &glyph, gx, gy, fg, ramp.as_ref());
+        }
     }
     width
 }
@@ -383,8 +422,29 @@ mod tests {
             assert_eq!(glyph(body, c).cp as u32, c as u32, "{c:?} missing");
         }
         // Everything else is the replacement box, from controls to emoji.
-        for c in ['\n', '\t', '\u{7f}', '\u{3a9}', '\u{4e2d}', '\u{1f600}', char::MAX] {
+        for c in ['\n', '\t', '\u{7f}', '\u{3a9}', '\u{1f600}', char::MAX] {
             assert_eq!(glyph(body, c).cp, REPLACEMENT, "{c:?}");
+        }
+    }
+
+    #[test]
+    fn chinese_uses_full_width_metrics_and_wraps_at_character_boundaries() {
+        for spec in RAMP {
+            for c in "中文简体繁體，。".chars() {
+                assert_eq!(glyph(data(spec.font), c).cp as u32, c as u32);
+            }
+            assert_eq!(measure(spec.font, "中文"), 2 * spec.px as i32 + spec.tracking_half_px as i32);
+            let text = "中文字体顯示測試";
+            let width = measure(spec.font, "中文");
+            let mut joined = String::new();
+            wrap(spec.font, text, width, 20, &mut |_, line, cut| {
+                assert!(!cut);
+                assert!(measure(spec.font, line) <= width);
+                joined.push_str(line);
+            });
+            assert_eq!(joined, text);
+            let (end, cut, fitted) = fit(data(spec.font), &spec, text, width);
+            assert!(text.is_char_boundary(end) && cut && px(fitted) <= width);
         }
     }
 

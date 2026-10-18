@@ -26,7 +26,7 @@ fn text<'a>(value: &'a Value, key: &str) -> &'a str {
 fn busy(value: &Value) -> bool {
     matches!(
         text(value, "phase"),
-        "checking" | "downloading" | "installing" | "reconnecting"
+        "checking" | "downloading" | "installing" | "reconnecting" | "bootloader"
     )
 }
 
@@ -52,10 +52,10 @@ impl Shell {
                 Ok(status) => {
                     if check { this.firmware.checked = Some(Instant::now()); }
                     let announce = status["available"].as_bool() == Some(true) && this.firmware.status["available"].as_bool() != Some(true);
-                    let previous = this.firmware.status["device"].clone();
+                    let previous = confirmation_target(&this.firmware.status);
                     this.firmware.status = status;
                     if announce { this.toast("A firmware update is available in Service → Updates.", window, cx); }
-                    if previous != this.firmware.status["device"] { this.firmware.confirm = false; this.firmware.selected_board = None; }
+                    if previous != confirmation_target(&this.firmware.status) { this.firmware.confirm = false; this.firmware.selected_board = None; }
                 }
                 Err(error) => { this.firmware.status = serde_json::json!({"phase":"error","error":failure_text(&error),"message":"Firmware updates are unavailable from this service."}); }
             }
@@ -131,6 +131,7 @@ impl Shell {
             .unwrap_or_else(|| text(device, "board"));
         let version = text(&status["release"]["firmware"], "version");
         let serial = text(device, "serial");
+        let bootloader_warning = requires_bootloader_warning(status);
         let active = busy(status) || self.firmware.pending;
         let can_install = !active
             && !dim
@@ -210,6 +211,18 @@ impl Shell {
             body = body.child(div().text_color(p.muted).child(error.to_string()));
         }
         if self.firmware.confirm {
+            if bootloader_warning {
+                body = body.child(
+                    v_flex()
+                        .gap_2()
+                        .child(
+                            div()
+                                .font_weight(gpui::FontWeight::BOLD)
+                                .child("Bootloader update — power must stay connected"),
+                        )
+                        .child(div().child(BOOTLOADER_WARNING)),
+                );
+            }
             body = body
                 .child(div().child(format!(
                     "Install firmware {version}? Keep USB connected until your deck restarts."
@@ -218,12 +231,21 @@ impl Shell {
                     h_flex()
                         .gap_2()
                         .child(
-                            Btn::new("firmware-confirm", "Install firmware")
-                                .solid()
-                                .disabled(!can_install)
-                                .on_click(cx.listener(|this, _, window, cx| {
+                            Btn::new(
+                                "firmware-confirm",
+                                if bootloader_warning {
+                                    "I understand — update device"
+                                } else {
+                                    "Install firmware"
+                                },
+                            )
+                            .solid()
+                            .disabled(!can_install)
+                            .on_click(
+                                cx.listener(|this, _, window, cx| {
                                     this.install_firmware(window, cx)
-                                })),
+                                }),
+                            ),
                         )
                         .child(Btn::new("firmware-cancel", "Cancel").on_click(cx.listener(
                             |this, _, _, cx| {
@@ -234,12 +256,19 @@ impl Shell {
                 );
         } else {
             body = body.child(
-                Btn::new("firmware-review", "Update firmware…")
-                    .disabled(!can_install)
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.firmware.confirm = true;
-                        cx.notify();
-                    })),
+                Btn::new(
+                    "firmware-review",
+                    if device["maintenance"] == true || device["recovery"] == true {
+                        "Resume update…"
+                    } else {
+                        "Update firmware…"
+                    },
+                )
+                .disabled(!can_install)
+                .on_click(cx.listener(|this, _, _, cx| {
+                    this.firmware.confirm = true;
+                    cx.notify();
+                })),
             );
         }
         ui::section("Updates", body, &p)
@@ -258,6 +287,7 @@ impl Shell {
                 .unwrap_or_else(|| text(&status["device"], "board").into()),
             serial: text(&status["device"], "serial").into(),
             version: text(&status["release"]["firmware"], "version").into(),
+            allow_bootloader_update: requires_bootloader_warning(status),
         };
         self.firmware.confirm = false;
         self.firmware.pending = true;
@@ -270,6 +300,19 @@ impl Shell {
             this.refresh_firmware(false, window, cx);
         });
     }
+}
+
+const BOOTLOADER_WARNING: &str = "This update may replace the bootloader, the software that starts your device. Keep USB-C firmly connected and your computer awake until the update finishes. Do not unplug or power off the device. Losing power during bootloader replacement can leave it unable to start or update over USB and require hardware repair. Bluetooth pairings are preserved.";
+
+fn requires_bootloader_warning(status: &Value) -> bool {
+    status["bootloader_warning"].as_bool() == Some(true)
+        || (status["release"]["firmware"]["protocol"] == 2
+            && (status["device"]["recovery_protocol"] != 2
+                || status["device"]["maintenance"] == true))
+}
+
+fn confirmation_target(status: &Value) -> Value {
+    serde_json::json!({"device":status["device"],"release":status["release"],"warning":requires_bootloader_warning(status)})
 }
 
 fn failure_text(error: &deck_client::ClientError) -> String {
@@ -303,6 +346,37 @@ fn needs_restart(info: &Value, expected: &str, version: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn bootloader_warning_covers_unknown_old_and_interrupted_devices() {
+        for device in [
+            serde_json::json!({}),
+            serde_json::json!({"recovery_protocol":1}),
+            serde_json::json!({"recovery_protocol":2,"maintenance":true}),
+        ] {
+            assert!(requires_bootloader_warning(
+                &serde_json::json!({"device":device,"release":{"firmware":{"protocol":2}}})
+            ));
+        }
+        assert!(!requires_bootloader_warning(
+            &serde_json::json!({"device":{"recovery_protocol":2},"release":{"firmware":{"protocol":2}}})
+        ));
+        assert!(BOOTLOADER_WARNING.contains("hardware repair"));
+        assert!(busy(&serde_json::json!({"phase":"bootloader"})));
+    }
+
+    #[test]
+    fn changing_release_or_device_invalidates_confirmation() {
+        let status = serde_json::json!({"device":{"serial":"A"},"release":{"firmware":{"protocol":2,"version":"0.3.1"}}});
+        let mut changed = status.clone();
+        changed["release"]["firmware"]["version"] = "0.3.2".into();
+        assert_ne!(confirmation_target(&status), confirmation_target(&changed));
+        changed = status.clone();
+        changed["device"]["serial"] = "B".into();
+        assert_ne!(confirmation_target(&status), confirmation_target(&changed));
+        changed = status.clone();
+        changed["progress"] = 50.into();
+        assert_eq!(confirmation_target(&status), confirmation_target(&changed));
+    }
     #[test]
     fn only_an_older_copy_of_this_bundled_daemon_is_restarted() {
         let exe = "/Applications/OpenWalkieTalkie.app/Contents/MacOS/deckd";

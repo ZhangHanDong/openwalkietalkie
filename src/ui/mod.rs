@@ -17,6 +17,7 @@ pub mod bluetooth;
 pub mod damage;
 pub mod faces;
 pub mod font;
+pub mod font_cjk;
 pub mod rich;
 pub mod font_data;
 pub mod icons;

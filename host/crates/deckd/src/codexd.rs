@@ -643,7 +643,10 @@ impl Model {
                         vec![Effect::Update {
                             thread,
                             state: Some(AgentState::Working),
-                            title: Some(sanitize::cut(&sanitize::collapse(&text), TITLE_MAX)),
+                            // A clarification answer continues the same task;
+                            // its transport envelope is never a roster title.
+                            title: questions::parse_reply(&text).is_none()
+                                .then(|| sanitize::cut(&sanitize::collapse(&text), TITLE_MAX)),
                         }]
                     }
                     "agentMessage" | "agent_message" if method == "item/completed" => {
@@ -921,8 +924,13 @@ fn chat_item(item: &Value, streaming: bool) -> Option<(deck_model::MessageMeta, 
     let id = item["id"].as_str()?.to_string();
     let images = crate::chat_images::codex(item);
     let (role, text) = match item["type"].as_str()? {
-        "userMessage" | "user_message" => (ChatRole::User, user_message_text(item).or_else(|| (!images.is_empty()).then(String::new)).or_else(|| crate::chat_images::has_images(&item["content"]).then(|| "[Image preview unavailable]".into()))?),
-        "agentMessage" | "agent_message" => (ChatRole::Assistant, item["text"].as_str().filter(|s| !s.is_empty()).unwrap_or("Working…").to_string()),
+        "userMessage" | "user_message" => {
+            let text = user_message_text(item).or_else(|| (!images.is_empty()).then(String::new))
+                .or_else(|| crate::chat_images::has_images(&item["content"]).then(|| "[Image preview unavailable]".into()))?;
+            (ChatRole::User, questions::reply_text(&text).unwrap_or(text))
+        }
+        "agentMessage" | "agent_message" => (ChatRole::Assistant, questions::question_text(item)
+            .unwrap_or_else(|| item["text"].as_str().filter(|s| !s.is_empty()).unwrap_or("Working…").to_string())),
         "commandExecution" => {
             let command = item["command"].as_str().unwrap_or("Command");
             let output = item["aggregatedOutput"].as_str().unwrap_or_default();
@@ -985,6 +993,7 @@ impl LoadedThread {
                     value["preview"]
                         .as_str()
                         .filter(|s| !s.trim().is_empty())
+                        .filter(|s| questions::parse_reply(s).is_none())
                         .map(str::to_string)
                 }),
             cwd: value["cwd"].as_str().map(str::to_string),
@@ -2235,6 +2244,35 @@ mod tests {
         json!({"id":"call_async","type":"agentMessage","delivery":"async","text":"Please choose",
             "questions":[{"title":"Which database?","options":["Postgres (Recommended)","SQLite"]},
                          {"title":"Project name?","options":null}]})
+    }
+
+    #[test]
+    fn structured_answers_have_the_same_readable_view_live_and_after_reconnect() {
+        let raw = format!("<send_user_message_question_reply>{}</send_user_message_question_reply>",
+            json!([{"question":"Which database?", "answer":"SQLite", "questionItemId":"private-id"}]));
+        let item = json!({"id":"answer","type":"userMessage","content":[{"type":"text","text":raw}]});
+        let (meta, shown) = chat_item(&item, false).unwrap();
+        assert_eq!(meta.role, deck_model::ChatRole::User);
+        assert!(shown.starts_with("### Your answer"));
+        assert!(!shown.contains("send_user_message") && !shown.contains("private-id"));
+        // The underlying text still carries the exact protocol needed by Codex.
+        assert_eq!(user_message_text(&item).unwrap(), raw);
+
+        let history = LoadedThread::from_thread(&json!({"id":"t1", "cwd":"/projects/demo", "preview":raw,
+            "turns":[{"items":[item]}]})).unwrap();
+        assert_eq!(history.name, None);
+        assert_eq!(history.messages[0].1, shown);
+
+        let mut model = Model::default();
+        model.loaded(&[loaded("t1", None, false)]);
+        let params = json!({"threadId":"t1","item":item});
+        let effects = model.notification("item/started", &params);
+        assert!(effects.iter().any(|e| matches!(e, Effect::Update { title: None, .. })));
+        assert!(!effects.iter().any(|e| matches!(e, Effect::Update { title: Some(_), .. })));
+        let messages = model.flush_messages();
+        assert!(messages.iter().any(|e| matches!(e, Effect::Message { text, .. } if text == &shown)));
+        model.notification("item/completed", &params);
+        assert!(model.flush_messages().is_empty());
     }
 
     fn card_spec(effects: &[Effect]) -> CardSpec {

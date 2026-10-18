@@ -1,4 +1,5 @@
 import os
+import rtconfig
 from building import *
 
 cwd = GetCurrentDir()
@@ -15,5 +16,9 @@ path = [cwd, sdk_board, musb_port]
 # catch boot_images_help itself: main.c defines and calls it in one object.)
 group = DefineGroup('OwtRecovery', src, depend=[''], CPPPATH=path,
                     CPPDEFINES=['CFG_BOOTLOADER'],
-                    LINKFLAGS=['-Wl,--wrap=board_init_psram'])
+                    LINKFLAGS=['-Wl,--wrap=board_init_psram',
+                               '-Wl,-T,' + os.path.join(cwd, 'display_scratch.ld')])
+target = os.path.join(Dir('#').abspath, rtconfig.OUTPUT_DIR,
+                      rtconfig.TARGET_NAME + '.' + rtconfig.TARGET_EXT)
+GetCurrentEnv().Depends(target, os.path.join(cwd, 'display_scratch.ld'))
 Return('group')

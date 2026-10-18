@@ -53,9 +53,31 @@ jobs:
         run: |
           if [[ "$BOARD" == lilygo ]]; then
             cargo build --release --locked --target thumbv8m.main-none-eabihf
-          else
-            bash tools/build-firmware-release.sh "$BOARD" dist/firmware
           fi
+      - name: Check out the pinned recovery SDK
+        if: matrix.board != 'lilygo'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: OpenSiFli/SiFli-SDK
+          ref: 006d03293e0621d694335cd4031773279fa2f19a
+          path: target/sifli-sdk
+          submodules: recursive
+          persist-credentials: false
+      - name: Build production, migration, and recovery images
+        if: matrix.board != 'lilygo'
+        env:
+          BOARD: ${{ matrix.board }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi python3-venv
+          python3 -m venv target/recovery-build-env
+          source target/recovery-build-env/bin/activate
+          pip install -r target/sifli-sdk/tools/requirements/requirements.core.txt
+          export SIFLI_SDK="$PWD/target/sifli-sdk"
+          export SIFLI_SDK_PATH="$SIFLI_SDK"
+          export PYTHONPATH="$SIFLI_SDK/tools/build"
+          export RTT_CC=gcc RTT_EXEC_PATH=/usr/bin SIFLI_SF_PKG_OFFLINE=1
+          bash tools/build-firmware-release.sh "$BOARD" dist/firmware
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: matrix.board != 'lilygo'
         with:

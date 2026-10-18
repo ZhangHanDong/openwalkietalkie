@@ -1,6 +1,6 @@
-//! Bench only (`bootloader-update`, Rev A): replace the USB recovery
-//! bootloader from the running application, for developing that bootloader
-//! without the UART pads. Never ship it: for the second the slot is erased
+//! Temporary migration firmware (`bootloader-update`, Rev A/B): replace the
+//! USB recovery bootloader from the running application. Never leave this
+//! feature in the normal application: while the slot is erased
 //! and rewritten the board has no bootloader, and a power loss then leaves
 //! only the UART debug port to put one back.
 //!
@@ -15,11 +15,14 @@
 //!   programs the slot at 0x12010000, reads it back and answers
 //!   `{"written":N,"crc":CRC}` from what flash now holds. An image equal to
 //!   what is already there is not rewritten (`"written":0`).
+//! - `boot.info {}` returns the installed flash table's bootloader mapping.
+//! - `boot.read {"o":OFFSET,"n":LEN}` returns up to 64 slot bytes as hex for
+//!   a pre-upgrade backup; it cannot read application or Bluetooth storage.
 //!
 //! The flash table, the application and the bond journal are never written;
 //! the new bootloader runs at the next reboot (`sys.reboot`).
 #[cfg(not(feature = "hw-a"))]
-compile_error!("bootloader-update is for Rev A: the LilyGo board keeps its factory bootloader");
+compile_error!("bootloader-update is for Rev A/B: LilyGo keeps its factory bootloader");
 
 use super::wire::{as_str, find_key, parse_u32, Out};
 use sifli_hal::pac;
@@ -31,6 +34,20 @@ const SLOT_MAX: usize = 64 * 1024;
 const SECTOR: usize = 4096;
 /// One FIFO's worth: the program unit, as in `bond_flash`.
 const CHUNK: usize = 64;
+
+/// SDK sec_configuration: ftab[DFU_FLASH_IMG_BL] and imgs[BL - 2].
+fn boot_mapping() -> [u32; 5] {
+    // Fixed, read-only metadata; never expose the flash table's key fields.
+    unsafe {
+        [
+            (0x1200_0000 as *const u32).read_volatile(),
+            (0x1200_0034 as *const u32).read_volatile(),
+            (0x1200_003c as *const u32).read_volatile(),
+            (0x1200_1200 as *const u32).read_volatile(),
+            u32::from((0x1200_1206 as *const u16).read_volatile()),
+        ]
+    }
+}
 
 struct Image {
     bytes: [u8; SLOT_MAX],
@@ -58,6 +75,36 @@ pub fn handle(req: &[u8], tx: &mut [u8]) -> Option<usize> {
     let image = unsafe { &mut *core::ptr::addr_of_mut!(IMAGE) };
     let mut out = Out::new(tx);
     let result: Result<(), &[u8]> = match method {
+        b"boot.info" => {
+            let values = boot_mapping();
+            out.push(b"{\"result\":{\"kind\":\"");
+            out.push(super::boot_info::BOOTSTRAP_MARKER);
+            out.push(b"\",\"magic\":");
+            out.push_u32(values[0]);
+            for (key, value) in [
+                (b",\"slot\":".as_slice(), values[1]),
+                (b",\"exec\":".as_slice(), values[2]),
+                (b",\"load_len\":".as_slice(), values[3]),
+                (b",\"flags\":".as_slice(), values[4]),
+            ] {
+                out.push(key);
+                out.push_u32(value);
+            }
+            out.push(b"}");
+            Ok(())
+        }
+        b"boot.read" => match (num(b"o"), num(b"n")) {
+            (Some(offset), Some(n)) if n > 0 && n <= 64 && offset <= (SLOT_MAX as u32) - n => {
+                out.push(b"{\"result\":{\"hex\":\"");
+                const HEX: &[u8] = b"0123456789abcdef";
+                for &byte in &slot(SLOT_MAX)[offset as usize..(offset + n) as usize] {
+                    out.push(&[HEX[(byte >> 4) as usize], HEX[(byte & 15) as usize]]);
+                }
+                out.push(b"\"}");
+                Ok(())
+            }
+            _ => Err(b"read must stay within bootloader slot; n must be 1..64"),
+        },
         b"boot.begin" => match (num(b"n"), num(b"crc")) {
             (Some(n), Some(crc)) if (1..=SLOT_MAX as u32).contains(&n) => {
                 image.bytes.fill(0xff);
@@ -125,11 +172,28 @@ fn commit(image: &Image) -> Result<usize, &'static [u8]> {
     if crc32(bytes) != image.crc {
         return Err(b"CRC mismatch");
     }
+    let marker = super::boot_info::RECOVERY_MARKER;
+    if !bytes.windows(marker.len()).any(|w| w == marker) {
+        return Err(b"bootloader is not recovery 2 for this board");
+    }
     let word =
         |at: usize| u32::from_le_bytes([bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]]);
     let sram = 0x2000_0000..=0x2008_0000;
     if image.len < 8 || !sram.contains(&word(0)) || word(4) & 1 == 0 || !sram.contains(&word(4)) {
         return Err(b"not a bootloader: its vector table must point into SRAM");
+    }
+    let [magic, base, exec, load_len, flags] = boot_mapping();
+    let entry = word(4) & !1;
+    if magic != 0x5345_4346
+        || base != SLOT_ADDRESS as u32
+        || exec != 0x2002_0000
+        || load_len < image.len as u32
+        || load_len > SLOT_MAX as u32
+        || flags != 2
+        || entry < exec
+        || entry >= exec + image.len as u32
+    {
+        return Err(b"installed flash table cannot load this bootloader; use UART");
     }
     if slot(image.len) == bytes {
         return Ok(0);

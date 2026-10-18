@@ -31,3 +31,9 @@ partitions:
     region: mpi1
     offset: 0
     size: 8MB
+  - name: app_assets
+    type: data
+    subtype: raw
+    region: mpi2
+    offset: 0x720000
+    size: 0x8E0000

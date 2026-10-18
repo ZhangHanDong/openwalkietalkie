@@ -11,7 +11,9 @@ checksums, and artifact attestations.
 can be started manually. It tests the shared firmware and renderer for
 LilyGo, Rev A, and Rev B; builds all three firmware configurations; tests
 the Mac host and app; and compiles the Sparkle bridge. Rev A and Rev B
-application images and debug ELFs are kept as workflow artifacts.
+application images, temporary migration images, debug ELFs, and board-specific
+recovery bootloaders are kept as workflow artifacts. Recovery uses the pinned
+SiFli SDK; the build checks its SRAM vectors, board marker, and 64 KiB limit.
 
 ## Configure signed publishing
 
@@ -89,8 +91,19 @@ firmware**. A newer release also produces a notification after the automatic
 check. Review the version, click **Update firmware…**, then **Install
 firmware**. The view shows download, installation, reconnection, and errors.
 
-The daemon downloads the stable manifest from this repository's GitHub
-Release. It validates product, board, protocol, flash layout, asset URL,
+For a device with an old or unknown bootloader, the confirmation instead shows
+**Bootloader update — power must stay connected** and an **I understand — update
+device** button. It explains that losing power while replacing startup software
+can prevent both boot and USB recovery and require hardware repair. USB-C must
+stay connected and the computer must remain awake. The daemon also prevents idle
+sleep for the duration of installation. This consent is enforced by the API,
+not just the view; a client that omits it cannot initiate migration.
+
+The daemon checks the stable manifest from this repository's GitHub Release
+and the manifest bundled with the Mac app. It selects the newer valid firmware
+release, preferring the bundled release when versions match. A complete,
+checksum-verified bundle also works offline; its online check times out after
+10 seconds. It validates product, board, protocol, flash layout, asset URL,
 size, SHA-256, board marker, and vector table. A matching image bundled
 inside the app is used when available; otherwise the release asset is
 downloaded. The selected serial number is checked again before recovery and
@@ -98,9 +111,36 @@ used throughout reconnection. Multiple USB decks are refused during discovery.
 
 Normal HID traffic pauses during installation and resumes on success or
 failure. Transfers use the existing OWTB protocol with sector CRCs; the
-bootloader commits the vector sector last. Only the application partition
-is written. The updater never writes the bootloader, flash table, or pairing
-journal and never updates over Bluetooth.
+bootloader commits the vector sector last. Protocol 2 exposes the two application
+banks across the 16 MiB NOR and preserves both Bluetooth stores in the middle.
+The updater validates FF padding over those stores and skips their sectors.
+The release manifest uses protocol 2 and an image span of `0xFE0000` bytes;
+128 KiB within that span is protected, leaving 15.75 MiB of application capacity.
+Large images require recovery protocol 2. For Rev A/B devices still on protocol
+1, an accepted migration verifies all three release images before writing:
+
+1. Install the board's temporary `bootstrap` app, which fits the old lower bank.
+2. Check its board identity and installed flash-table mapping. Back up the
+   resident bootloader to the daemon's firmware cache under `bootloader-backups/`.
+3. Stage the board's `recovery` image in SRAM, validate its CRC, write the
+   bootloader slot, and verify the complete image by reading it back over USB.
+4. Reboot into recovery and require protocol 2. Install the normal application,
+   skipping both Bluetooth stores, and verify board, version, and removal of the
+   temporary maintenance firmware.
+
+Protocol-2 devices go straight to the normal application update. Small legacy
+images/manifests remain supported. Neither path writes the flash table or
+Bluetooth stores, and neither runs over Bluetooth. Bootloader replacement is
+the sole exception to application-only flashing, with separate user consent.
+
+If migration is refused before any application erase, the updater requests a
+return to the existing application. If an installed temporary updater finds an
+incompatible flash table, it refuses bootloader writes and reports that hardware
+service is needed; the temporary app remains installed. A lost bootloader-write
+reply or failed read-back never triggers an automatic reboot. Keep power
+connected and retry: the temporary app is detected even at the target firmware
+version, and the next attempt verifies or repairs the slot before rebooting.
+After an interrupted final application transfer, retry from recovery.
 
 If the deck is already in recovery or its older firmware cannot identify its
 board, choose the physical revision printed on the board. Recovery mode
@@ -111,13 +151,44 @@ version after reboot.
 
 Daemon API calls are `firmware.status` (`observe`), `firmware.check`
 (`admin`, optional `force`), and `firmware.install` (`admin`, with `board`,
-`serial`, and `version` copied from the checked release). Installation is
+`serial`, and `version` copied from the checked release, plus
+`allow_bootloader_update:true` only after accepting the warning).
+`firmware.status` includes `bootloader_warning`; its device includes optional
+`recovery_protocol` and a `maintenance` flag. The `bootloader` phase is busy and
+prevents service restarts. Installation is
 always explicit; scheduled checks never flash a device.
+
+### Hardware validation status
+
+The 0.4.0 migration is implemented and tested in software. **A shipped Rev B
+board was unavailable; its end-to-end hardware migration is not validated.**
+Keep this limitation explicit in the 0.4.0 release notes. To complete validation,
+exercise the exact release artifacts on a shipped Rev B:
+warning acceptance/cancellation, normal migration, pairing preservation, USB
+reconnection, interrupted application transfers, and retry while the temporary
+app is installed. Verify that maintenance commands are absent afterward. Do not
+cut power during the single-slot bootloader write without a UART recovery setup.
+Software tests cannot establish recovery from physical power loss in that window.
+
+The new recovery image also drives the Rev A/B display. Before release, check
+bulk enumeration and transfer on the supported desktop OS, HID fallback with
+an older host, sparse-sector erasure over stale data, and retry after a failed
+or disconnected bulk transfer. Confirm that both Bluetooth stores are unchanged.
+Existing protocol-2 bootloaders retain HID support and are not automatically
+replaced solely for bulk capability; bootloader writes retain the explicit warning.
+For the display, check upright recovery/missing-firmware instructions,
+percentage progress, completion,
+CRC/flash errors and USB reconnect/retry on both revisions. Confirm normal boots
+hand display initialization directly to the app. The renderer and progress
+accounting are covered by software tests; panel timing/appearance and physical
+USB interruption remain hardware checks. The on-device screen starts once the
+new bootloader runs; the existing desktop warning covers bootloader replacement.
 
 ## Local validation
 
 ```sh
 python3 -m unittest discover -s tools/tests -p 'test_release.py'
+# First load the pinned SiFli SDK environment (SIFLI_SDK, RTT_EXEC_PATH, PYTHONPATH).
 bash tools/build-firmware-release.sh hw-a dist/firmware
 bash tools/build-firmware-release.sh hw-b dist/firmware
 tools/package-macos.sh dist/macos
@@ -125,6 +196,11 @@ tools/package-macos.sh dist/macos
 
 The last command produces an ad-hoc package unless signing credentials are
 provided. `REQUIRE_SIGNING=1` requires both code signing and notarization.
+For an internal 0.4.0 test DMG, set `OWT_FIRMWARE_DIR` to the directory containing
+the six board images and `firmware-manifest.json`, and set `OWT_RELEASE_README`
+to `docs/releases/0.4.0-testing.zh-CN.md` to include the Chinese testing guide.
+The guide describes a signed but unnotarized internal package; update that
+disclosure when producing a notarized release.
 `release-manifest.json` generated by packaging describes that package;
 the release workflow combines all verified packages and firmware into the
 public updater manifest using `tools/release.py manifest`.

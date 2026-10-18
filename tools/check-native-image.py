@@ -11,7 +11,11 @@ header = struct.unpack_from("<16sHHIIIIIHHHHHH", image)
 if header[2] != 40:
     sys.exit("Expected an ARM ELF")
 entry, offset, stride, count = header[4], header[5], header[9], header[10]
-if not 0x12020000 <= (entry & ~1) < 0x12700000 or stride < 32:
+def app_range(address, size):
+    return (0x12020000 <= address < address + size <= 0x13000000
+            and (address + size <= 0x12700000 or address >= 0x12720000))
+
+if not app_range(entry & ~1, 2) or stride < 32:
     sys.exit("Invalid application entry point or program headers")
 total = 0
 for index in range(count):
@@ -20,7 +24,7 @@ for index in range(count):
     )
     if kind != 1 or size == 0:
         continue
-    if source + size > len(image) or not (0x12020000 <= address < address + size <= 0x12700000):
+    if source + size > len(image) or not app_range(address, size):
         sys.exit(f"Unsafe load segment at 0x{address:08x} ({size} bytes)")
     total += size
 if not total:

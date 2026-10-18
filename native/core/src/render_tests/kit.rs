@@ -292,12 +292,37 @@ fn unknown_codepoints_draw_the_replacement_box() {
     };
     let boxes = draw("\u{fffd}\u{fffd}\u{fffd}");
     assert!(lit_in(&boxes, Rect::SCREEN).count() > 30);
-    assert_frame(&draw("\u{4e2d}\u{1f600}\u{3a9}"), &boxes, "CJK, emoji and Greek are the box");
+    assert_frame(&draw("\u{20000}\u{1f600}\u{3a9}"), &boxes, "unsupported extension B, emoji and Greek are the box");
     assert_frame(&draw("\n\t\u{7f}"), &boxes, "controls are the box");
-    assert_eq!(font::measure(Font::Row, "\u{4e2d}\u{1f600}\u{3a9}"), font::measure(Font::Row, "\u{fffd}\u{fffd}\u{fffd}"));
+    assert_eq!(font::measure(Font::Row, "\u{20000}\u{1f600}\u{3a9}"), font::measure(Font::Row, "\u{fffd}\u{fffd}\u{fffd}"));
     // Covered glyphs are not the box.
     let covered = draw("\u{2192}\u{2713}\u{153}");
     assert!(lit_in(&covered, Rect::SCREEN).zip(lit_in(&boxes, Rect::SCREEN)).any(|(a, b)| a != b));
+}
+
+#[test]
+fn chinese_glyphs_are_distinct_and_scale_through_every_band_and_clip() {
+    let scene = |band: &mut display::Band| {
+        band.fill(kit::rgb(theme::CANVAS));
+        for (i, spec) in theme::RAMP.iter().enumerate() {
+            let y = 37 + i as i32 * 29;
+            font::draw(band, spec.font, 30, y, "中文簡體，。", theme::TEXT_PRIMARY, Some(theme::CANVAS), 200, Align::Left);
+            font::draw(band, spec.font, 450, y, "繁體測試！？", theme::AMBER, None, 200, Align::Right);
+        }
+    };
+    let reference = full_draw(scene);
+    for (h, w) in [(1, 480), (7, 13)] {
+        assert_frame(&partitioned(h, w, &mut |band| scene(band)), &reference, "Chinese clip seams");
+    }
+    for spec in theme::RAMP {
+        let draw = |text: &str| clean_draw(|band| {
+            font::draw(band, spec.font, 40, 100, text, theme::TEXT_PRIMARY, Some(theme::CANVAS), 400, Align::Left);
+        });
+        let chinese = draw("中");
+        assert_ne!(chinese, draw("文"));
+        assert_ne!(chinese, draw("\u{fffd}"));
+        assert!(lit_in(&chinese, Rect::new(40, 40, 60, 80)).count() > 15);
+    }
 }
 
 #[test]
@@ -306,7 +331,7 @@ fn the_ramp_path_matches_read_blending_on_black_and_nearly_on_a_card() {
         clean_draw(move |band| {
             kit::fill(band, Rect::new(0, 60, 480, 120), under);
             font::draw(band, Font::Name, 40, 120, "Codex \u{b7} cohdl-api \u{e9}", theme::TEXT_PRIMARY, bg, 400, Align::Left);
-            font::draw(band, Font::Small, 440, 160, "blocked 2m", theme::AMBER, bg, 400, Align::Right);
+            font::draw(band, Font::Small, 440, 160, "blocked 2m 中文繁體", theme::AMBER, bg, 400, Align::Right);
         })
     };
     assert_frame(&run(Some(theme::CANVAS), theme::CANVAS), &run(None, theme::CANVAS), "black: both paths identical");

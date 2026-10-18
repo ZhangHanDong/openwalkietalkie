@@ -1,6 +1,6 @@
 [package]
 name = "openwalkietalkie-fw"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 license = "MIT"
 description = "OpenWalkieTalkie firmware (SiFli SF32LB52x, embassy)"
@@ -81,7 +81,7 @@ profont = "0.7"
 # turn 180 degrees. The default build is the upright LilyGo T-Display SF32.
 hw-a = []
 # The Rev B main board (hardware/rev-b). It implies `hw-a`, which is the
-# OpenWalkieTalkie main board as such (PSRAM link, USB, voice, the GPIO
+# OpenWalkieTalkie main board as such (USB, voice, the GPIO
 # inputs); `hw-b` only overlays the three pins that moved: the speaker
 # amplifier's enable on PA1 instead of PA20, the charger's CHG output on PA33
 # (a charge state at last) and the CAL test pad on PA0. Build Rev B with
@@ -98,9 +98,10 @@ audio-open = []
 # reading and writing the audio blocks' registers while a stream plays
 # (src/link/debug.rs). Never ship it.
 audio-debug = []
-# Bench only, Rev A: `boot.*` on the host request channel rewrites the USB
-# recovery bootloader from the running app (src/link/boot_update.rs), for
-# developing that bootloader without the UART pads. Never ship it.
+# Temporary migration app, Rev A/B: USB-only `boot.*` replaces recovery.
+# Only distribute as the separately identified bootstrap image, never as
+# normal firmware. The desktop requires explicit bootloader risk acceptance.
+# This also keeps all assets in lower flash for protocol-1 recovery.
 bootloader-update = []
 
 [profile.release]

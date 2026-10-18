@@ -372,7 +372,17 @@ impl Core {
                         return Reply::err(ApiError::invalid("firmware", "Finish talking and wait for transcription before updating."));
                     }
                     let text = |key| params.get(key).and_then(serde_json::Value::as_str).unwrap_or("");
-                    self.firmware.install(text("board"), text("serial"), text("version"), cache, self.hid.maintenance.clone())
+                    self.firmware.install(
+                        text("board"),
+                        text("serial"),
+                        text("version"),
+                        params
+                            .get("allow_bootloader_update")
+                            .and_then(serde_json::Value::as_bool)
+                            .unwrap_or(false),
+                        cache,
+                        self.hid.maintenance.clone(),
+                    )
                 };
                 match result {
                     Ok(status) => Reply::ok(serde_json::to_value(status).unwrap()),

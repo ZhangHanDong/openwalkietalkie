@@ -11,6 +11,11 @@ pub mod font_data;
 
 #[allow(warnings, clippy::all)]
 #[rustfmt::skip]
+#[path = "../../../../../src/ui/font_cjk.rs"]
+pub mod font_cjk;
+
+#[allow(warnings, clippy::all)]
+#[rustfmt::skip]
 #[path = "../../../../../src/ui/theme.rs"]
 pub mod theme;
 

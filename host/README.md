@@ -304,6 +304,13 @@ client can answer, and a native answer clears the deck's card. Unrecognized
 prompt types remain available in Codex. `[codex] daemon = false` turns the
 client off.
 
+Asynchronous clarification questions also appear in chat history with their
+titles and suggested options. Their structured replies display as **Your
+answer**, with the question above the answer, including after reconnecting.
+The internal `send_user_message_question_reply` envelope stays in the Codex
+transport and does not replace the task title. Quoted examples and malformed
+envelopes remain ordinary text.
+
 **Codex Desktop (macOS)** can use that same connection through its experimental
 local-daemon mode. Install from the app's **Integrations → Codex Desktop** row,
 or run:

@@ -11,33 +11,42 @@ PrepareEnv()
 # stored at 0x12010000) and build_openwalkietalkie_hcpu/ftab.bin (0x12000000).
 # The LilyGo keeps its factory copies, so the default build leaves both out
 # and tools/flash.sh never touches them.
-boot_images = os.environ.get('OWT_BOOT_IMAGES') == '1'
+recovery_only = os.environ.get('OWT_RECOVERY_ONLY') == '1'
+boot_images = recovery_only or os.environ.get('OWT_BOOT_IMAGES') == '1'
 if boot_images:
     # Our second-stage bootloader (native/bootloader): the SDK's, plus a USB
     # DFU recovery mode. Built as the 'bootloader' child project exactly as
     # the SDK's AddBootLoader builds its own, into the same output path.
     AddChildProj('bootloader', os.path.join(Dir('#').abspath, '..', 'bootloader'), False)
-AddLCPU(SIFLI_SDK, rtconfig.CHIP, '../src/lcpu_img.c')
-SifliEnv()
-TARGET = rtconfig.OUTPUT_DIR + rtconfig.TARGET_NAME + '.' + rtconfig.TARGET_EXT
-objs = PrepareBuilding(None)
-env = GetCurrentEnv()
-env.Append(CPPDEFINES=['FDB_PRINT=rt_kprintf'])
-# OWT_BOARD=hw-a / hw-b (set by tools/build-native.sh) selects the Rev A or
-# Rev B pin map on the C side. The board SConscript
-# (native/boards/openwalkietalkie) defines OWT_BOARD_HW_A (and OWT_BOARD_HW_B)
-# for the whole build so the bootloader child project compiles the board
-# files for that board too; the Rust core gets the matching `hw-a` / `hw-b`
-# feature from the script.
-wrapped = ['rand', 'rt_flash_write', 'fdb_kv_set_blob', 'audio_3a_uplink',
-           'rt_system_power_manager',
-           'bf0_audprc_device_write', 'HAL_AUDPRC_Config_TChanel',
-           'bt_avsnk_hdl_suspend_ind', 'bt_avsnk_close_handler',
-           'bt_avsnk_abort_handler', 'bt_avsnk_hdl_disc_handler']
-env.Append(LINKFLAGS=['-Wl,' + ','.join('--wrap=' + name for name in wrapped)])
-if os.environ.get('OWT_BOARD') in ('hw-a', 'hw-b'):
-    # board.c powers the Rev A/B PDM microphone around the PDM block's lifetime.
-    env.Append(LINKFLAGS=['-Wl,--wrap=HAL_PDM_Init,--wrap=HAL_PDM_DeInit'])
-DoBuilding(TARGET, objs)
-if boot_images:
-    AddFTAB(SIFLI_SDK, rtconfig.CHIP, env)
+# Release recovery builds do not compile the native app or radio image.
+if recovery_only:
+    # SDK binary/hex actions read the restored parent's rtconfig at execution.
+    SifliEnv()
+else:
+    AddLCPU(SIFLI_SDK, rtconfig.CHIP, '../src/lcpu_img.c')
+    SifliEnv()
+    TARGET = rtconfig.OUTPUT_DIR + rtconfig.TARGET_NAME + '.' + rtconfig.TARGET_EXT
+    objs = PrepareBuilding(None)
+    env = GetCurrentEnv()
+    assets_link = os.path.abspath('../../flash-assets.x')
+    env.Append(LINKFLAGS=['-Wl,-T,' + assets_link])
+    env.Depends(TARGET, assets_link)
+    env.Append(CPPDEFINES=['FDB_PRINT=rt_kprintf'])
+    # OWT_BOARD=hw-a / hw-b (set by tools/build-native.sh) selects the Rev A or
+    # Rev B pin map on the C side. The board SConscript
+    # (native/boards/openwalkietalkie) defines OWT_BOARD_HW_A (and OWT_BOARD_HW_B)
+    # for the whole build so the bootloader child project compiles the board
+    # files for that board too; the Rust core gets the matching `hw-a` / `hw-b`
+    # feature from the script.
+    wrapped = ['rand', 'rt_flash_write', 'fdb_kv_set_blob', 'audio_3a_uplink',
+               'rt_system_power_manager',
+               'bf0_audprc_device_write', 'HAL_AUDPRC_Config_TChanel',
+               'bt_avsnk_hdl_suspend_ind', 'bt_avsnk_close_handler',
+               'bt_avsnk_abort_handler', 'bt_avsnk_hdl_disc_handler']
+    env.Append(LINKFLAGS=['-Wl,' + ','.join('--wrap=' + name for name in wrapped)])
+    if os.environ.get('OWT_BOARD') in ('hw-a', 'hw-b'):
+        # board.c powers the Rev A/B PDM microphone around the PDM block's lifetime.
+        env.Append(LINKFLAGS=['-Wl,--wrap=HAL_PDM_Init,--wrap=HAL_PDM_DeInit'])
+    DoBuilding(TARGET, objs)
+    if boot_images:
+        AddFTAB(SIFLI_SDK, rtconfig.CHIP, env)

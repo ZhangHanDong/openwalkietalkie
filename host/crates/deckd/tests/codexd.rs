@@ -251,6 +251,12 @@ async fn async_pending_questions_restore_deliver_and_resolve_across_clients() {
     assert_eq!(card.origin.kind, OriginKind::Question);
     assert_eq!(card.expires, None);
     assert!(card.free_text && card.choices.is_empty());
+    daemon.until("readable restored answer", |s| s.agents[&agent.id].messages.iter()
+        .any(|m| m.message.id == "old-reply" && m.text.contains("Your answer"))).await;
+    let restored = daemon.api.bus.snapshot();
+    let answer = restored.agents[&agent.id].messages.iter().find(|m| m.message.id == "old-reply").unwrap();
+    assert!(answer.text.contains("Already answered") && answer.text.contains("> Yes"));
+    assert!(!answer.text.contains("send_user_message_question_reply") && !answer.text.contains("questionItemId"));
     let mut peer = daemon.connect().await;
     peer.call("session.hello", json!({"client":{"name":"gui"},"scopes":["observe","operate"]})).await;
 
@@ -306,6 +312,13 @@ async fn async_pending_questions_restore_deliver_and_resolve_across_clients() {
     }}})).unwrap();
     daemon.until("answer in Codex clears device question", |s| s.agents[&agent.id].card.as_ref()
         .is_none_or(|c| c.status != CardStatus::Pending)).await;
+    daemon.until("readable live answer", |s| s.agents[&agent.id].messages.iter()
+        .any(|m| m.message.id == "external-reply" && m.text.contains("Your answer"))).await;
+    let snapshot = daemon.api.bus.snapshot();
+    assert_eq!(snapshot.agents[&agent.id].title.as_deref(), Some("Working in parallel"));
+    let answer = snapshot.agents[&agent.id].messages.iter().find(|m| m.message.id == "external-reply").unwrap();
+    assert!(answer.text.contains("Anything else") && answer.text.contains("> No"));
+    assert!(!answer.text.contains("send_user_message_question_reply") && !answer.text.contains("questionItemId"));
     stop.send(true).unwrap();
     client.await.unwrap();
     daemon.shutdown().await;

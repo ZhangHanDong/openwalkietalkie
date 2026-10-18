@@ -413,7 +413,9 @@ pub enum Handled {
     DeviceStatus,
     /// `sys.reboot`: the runtime reboots once the reply is out, into the
     /// bootloader's USB recovery mode when `recovery`.
-    Reboot { recovery: bool },
+    Reboot {
+        recovery: bool,
+    },
     /// Unknown method — or none at all: answered `Method not found` with
     /// the id, so a caller waiting on that id never hangs.
     Unknown,
@@ -424,6 +426,8 @@ pub enum Handled {
 pub struct Status {
     pub battery: u8,
     pub is_charging: bool,
+    pub recovery_protocol: Option<u8>,
+    pub maintenance: bool,
 }
 
 /// Handle one complete request, writing the reply to `tx`. Returns what it
@@ -448,7 +452,15 @@ pub fn handle_request(
             out.push(version.as_bytes());
             out.push(b"\",\"board\":\"");
             out.push(board.as_bytes());
-            out.push(b"\"}}");
+            out.push(b"\"");
+            if let Some(protocol) = status.recovery_protocol {
+                out.push(b",\"recovery_protocol\":");
+                out.push_u32(u32::from(protocol));
+            }
+            if status.maintenance {
+                out.push(b",\"maintenance\":true");
+            }
+            out.push(b"}}");
             Handled::SysVersion
         }
         // `{"method":"sys.reboot","params":{"mode":"recovery"}}` reboots into
@@ -472,7 +484,11 @@ pub fn handle_request(
             out.push(b"\",\"battery\":");
             out.push_u32(status.battery.min(100) as u32);
             out.push(b",\"is_charging\":");
-            out.push(if status.is_charging { b"true" } else { b"false" });
+            out.push(if status.is_charging {
+                b"true"
+            } else {
+                b"false"
+            });
             out.push(b"}}");
             Handled::DeviceStatus
         }
@@ -488,11 +504,34 @@ pub fn handle_request(
 mod request_tests {
     use super::*;
 
+    #[test]
+    fn version_identifies_temporary_updater_and_known_recovery() {
+        let mut tx = [0u8; TX_CAP];
+        let (_, n) = handle_request(
+            br#"{"method":"sys.version","id":1}"#,
+            "0.3.1-openwalkietalkie",
+            "Rev B",
+            Status {
+                battery: 50,
+                is_charging: false,
+                recovery_protocol: Some(2),
+                maintenance: true,
+            },
+            &mut tx,
+        );
+        let reply = core::str::from_utf8(&tx[..n]).unwrap();
+        assert!(reply.contains("\"maintenance\":true"));
+        assert!(reply.contains("\"recovery_protocol\":2"));
+        assert!(reply.contains("\"board\":\"Rev B\""));
+    }
+
     fn request(json: &[u8]) -> (Handled, std::string::String) {
         let mut tx = [0u8; TX_CAP];
         let status = Status {
             battery: 50,
             is_charging: false,
+            recovery_protocol: None,
+            maintenance: false,
         };
         let (handled, n) = handle_request(json, "test", "Rev T", status, &mut tx);
         (handled, std::str::from_utf8(&tx[..n]).unwrap().into())
@@ -502,7 +541,10 @@ mod request_tests {
     fn sys_version_and_device_status_echo_the_id() {
         let (handled, reply) = request(br#"{"method":"sys.version","id":1}"#);
         assert_eq!(handled, Handled::SysVersion);
-        assert_eq!(reply, r#"{"id":1,"result":{"version":"test","board":"Rev T"}}"#);
+        assert_eq!(
+            reply,
+            r#"{"id":1,"result":{"version":"test","board":"Rev T"}}"#
+        );
         let (handled, reply) = request(br#"{"method":"device.status","id":"a"}"#);
         assert_eq!(handled, Handled::DeviceStatus);
         assert_eq!(
@@ -532,7 +574,10 @@ mod request_tests {
             let json = std::format!(r#"{{"method":"{method}","id":9}}"#);
             let (handled, reply) = request(json.as_bytes());
             assert_eq!(handled, Handled::Unknown);
-            assert!(reply.starts_with(r#"{"id":9,"error":{"code":-32601"#), "{reply}");
+            assert!(
+                reply.starts_with(r#"{"id":9,"error":{"code":-32601"#),
+                "{reply}"
+            );
         }
     }
 

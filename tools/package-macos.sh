@@ -19,6 +19,7 @@
 #   OWT_MACOS_ARCH        arm64 (default, this Mac) or x86_64.
 #   OWT_SPARKLE_ROOT      an existing Sparkle 2.9.6 tree, to build offline.
 #   GITHUB_REPOSITORY     owner/name for the Sparkle feed URL.
+#   OWT_RELEASE_README    optional README.md to include beside the app in DMG.
 #
 # This is openmicrokbd's scripts/package-macos.sh with ONE deliberate change
 # (§10.1): every Mach-O in the bundle is signed
@@ -61,6 +62,10 @@ version=$(
         jq -r '.packages[] | select(.name == "openwalkietalkie-app") | .version'
 )
 [ -n "$version" ] || { echo "package-macos: could not read openwalkietalkie-app's version" >&2; exit 1; }
+firmware_version=$(
+    cargo metadata --manifest-path "$root/Cargo.toml" --locked --no-deps --format-version 1 |
+        jq -r '.packages[] | select(.name == "openwalkietalkie-fw") | .version'
+)
 
 stage="$output_dir/macos-$arch"
 app="$stage/OpenWalkieTalkie.app"
@@ -144,12 +149,20 @@ if [ -d "$firmware_dir" ]; then
     for image in "$firmware_dir"/*.bin; do
         [ -f "$image" ] && install -m 644 "$image" "$resources/firmware/"
     done
+    if [ -f "$firmware_dir/firmware-manifest.json" ]; then
+        install -m 644 "$firmware_dir/firmware-manifest.json" "$resources/firmware/"
+    fi
 fi
 if [ "$require_signing" = 1 ]; then
+    [ -f "$resources/firmware/firmware-manifest.json" ] || {
+        echo "package-macos: missing bundled firmware manifest" >&2; exit 1;
+    }
     for board in hw-a hw-b; do
-        compgen -G "$resources/firmware/*-$board.bin" >/dev/null || {
-            echo "package-macos: missing $board firmware" >&2; exit 1;
-        }
+        for kind in "" "bootstrap-" "recovery-"; do
+            [ -f "$resources/firmware/OpenWalkieTalkie-$firmware_version-${kind}$board.bin" ] || {
+                echo "package-macos: missing ${kind}$board firmware" >&2; exit 1;
+            }
+        done
     done
 fi
 sparkle_enabled='<false/>'
@@ -235,6 +248,9 @@ rm -rf "$dmg_root"
 mkdir -p "$dmg_root"
 ditto "$app" "$dmg_root/OpenWalkieTalkie.app"
 ln -s /Applications "$dmg_root/Applications"
+if [ -n "${OWT_RELEASE_README:-}" ]; then
+    install -m 644 "$OWT_RELEASE_README" "$dmg_root/README.md"
+fi
 rm -f "$dmg"
 hdiutil create -volname OpenWalkieTalkie -srcfolder "$dmg_root" -format UDZO -ov "$dmg" >/dev/null
 if [ -n "$sign_identity" ]; then

@@ -37,5 +37,9 @@ xcrun notarytool store-credentials "$MACOS_NOTARY_PROFILE" --keychain "$keychain
 expected=$(tr -d '\r\n' < packaging/macos/sparkle-public-key.txt)
 actual=$(swift tools/sparkle-public-key.swift "$temporary/sparkle-key")
 if [[ "$actual" != "$expected" ]]; then echo 'Sparkle secret does not match the embedded public key' >&2; exit 1; fi
+python3 tools/release.py firmware-manifest "$tag" dist/firmware
+if [[ -f "docs/releases/${tag#v}.zh-CN.md" ]]; then
+    export OWT_RELEASE_README="$root/docs/releases/${tag#v}.zh-CN.md"
+fi
 REQUIRE_SIGNING=1 OWT_MACOS_ARCH="$arch" bash tools/package-macos.sh dist/macos
 bash tools/finalize-macos-release.sh "$arch" "$tag" dist/macos "$temporary/sparkle-key"

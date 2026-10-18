@@ -9,6 +9,68 @@ use std::collections::VecDeque;
 const OPEN: &str = "<send_user_message_question_reply>";
 const CLOSE: &str = "</send_user_message_question_reply>";
 
+#[derive(serde::Deserialize)]
+pub(super) struct QuestionReply {
+    answer: String,
+    question: Option<String>,
+    #[serde(rename = "questionItemId")]
+    key: Option<String>,
+}
+
+/// Recognize only a complete protocol envelope. A quoted example, ordinary
+/// XML or malformed JSON remains ordinary user text and cannot resolve cards.
+pub(super) fn parse_reply(text: &str) -> Option<Vec<QuestionReply>> {
+    let body = text.trim().strip_prefix(OPEN)?.strip_suffix(CLOSE)?;
+    let replies: Vec<QuestionReply> = serde_json::from_str(body).ok()?;
+    (!replies.is_empty()).then_some(replies)
+}
+
+fn literal(text: &str) -> String {
+    let mut out = String::new();
+    for c in sanitize::strip_ansi(text).chars() {
+        if c.is_ascii_punctuation() { out.push('\\'); }
+        out.push(c);
+    }
+    out
+}
+
+/// Presentation only: the original JSON is still used for delivery and card
+/// resolution. Existing rich-text headings and quote bars work on every deck.
+pub(super) fn reply_text(text: &str) -> Option<String> {
+    let replies = parse_reply(text)?;
+    let mut out = if replies.len() == 1 { "### Your answer" } else { "### Your answers" }.to_string();
+    for reply in replies {
+        if let Some(question) = reply.question.filter(|s| !s.trim().is_empty()) {
+            out.push_str(&format!("\n\n**{}**", literal(&sanitize::collapse(&question))));
+        }
+        out.push_str("\n\n");
+        for (i, line) in literal(&reply.answer).split('\n').enumerate() {
+            if i != 0 { out.push_str("  \n"); }
+            out.push_str("> ");
+            out.push_str(line.trim_end_matches('\r'));
+        }
+    }
+    Some(out)
+}
+
+pub(super) fn question_text(item: &Value) -> Option<String> {
+    if item["delivery"] != "async" { return None; }
+    let questions = item["questions"].as_array()?;
+    let mut blocks = Vec::new();
+    for question in questions {
+        let Some(title) = question["title"].as_str().filter(|s| !s.trim().is_empty()) else { continue; };
+        let mut block = format!("**{}**", literal(&sanitize::collapse(title)));
+        for option in question["options"].as_array().into_iter().flatten().filter_map(Value::as_str) {
+            block.push_str(&format!("\n\n- {}", literal(&sanitize::collapse(option))));
+        }
+        blocks.push(block);
+    }
+    if blocks.is_empty() { return None; }
+    let heading = if blocks.len() == 1 { "### Question" } else { "### Questions" };
+    let intro = item["text"].as_str().filter(|s| !s.trim().is_empty()).unwrap_or_default();
+    Some(format!("{heading}\n\n{}{}{}", literal(intro), if intro.is_empty() { "" } else { "\n\n" }, blocks.join("\n\n")))
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Question {
     pub key: String,
@@ -53,6 +115,53 @@ mod tests {
         live.merge_older(old);
         assert_eq!(live.pending.len(), 1);
         assert_eq!(live.pending[0].title, "new");
+    }
+
+    #[test]
+    fn answers_show_question_context_without_transport_keys_or_markup() {
+        let text = format!("{OPEN}{}{CLOSE}", json!([
+            {"question":"Which database?", "answer":"SQLite", "questionItemId":"internal-key"},
+            {"question":"项目名称？", "answer":"中文项目\n<notes> **literal**", "questionItemId":"another-key"}
+        ]));
+        let shown = reply_text(&text).unwrap();
+        assert!(shown.starts_with("### Your answers"));
+        assert!(shown.contains("**Which database\\?**\n\n> SQLite"));
+        assert!(shown.contains("**项目名称？**\n\n> 中文项目  \n> \\<notes\\> \\*\\*literal\\*\\*"));
+        assert!(!shown.contains("questionItemId") && !shown.contains("internal-key") && !shown.contains(OPEN));
+        for size in 0..=2 {
+            let (_, lines) = deck_wrap::wrap_rich_reply(&shown, size);
+            assert!(lines.iter().any(|line| line.starts_with("q1") && line.contains("SQLite")));
+            assert!(lines.iter().all(|line| line.len() <= deck_proto::caps().doc_line));
+        }
+        let no_title = format!("{OPEN}{}{CLOSE}", json!([{"answer":"Yes"}]));
+        assert_eq!(reply_text(&no_title).unwrap(), "### Your answer\n\n> Yes");
+    }
+
+    #[test]
+    fn prose_examples_and_invalid_envelopes_are_not_replies() {
+        let valid = user_message_text(&reply("pending")).unwrap();
+        for text in [
+            format!("Example: {valid}"), format!("```\n{valid}\n```"),
+            format!("{OPEN}not JSON{CLOSE}"), format!("{OPEN}[]{CLOSE}"),
+            format!("{OPEN}{{\"answer\":\"Yes\"}}{CLOSE}"),
+            format!("{OPEN}[{{\"answer\":42}}]{CLOSE}"),
+            format!("{OPEN}[{{\"answer\":\"Yes\"}}]"),
+        ] {
+            assert!(reply_text(&text).is_none(), "{text}");
+            let mut questions = Questions::default();
+            questions.observe(&ask("pending"));
+            questions.observe(&json!({"type":"userMessage","text":text}));
+            assert_eq!(questions.pending.len(), 1);
+        }
+    }
+
+    #[test]
+    fn async_question_history_includes_titles_and_all_options() {
+        let shown = question_text(&ask("Choose a database")).unwrap();
+        assert!(shown.starts_with("### Question"));
+        assert!(shown.contains("**Choose a database**"));
+        assert!(shown.contains("- Yes") && shown.contains("- No"));
+        assert!(question_text(&json!({"type":"agentMessage","text":"ordinary reply"})).is_none());
     }
 }
 
@@ -133,17 +242,11 @@ impl Questions {
             }
             Some("userMessage" | "user_message") => {
                 let text = user_message_text(item)?;
-                // Require the whole envelope: quoted examples in ordinary
-                // user prose must not dismiss a real pending question.
-                let body = text.trim().strip_prefix(OPEN)?.strip_suffix(CLOSE)?;
-                let replies: Vec<Value> = serde_json::from_str(body).ok()?;
+                let replies = parse_reply(&text)?;
                 let mut clear = None;
                 for reply in replies {
-                    if reply["answer"].as_str().is_none() {
-                        continue;
-                    }
-                    if let Some(key) = reply["questionItemId"].as_str() {
-                        clear = self.resolve(key).or(clear);
+                    if let Some(key) = reply.key {
+                        clear = self.resolve(&key).or(clear);
                     }
                 }
                 clear

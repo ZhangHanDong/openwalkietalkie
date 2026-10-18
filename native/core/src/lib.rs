@@ -803,6 +803,8 @@ pub unsafe extern "C" fn owt_core_hid_report(data: *const u8, len: usize) {
             wire::Status {
                 battery: core.ui.battery.percentage().unwrap_or(0),
                 is_charging: core.ui.battery.charge == battery::ChargeState::Charging,
+                recovery_protocol: None,
+                maintenance: false,
             },
             &mut output,
         );

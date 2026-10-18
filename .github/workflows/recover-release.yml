@@ -114,6 +114,9 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
+          if [[ -f "docs/releases/${TAG#v}.zh-CN.md" ]]; then
+            cp "docs/releases/${TAG#v}.zh-CN.md" dist/release/README.zh-CN.md
+          fi
           python3 tools/release.py manifest "$TAG" dist/release
           cd dist/release
           sha256sum --check SHA256SUMS

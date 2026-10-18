@@ -59,7 +59,12 @@ full-scale tone at maximum volume with the board on USB and no cell fitted
 reset the MCU after about a second: the charger's 500 mA input limit cannot
 carry the NS4150B's peak draw, so SYSTEM_SUPPLY drops out. Loud tests need
 the cell; a volume ceiling for cell-less operation is open.
-The speaker also hissed at every volume setting. It is not the DAC's
+Earlier bench tests found speaker hiss at every volume setting. The original
+diagnosis and temporary workaround below are historical: the clock-configuration
+correction subsequently resolved the issue. As of 2026-10-17 the firmware
+executes directly from NOR again, with no code/font copy into PSRAM.
+
+The original diagnosis excluded the DAC
 (measured 2026-10-04/05 with the deck's own microphone through the
 `audio-debug` bench RPCs, R4/R5 22 kΩ as released): it is a train of clicks, one per external-flash read burst, coupled
 into the amplifier's input summing node. AMP_INN runs on In2.Cu across
@@ -73,11 +78,11 @@ same bursts from SRAM or PSRAM, or with the amplifier off, stay at the floor
 low-power and bias modes) and no radio TX power change moved it, and halving
 the flash pads' drive strength bought only 3 dB. Because the injection is at
 the summing node, its level is set by the NS4150B's 300 kΩ feedback, not by
-R_in: changing R4/R5 would not reduce this noise. The firmware fix, in `hw-a` builds from 2026-10-05,
-runs the code from the in-package PSRAM, whose bus never reaches the PCB:
-`link-psram.x` links .text and .rodata at 0x60000000 with their load image
-in the NOR, and `src/xip.rs` (cortex-m-rt's `__pre_init`, in flash) copies
-and verifies them and moves the vector table to SRAM before RAM init. Speaker
+R_in: changing R4/R5 would not reduce this noise. The temporary workaround,
+in `hw-a` builds from 2026-10-05, ran the code from the in-package PSRAM,
+whose bus never reaches the PCB. The former linker script placed `.text`
+and `.rodata` at 0x60000000, and the pre-init hook copied and verified them
+and moved the vector table to SRAM. That workaround has now been removed. Speaker
 on, silence streamed over BLE: −60 → −81.9 dBFS(A) (speaker off −82.1); BLE
 mic loopback over silence on the shipping image −59 → −81.7; USB RPC traffic
 −64…−69 → −79…−81. For the next revision: put R4/R5 at the NS4150B's input

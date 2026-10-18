@@ -222,8 +222,9 @@ fixed 300 kΩ feedback whatever the gain resistors are. Place R4/R5 at the
 amplifier's input pins, keep AMP_INP/AMP_INN short and away from the flash
 (MPI2) and panel QSPI lines with ground between, and never let them cross
 those lines on an adjacent layer. BodyV6.13 r6 routes AMP_INN across four
-flash lines, and every execute-in-place fetch clicked in the speaker until
-the `hw-a` firmware moved its code into PSRAM (hardware/rev-a/README.md).
+flash lines. Earlier audio tests motivated a temporary PSRAM execution
+workaround; the subsequent clock-configuration correction resolved the issue,
+and current firmware executes directly from NOR (hardware/rev-a/README.md).
 
 **HW-009:** The Alps EC05E1220401 is on a physically separate raised PCB;
 the main board retains A/B pull-ups, series resistors and filters connected

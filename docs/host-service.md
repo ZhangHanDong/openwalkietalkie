@@ -1381,8 +1381,21 @@ admin. Checks retrieve the stable release manifest at startup and every six hour
 while the app runs. Installation is an explicit confirmation in Service → Updates.
 The daemon selects the board image, verifies its layout, size, SHA-256, identity,
 and vector table, pauses its HID writer, and uses the USB OWTB application recovery
-protocol. The selected USB serial is retained through recovery and reboot. The
-bootloader and pairing journal are outside the writable update range. Recovery
+protocol. The selected USB serial is retained through recovery and reboot. Both
+Bluetooth stores are outside the writable update ranges. Normal application
+transfers also exclude the bootloader; a separately acknowledged migration can
+replace it through the temporary board-specific updater.
+Protocol-2 recovery supports the upper application bank through `0x12FFFFFF`;
+the updater skips `0x12700000..0x1271FFFF` and verifies its image padding is FF.
+An old recovery bootloader needs a one-time migration before images using upper
+flash. `firmware.status.bootloader_warning` requests a power-loss warning and
+`firmware.install` requires `allow_bootloader_update:true` before migration. The
+release supplies a lower-bank bootstrap and recovery image per board, with hashes
+and board identities checked before writes. The daemon backs up and reads back
+the bootloader, verifies protocol 2, then installs normal firmware. An uncertain
+bootloader write never causes an automatic reboot; retries verify or repair it
+first. The `bootloader` phase is busy. See [RELEASING.md](../RELEASING.md) for the
+full sequence and pending Rev B hardware gate. Legacy small images remain supported. Recovery
 mode and older firmware without board identity require a board selection.
 
 See [RELEASING.md](../RELEASING.md) for workflows, credentials, versioning,

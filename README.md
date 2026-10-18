@@ -139,6 +139,14 @@ lower; the PTT pill is wider). `tools/generate-ui-fonts.py --check`
 regenerates into a temporary directory and diffs; the atlases depend on the
 local FreeType build, so a check on another machine may differ.
 
+Chinese text falls back to Noto Sans CJK SC: 28,491 glyphs covering simplified
+and traditional Chinese, Extension A, Chinese punctuation and fullwidth
+forms. A shared 26 px, 2-bit atlas is filtered to each text size, keeping the
+firmware inside the board's application partition. The host uses the same
+metrics when wrapping messages. Regenerate it with
+`python3 tools/generate-cjk-font.py` (or verify with `--check`); source,
+license and coverage details are in `assets/fonts/gen/README.md`.
+
 ### The deck host
 
 The deck faces are drawn from data a host daemon pushes over HID channel 5:
@@ -526,14 +534,35 @@ flashing a good one — no JTAG rescue needed. `memory.x` records the partition
 map, read back off the board itself with
 `sftool read_flash ftab.bin@0x12000000:256`.
 
-**Rev A runs its code from PSRAM.** `hw-a` builds link with `link-psram.x`
-instead of cortex-m-rt's `link.x`: .text and .rodata are linked at the
-in-package PSRAM (0x60000000) and stored in the application partition, and
-`src/xip.rs`, cortex-m-rt's `__pre_init` kept in flash, copies and checks
-them and moves the vector table to SRAM before `main`. Execute-in-place
-fetches from the NOR clicked in the speaker on that board (the amplifier
-input crosses the flash lines; hardware/rev-a/README.md); the PSRAM's bus
-stays inside the package. The LilyGo build still runs in place from flash.
+**All boards execute directly from NOR flash.** The corrected clock
+configuration resolved the Rev A audio issue that had motivated copying
+code and constants into PSRAM. Builds now use cortex-m-rt's `link.x`:
+`.text`, `.rodata`, `.flash_assets` (including the Chinese fonts) and the
+vector table stay in application flash. `src/xip.rs` only sets the stack limit.
+Normal `.data` initialization still copies mutable data and the small
+flash-writing/shutdown routines into SRAM. PSRAM is available for runtime
+buffers; its final MiB is reserved for bench diagnostics.
+
+The 16 MiB NOR now provides **15.75 MiB for application code and assets**.
+The lower bank (`0x12020000..0x126FFFFF`, 6.875 MiB) holds code, ordinary
+constants and SRAM initialization data. `flash-assets.x` places the Chinese
+atlas and metrics in the upper bank (`0x12720000..0x12FFFFFF`, 8.875 MiB).
+The two intervening 64 KiB Bluetooth stores retain their original addresses;
+the initial 128 KiB retains the flash table and bootloader. New large assets
+can use `.flash_assets.*` sections without taking space from the lower bank.
+
+**Existing Rev A/B devices need the protocol-2 recovery bootloader before an
+image using upper flash can be installed over USB.** The desktop updater can
+perform this migration using a temporary lower-bank app and the board's recovery
+image after explicit acceptance of the bootloader power-loss warning. See
+[the update sequence and Rev B hardware validation gate](RELEASING.md#device-firmware-updates).
+UART also supports blank boards and incompatible flash-table updates.
+The USB tools and desktop updater reject an incompatible recovery version
+before erasing any application data. Updated recovery still accepts older
+small images. Raw release binaries contain `0xFF` padding over the bond
+stores, which the USB updater skips; **use the ELF for UART flashing**, never
+write the padded binary as one contiguous range. File size includes padding
+and is not the amount of code/assets stored.
 
 **Rev A recovers over its own USB-C.** `OWT_BOARD=hw-a OWT_BOOT_IMAGES=1
 tools/build-native.sh` builds `native/bootloader`, the SDK's second-stage
@@ -548,10 +577,12 @@ involved; the image travels on channel 9 of the same reports.
 `tools/flash-usb.py <elf>` drives the whole cycle from a running deck:
 request, download (about 32 s for a 1 MB image), and the wait for the
 application to come back; `--no-request` when the deck is already in
-recovery. Both boards build to the same ELF path, so the tool refuses an
-image whose code is not loaded into PSRAM (a dev-board build, which on Rev A
-is a dark screen and no USB until the recovery chord); build the Rev A image
-last, or pass `--xip` to override. The bootloader and flash table themselves are written only over
+recovery. Both boards build to the same ELF path, so the tool checks the
+image's Rev A/Rev B identity against the connected board and rejects
+unidentified dev-board images. Current XIP and older PSRAM-linked images
+are supported without a special flag. Build the intended board last.
+The desktop migration can replace a compatible device's bootloader over USB.
+Writing the flash table or provisioning a blank board still requires
 the UART pads (`tools/flash-uart.py <port> write_flash --verify
 native/project/build_openwalkietalkie_hcpu/bootloader/output/bootloader.bin@0x12010000`),
 which the chip's debug port answers whatever is in flash.

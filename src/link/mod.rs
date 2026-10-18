@@ -24,6 +24,8 @@
 mod bond_flash;
 mod bond_record;
 pub use bond_record::Prefs;
+#[cfg(feature = "hw-a")]
+mod boot_info;
 #[cfg(feature = "bootloader-update")]
 mod boot_update;
 #[cfg(feature = "audio-debug")]
@@ -635,7 +637,11 @@ async fn gatt_task(
                     crate::audio::voice::subscribe(Link::Ble, on, mtu.saturating_sub(3));
                     logln!(
                         "voice: host {} the microphone (ATT MTU {})",
-                        if on { "subscribed to" } else { "unsubscribed from" },
+                        if on {
+                            "subscribed to"
+                        } else {
+                            "unsubscribed from"
+                        },
                         mtu
                     );
                 }
@@ -731,7 +737,10 @@ async fn dispatch_frame(link: Link, inbound: &mut Inbound, frame: &[u8]) {
                 len: 0,
             };
             #[cfg(feature = "bootloader-update")]
-            if let Some(len) = boot_update::handle(inbound.rx.data(n), &mut message.bytes) {
+            if let Some(len) = (link == Link::Usb)
+                .then(|| boot_update::handle(inbound.rx.data(n), &mut message.bytes))
+                .flatten()
+            {
                 inbound.rx.clear();
                 message.len = len;
                 REPLIES[link.index()].send(message).await;
@@ -751,6 +760,17 @@ async fn dispatch_frame(link: Link, inbound: &mut Inbound, frame: &[u8]) {
                 wire::Status {
                     battery: battery.percentage().unwrap_or(0),
                     is_charging: matches!(battery.charge, ChargeState::Charging),
+                    recovery_protocol: {
+                        #[cfg(feature = "hw-a")]
+                        {
+                            boot_info::recovery_protocol()
+                        }
+                        #[cfg(not(feature = "hw-a"))]
+                        {
+                            None
+                        }
+                    },
+                    maintenance: cfg!(feature = "bootloader-update"),
                 },
                 &mut message.bytes,
             );
@@ -789,7 +809,11 @@ fn voice_report(link: Link, frame: &[u8]) {
             voice::subscribe(link, on, codec::REPORT_FRAME as u16);
             logln!(
                 "voice: the USB host {} the microphone",
-                if on { "listens to" } else { "stopped listening to" }
+                if on {
+                    "listens to"
+                } else {
+                    "stopped listening to"
+                }
             );
             if on {
                 let mut bytes = [0u8; 1 + codec::INFO_LEN];
@@ -994,7 +1018,11 @@ async fn voice_task(
             Ok(Err(e)) => {
                 // Logging blocks: once, then every 50th.
                 if notify_failures % 50 == 0 {
-                    logln!("voice: mic notify failed ({} so far): {:?}", notify_failures + 1, e);
+                    logln!(
+                        "voice: mic notify failed ({} so far): {:?}",
+                        notify_failures + 1,
+                        e
+                    );
                 }
                 notify_failures += 1;
             }
@@ -1045,7 +1073,11 @@ const IDLE_LINK: RequestedConnParams = RequestedConnParams {
 fn relaxed(before: &ConnParams) -> RequestedConnParams {
     const STEP_US: u64 = 15_000;
     let interval_us = (before.conn_interval.as_micros() / STEP_US).max(1) * STEP_US;
-    let max_us = if interval_us > STEP_US { interval_us + STEP_US } else { interval_us };
+    let max_us = if interval_us > STEP_US {
+        interval_us + STEP_US
+    } else {
+        interval_us
+    };
     let timeout = before
         .supervision_timeout
         .max(Duration::from_secs(2))
@@ -1208,9 +1240,7 @@ async fn transmit_task<S: ReportSink>(link: Link, sink: &mut S) {
         )
         .await
         {
-            Either4::First(reply) => {
-                send_line(sink, &reply.bytes[..reply.len], wire::frame).await
-            }
+            Either4::First(reply) => send_line(sink, &reply.bytes[..reply.len], wire::frame).await,
             Either4::Second(slot) => {
                 let result = send_deck_slot(sink, slot).await;
                 free_deck_slot(slot);

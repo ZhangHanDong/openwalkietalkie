@@ -306,7 +306,12 @@ pub enum UiAction {
     SttStatus,
     FirmwareStatus,
     FirmwareCheck { force: bool },
-    FirmwareInstall { board: String, serial: String, version: String },
+    FirmwareInstall {
+        board: String,
+        serial: String,
+        version: String,
+        allow_bootloader_update: bool,
+    },
     /// `stt.install{model?}` — the opt-in: fetch the model's weights. The
     /// daemon downloads in the background; the screen polls `stt.status`.
     SttInstall {
@@ -412,7 +417,15 @@ impl UiAction {
             UiAction::ImageGet { agent, image, offset } => ("image.get", serde_json::json!({"agent":agent,"image":image,"offset":offset})),
             UiAction::FirmwareStatus => ("firmware.status", serde_json::json!({})),
             UiAction::FirmwareCheck { force } => ("firmware.check", serde_json::json!({"force": force})),
-            UiAction::FirmwareInstall { board, serial, version } => ("firmware.install", serde_json::json!({"board":board,"serial":serial,"version":version})),
+            UiAction::FirmwareInstall {
+                board,
+                serial,
+                version,
+                allow_bootloader_update,
+            } => (
+                "firmware.install",
+                serde_json::json!({"board":board,"serial":serial,"version":version,"allow_bootloader_update":allow_bootloader_update}),
+            ),
             UiAction::SttStatus => ("stt.status", serde_json::json!({})),
             UiAction::SttInstall { model } => match model {
                 Some(model) => ("stt.install", serde_json::json!({"model": model})),

@@ -31,7 +31,10 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 88] = [
+const DECK_SCENES: [&str; 91] = [
+    "question-answer",
+    "chinese-reply",
+    "chinese-question",
     "roster",
     "roster-page2",
     "roster-offline",
@@ -151,6 +154,60 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
     ui.deck.host_present = true;
     ui.connected = true;
     match scene {
+        "question-answer" => {
+            let agent = &mut ui.deck.agents[0];
+            agent.name.set("Project setup");
+            agent.has_card = false;
+            agent.state = deck::msg::AgentState::Working;
+            agent.reply_rev = 1;
+            agent.reply.id = 1;
+            agent.reply.font = deck::msg::DocFont::RichRow;
+            let lines = [
+                "h0\u{e000}BYou · 4 · done", "b0",
+                "h0\u{e000}BYour answers", "b0",
+                "p0\u{e000}BWhich database?", "b0", "q1SQLite", "b0",
+                "p0\u{e000}BProject name?", "b0", "q1中文项目",
+            ];
+            for (slot, text) in agent.reply.lines.iter_mut().zip(lines) { slot.set(text); }
+            agent.reply.first = 0;
+            agent.reply.held = lines.len() as u8;
+            agent.reply.total = lines.len() as u16;
+            ui.agents.view = AgentsView::Channel;
+            ui.agents.agent = 1;
+            ui.agents.highlight = 1;
+            ui.global.active_channel = 1;
+        }
+        "chinese-reply" | "chinese-question" => {
+            let agent = &mut ui.deck.agents[0];
+            agent.name.set("中文助手");
+            agent.title.set("设备字体已更新");
+            if scene == "chinese-question" {
+                agent.card.text.set("是否更新设备？简体中文與繁體中文都能正常顯示。");
+                agent.card.choices[0].set("立即更新");
+                agent.card.choices[1].set("先运行测试");
+                agent.card.choices[2].set("取消操作");
+                card(ui, 1, Some(0));
+            } else {
+                agent.has_card = false;
+                agent.state = deck::msg::AgentState::Ready;
+                agent.reply_rev = 1;
+                agent.reply.id = 1;
+                agent.reply.font = deck::msg::DocFont::Title;
+                agent.reply.first = 0;
+                agent.reply.held = 0;
+                ui::font::wrap(ui::font::Font::Title,
+                    "你好，世界！中文字体已安装。\n简体中文与繁體中文：臺灣、香港。\nCodex 已完成 3 项测试。",
+                    ui::layout::CHANNEL_REPLY.width(), deck::msg::DOC_HELD, &mut |index, line, _| {
+                        agent.reply.lines[index].set(line);
+                        agent.reply.held = (index + 1) as u8;
+                    });
+                agent.reply.total = agent.reply.held as u16;
+                ui.agents.view = AgentsView::Channel;
+                ui.agents.agent = 1;
+                ui.agents.highlight = 1;
+                ui.global.active_channel = 1;
+            }
+        }
         "bluetooth-strong" | "bluetooth-weak" | "bluetooth-unknown" | "bluetooth-disconnected" => {
             use ui::bluetooth::{Level, Status};
             ui.bluetooth = match scene {

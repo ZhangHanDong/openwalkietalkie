@@ -187,27 +187,26 @@ metal) when
   checked before every boot, so erased flash or an interrupted download never
   gets jumped into.
 
-Recovery mode is the application's own USB device, descriptor for
-descriptor: the vendor HID collection the firmware presents as
-"OpenWalkieTalkie" (`1209:5754`, manufacturer "Cohdl", the same strings, the same chip-derived serial, the same
-report descriptor and endpoints, captured from the running application with
-pyusb). A host that has accepted the application therefore accepts it with
-no driver and no new-accessory prompt (a distinct DFU identity was tried
-first: macOS keys its one-time approval below the device descriptor, so even
-a byte-identical device descriptor with a different interface was held for
-a click). The image travels on channel 9 of the same 64-byte reports
+Recovery keeps the application's vendor HID collection as interface 0:
+"OpenWalkieTalkie" (`1209:5754`, manufacturer "Cohdl", the same strings,
+chip-derived serial, report descriptor and HID endpoints). Current recovery
+also exposes vendor bulk interface 1 (`ff/57/01`, OUT `0x03`, IN `0x85`, 64-byte
+full-speed packets). macOS accessory approval applies to the composite device.
+The compatible update path travels on channel 9 of the same 64-byte reports
 (`[6][9][len][payload]`): HELLO, BEGIN (erases the vector-table sector),
 DATA pieces into a 4 KB sector buffer, COMMIT with address, length and CRC-32
 (erase, program, read back), FINISH (writes the held vector-table sector,
-checks it, reboots), BOOT and READ. Writes stay inside the application window
-(`0x12020000` up to the pairing journal at `0x12710000`); a download that
+checks it, reboots), BOOT and READ. Protocol 2 writes only the two application
+banks (`0x12020000..0x126FFFFF` and `0x12720000..0x12FFFFFF`), preserving both
+Bluetooth stores between them. Clients check the recovery version before BEGIN;
+large images are refused on protocol-1 recovery before any erase. A download that
 stops half way leaves an image the bootloader refuses and comes back to
 recovery by itself. The deck host's own traffic on the other channels is
-ignored. The flash table at `0x12000000` and the bootloader's slot are never
-written over USB; they, and the bootloader's own updates, stay on the UART
-path (`tools/flash-uart.py ... bootloader.bin@0x12010000`), which the
-chip's always-on debug port guarantees whatever is in flash. For bootloader
-development only, an Embassy app built with `--features hw-a,bootloader-update`
+ignored. Application recovery never writes the flash table at `0x12000000`
+or the bootloader's slot. UART (`tools/flash-uart.py ... bootloader.bin@0x12010000`)
+can provision both through the chip's always-on debug port regardless of the
+contents of flash. For an acknowledged Rev A/B bootloader upgrade, a temporary
+Embassy app built with `--features hw-a,bootloader-update`
 rewrites the slot itself (`tools/flash-usb.py --bootloader bootloader.bin`,
 deliberately left out of `--help`; `src/link/boot_update.rs`): a power loss
 during that second leaves the UART pads as the only way back. If nobody
@@ -215,11 +214,81 @@ speaks the protocol within two minutes and the image is valid, recovery mode
 boots the application. It logs `OWTB: ...` lines on UART1. The RSA image
 verifier the SDK project carries is left out (`CONFIG_PKG_SIFLI_MBEDTLS_BOOT`
 off: images are unsigned here), which makes room for the USB stack in the
-64 KB slot (about 45 KB used). `owt/usb_dc_musb.c` is the SDK's musb device
+64 KB slot (51,888 bytes used, including bulk and the recovery screen). `owt/usb_dc_musb.c` is the SDK's musb device
 port with one fix (its EP0 OUT data stage only ended on a short packet, so a
 control transfer that is an exact multiple of 64 bytes never completed);
 `proj.conf` selects CherryUSB's "custom" port so the SDK's copy is not
 compiled too, and `owt/usb_glue_sifli.c` is the SDK's glue unchanged.
+
+Rev A/B recovery initializes the CO5300 AMOLED itself, with the same panel
+rails, reset sequence, QSPI framing and 180-degree orientation as the app.
+It shows recovery instructions, missing firmware, update progress, completion,
+and CRC/flash/verification or USB-reset errors with retry instructions. Normal
+boots do not initialize the display here. No audio or touch driver is started.
+The renderer carries a small built-in font and uses a 15 KiB RGB565 band in
+unused bootloader SRAM. Two 4,160-byte USB receive buffers share this NOLOAD
+region, starting at `0x20030000` (23,680 bytes total); neither uses application
+assets or PSRAM. `display_scratch.ld` keeps these buffers out of the load image
+and asserts that the image fits below it in the existing 64 KiB flash slot.
+LCDC command/DMA waits are bounded; a display fault stops drawing and leaves
+the USB updater running. Rev A display orientation has been verified; Rev B
+physical display validation remains pending.
+
+HELLO still reports protocol 2, with an optional capability byte after the
+image-valid byte: bit 0 enables sparse ERASE (op 8, COMMIT fields with implicit
+FF data), bit 1 enables bulk v1. Missing capabilities mean the legacy protocol.
+Both hosts prefer bulk and fall back to HID only before a transfer begins.
+HID also uses sparse ERASE when advertised. Empty sectors are checked, erased
+only if necessary, and verified; skipping their USB payload never preserves
+stale firmware. Both Bluetooth stores remain excluded. An older protocol-2
+bootloader continues to work at its previous speed; this optional acceleration
+does not silently trigger another bootloader replacement.
+
+After checking an incoming sector's CRC, recovery compares its bytes against
+flash. Identical sectors are already verified and need no erase/program cycle;
+the unused tail of a partial sector must also be FF before a rewrite can be
+skipped. Changed sectors still get erase/program/readback verification. BEGIN
+always invalidates the vector sector, which remains held until verified FINISH,
+including when all other sectors match. This reduces update time and flash wear
+when large font assets or code have not changed.
+
+Bulk uses 32-byte headers and up to 4 KiB data, padded to a 64-byte boundary
+after the header so every frame terminates with a short packet. Header fields
+are `OWTF`, op:u8, version=1:u8, length:u16, address:u32, sequence:u32,
+session-token:u32, data-CRC32:u32, header-CRC32(first 24 bytes):u32, reserved=0:u32.
+All integers are little-endian. BEGIN (2) has sequence/length/data-CRC zero,
+address=image span and a fresh nonzero token. COMMIT (4) includes data; ERASE
+(8) includes only the header and CRC of the implicit FF bytes. FINISH (5) has
+zero address/length/data-CRC. Sequence advances from 1 after BEGIN.
+The 24-byte acknowledgment is `OWTA`, op, status, version=1, reserved=0,
+sequence:u32, token:u32, address:u32, CRC32(first 20 bytes):u32.
+Two receive buffers and two host requests overlap reception and flash work.
+Every sector is CRC-checked and verified before acknowledgment; FINISH checks
+complete coverage and commits vectors last. Errors require a fresh BEGIN;
+hosts never switch transport or send FINISH after a failed/uncertain transfer.
+Before any sector data is submitted, hosts may repeat BEGIN once to flush an
+old partial USB frame. CRC-valid acknowledgments from another session are
+drained within a deadline; matching-token replies must still pass sequence,
+address and status checks. This does not retry uncertain sector writes.
+
+The desktop uses native USB through `nusb`, with no external libusb dependency.
+`flash-usb.py` optionally uses PyUSB/libusb; `--transport auto|hid|bulk` selects
+automatic negotiation, compatible HID, or required bulk. Missing PyUSB/libusb
+falls back to HID in auto mode before any erase. Bulk mode fails before erase
+when unavailable. The script binds recovery and reconnection to the same serial.
+
+The desktop and `flash-usb.py` send an optional four-byte little-endian image
+span after BEGIN. Old bootloaders ignore it. New recovery validates it before
+erasing and counts unique CRC-checked sectors, excluding the two Bluetooth
+stores. It holds progress at 99% until FINISH writes and validates the vector
+sector; incomplete declared transfers cannot FINISH. Old clients' empty BEGIN
+still works and shows "RECEIVING DATA" without an invented percentage. This is
+an optional protocol-2 extension, not a protocol version change. Already-installed
+protocol-2 bootloaders continue to work; an application-only update does not
+retrofit their screen. The screen accompanies the new recovery image installed
+by the acknowledged protocol-1 migration or explicit bootloader provisioning.
+During the temporary app's replacement of the bootloader, progress and the
+power-loss warning remain in the desktop app.
 
 Host side: `tools/flash-usb.py <ELF or .bin>` (needs the `hid` Python
 module, nothing else) asks a running deck to reboot into recovery, waits for
@@ -621,6 +690,8 @@ the Mac's HID re-pairing prompt from the appearance revision also remains pendin
 ## Storage and scheduling
 
 - Application: `0x12020000..0x126fffff`.
+- Application assets: `0x12720000..0x12ffffff` (8.875 MiB), linked by the
+  shared `flash-assets.x`. Together the application banks hold 15.75 MiB.
 - Native FlashDB/NVDS (Classic bonds, BLE bonds and per-peer HID subscriptions):
   `0x12700000..0x1270ffff`.
 - Preserved Embassy bond journal: `0x12710000..0x1271ffff`.
@@ -635,6 +706,17 @@ loaded by the SDK.
 `check-native-image.py` validates all nonempty ELF load segments before flashing.
 The original Embassy target still builds with `cargo build --release`.
 
+Existing main boards need a one-time update of the recovery bootloader
+before USB can install images containing upper-bank assets. With the SDK
+environment loaded, build `OWT_BOARD=hw-a OWT_BOOT_IMAGES=1 tools/build-native.sh`
+(use `hw-b` for Rev B). The Flash and connect procedure above writes `ftab.bin`,
+the protocol-2 `bootloader.bin` and the application's **ELF**, preserving both
+bond stores because no ELF load segment targets them. The same procedure is
+available through `tools/flash-new-board.sh PORT ELF`. Never flash a padded
+release `.bin` directly over UART: its gap contains placeholders, not bytes
+that should replace Bluetooth data. `tools/flash-usb.py` and the desktop
+updater skip that gap explicitly. The bootloader enforces the exclusion too.
+
 Bluetooth callbacks queue bounded messages to the single application thread.
 Only that thread enters Rust. UI rendering compares frame snapshots and draws only
 damaged rectangles, split at 48-row boundaries. Two aligned SRAM buffers let LCDC
@@ -647,3 +729,74 @@ a notification timeout disconnects HID so a lost PTT release cannot remain
 held on the host. Subscription state is saved by peer identity after encryption.
 Hardware RNG supplies the SDK's `rand()` calls used by legacy SMP, as well as
 the persistent local IRK. HCPU deep sleep is disabled during initial bring-up.
+
+### Upgrading Rev A recovery over USB-C
+
+The desktop's automated migration now supports Rev A and Rev B with separately
+identified images and explicit acknowledgement of the bootloader power-loss
+warning. See [RELEASING.md](../RELEASING.md#device-firmware-updates), including the
+pending shipped-Rev-B hardware validation. The commands below are the manual
+maintenance path; use `hw-b` for both builds when working on Rev B.
+
+A working Rev A/B with protocol-1 recovery can install protocol 2 without a UART
+adapter using the temporary `bootloader-update` firmware. Its fonts remain in
+the lower bank so the old recovery can install it. The feature must not be
+included in normal firmware; distribute it only as the separate bootstrap image.
+Its maintenance commands are USB-only. Keep USB-C power connected throughout:
+power loss while replacing the bootloader requires UART recovery.
+
+First build the new recovery with the SDK environment loaded:
+
+```sh
+OWT_BOARD=hw-a OWT_BOOT_IMAGES=1 tools/build-native.sh
+cargo build --offline --locked --release --features hw-a,bootloader-update --target-dir target/firmware-bootstrap
+python3 tools/check-xip-image.py --bootstrap target/firmware-bootstrap/thumbv8m.main-none-eabihf/release/openwalkietalkie-fw
+python3 tools/flash-usb.py --serial SERIAL target/firmware-bootstrap/thumbv8m.main-none-eabihf/release/openwalkietalkie-fw
+python3 tools/flash-usb.py --serial SERIAL --bootloader native/project/build_openmicrodial_hcpu/bootloader/output/bootloader.bin
+```
+
+Replace `SERIAL` with the connected deck's USB serial. Before erasing the
+bootloader, the maintenance app checks its staged image's CRC and SRAM vectors
+and the installed flash-table mapping: storage `0x12010000`, execution
+`0x20020000`, flags `2` (automatic boot, no encryption), and sufficient load
+length (at most 64 KiB).
+An incompatible table is refused and must be updated over UART. `boot.info`
+reports these fields; `boot.read` can back up the existing 64 KiB bootloader
+slot in chunks of up to 64 bytes. The table and Bluetooth stores are unchanged.
+The replacement is read back and CRC checked before reboot.
+
+Finally install a normal build **without** `bootloader-update`, using the same
+USB flasher. This places fonts in the upper bank and removes the maintenance
+RPCs. Protocol 2 is checked before any application erase, and both Bluetooth
+stores are skipped. Keep the maintenance build in its separate target directory
+so it cannot be mistaken for a release image.
+
+Verified on Rev A on 2026-10-17 using USB-C only: the temporary lower-bank app
+installed through protocol 1, recovery v2 was written and read back, and the
+expanded production app installed with per-sector verification. The existing
+flash table was retained and the Bluetooth sectors were skipped. The application
+answered `sys.version`, `boot.info` returned Method not found, and the desktop
+service reconnected with zero device errors. No audio tests were run.
+
+The display-enabled recovery was subsequently installed on the same Rev A over
+USB-C and its full 50,564 bytes read back before reboot. The user confirmed that
+the recovery progress screen was visible and upright during the production
+0.3.1 transfer. The final application reported recovery protocol 2, rejected
+`boot.info`, and reconnected to the desktop service. The temporary and final
+application downloads took 210.4 s and 394.9 s respectively (about 31 KB/s).
+Rev B hardware validation and interrupted-transfer display checks remain pending;
+no audio tests were run.
+
+USB bulk acceleration was verified on the same Rev A on 2026-10-18. The
+51,888-byte recovery image was read back in full before reboot. A regular
+reinstall of the 6,566,500 load-byte production image took 9.00 s through the
+desktop transport and 9.9 s through Python (transfer/verification, excluding
+application reboot), versus 394.9 s with the earlier HID uploader. Uploads
+contain 6,665,056 bytes including bulk framing instead of 12,364,180 firmware
+bytes over HID. This benchmark reuses matching flash contents: changed sectors
+still require erase/program time. Restoring production after the temporary
+updater and an interrupted packet took 89.86 s, including the bounded BEGIN
+retry and cleanup of the temporary layout. A full stale-padding sector was
+read back as FF; incomplete transfers stayed unbootable, both across reboot
+and on a direct retry without disconnecting USB. Both clients returned to
+production 0.3.1. No audio tests ran; Rev B hardware validation is pending.

@@ -50,12 +50,23 @@ fn exec_test(addr: u32) -> u32 {
     }
 }
 
-/// Write a pattern over `bytes` of PSRAM from its start and read it back:
+/// Bounds of the diagnostic area reserved by `memory.x` / `psram.x`.
+fn psram_scratch() -> (usize, usize) {
+    extern "C" {
+        static __psram_scratch_start: u8;
+        static __psram_scratch_end: u8;
+    }
+    let start = core::ptr::addr_of!(__psram_scratch_start) as usize;
+    let end = core::ptr::addr_of!(__psram_scratch_end) as usize;
+    (start, end - start)
+}
+
+/// Write a pattern over at most `bytes` of reserved PSRAM and read it back:
 /// (mismatching words, milliseconds).
 fn psram_test(bytes: u32, seed: u32) -> (u32, u32) {
-    // The low 4 MB hold the running code (link-psram.x).
-    let base = 0x6040_0000 as *mut u32;
-    let words = (bytes / 4) as usize;
+    let (start, capacity) = psram_scratch();
+    let base = start as *mut u32;
+    let words = (bytes as usize).min(capacity) / 4;
     let started = embassy_time::Instant::now();
     let mut x = seed | 1;
     for i in 0..words {
@@ -113,7 +124,7 @@ pub fn handle(req: &[u8], tx: &mut [u8]) -> Option<usize> {
             return Some(out.finish());
         }
         b"dbg.ptest" => {
-            let (bad, ms) = psram_test(arg(b"n").unwrap_or(0x10_0000).min(0x40_0000), arg(b"seed").unwrap_or(1));
+            let (bad, ms) = psram_test(arg(b"n").unwrap_or(0x10_0000), arg(b"seed").unwrap_or(1));
             out.push(b",\"result\":{\"bad\":");
             out.push_u32(bad);
             out.push(b",\"ms\":");
@@ -122,7 +133,7 @@ pub fn handle(req: &[u8], tx: &mut [u8]) -> Option<usize> {
             return Some(out.finish());
         }
         b"dbg.pexec" => {
-            let r = exec_test(arg(b"a").unwrap_or(0x6070_0000));
+            let r = exec_test(arg(b"a").unwrap_or(psram_scratch().0 as u32));
             out.push(b",\"result\":{\"r\":");
             out.push_u32(r);
             out.push(b"}}");

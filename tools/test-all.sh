@@ -104,6 +104,8 @@ for board in lilygo hw-a hw-b; do
     [ "$board" != lilygo ] && features=(--features "$board")
     run_step "embassy release build [$board]" built \
         cargo build --release --locked --offline ${features[@]+"${features[@]}"}
+    run_step "XIP layout [$board]" verified \
+        python3 tools/check-xip-image.py target/thumbv8m.main-none-eabihf/release/openwalkietalkie-fw
 done
 
 for board in lilygo hw-a hw-b; do
@@ -117,6 +119,9 @@ done
 
 run_step "C panel wake sequence" "1 passed" c_check tests/panel.c panel-test
 run_step "C speaker PCM" "1 passed" c_check tests/speaker_pcm.c speaker-pcm-test
+run_step "C recovery flash bounds" "1 passed" c_check tests/flash_layout.c flash-layout-test
+run_step "C recovery progress and screen" "passed" \
+    python3 -m unittest discover -s tools/tests -p test_recovery_ui.py
 
 goldens() {
     local preview="$root/target/native-core-preview/$host/debug/examples/ui-preview"

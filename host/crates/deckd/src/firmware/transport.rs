@@ -1,9 +1,14 @@
 //! The resident OWTB recovery protocol (native/bootloader): application
 //! window only, CRC per sector, vector sector committed last by the device.
-use super::{firmware_version, Device, APP_BASE};
+use super::{
+    firmware_version, migration, validate_layout, Device, APP_BASE, BONDS_END, BONDS_START,
+};
 use crate::hid::{PID, USAGE_PAGE, VID};
 use hidapi::{BusType, HidApi, HidDevice};
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::io::Write;
+use std::path::Path;
 use std::time::{Duration, Instant};
 
 const SECTOR: usize = 4096;
@@ -51,25 +56,29 @@ impl Wire {
         }
         Ok(None)
     }
-    fn hello(&self) -> Result<bool, String> {
+    fn hello(&self) -> Result<Option<u8>, String> {
+        Ok(self.hello_info()?.map(|(protocol, _)| protocol))
+    }
+    fn hello_info(&self) -> Result<Option<(u8, u8)>, String> {
         self.send(RECOVERY, &[1])?;
         let until = Instant::now() + Duration::from_millis(500);
         while let Some(reply) = self.recv(RECOVERY, until)? {
             if reply.starts_with(b"\x01OWTB") {
-                if reply.len() < 7 || reply[5] != 1 {
+                if reply.len() < 7 || !matches!(reply[5], 1 | 2) {
                     return Err("Unsupported recovery protocol.".into());
                 }
-                return Ok(true);
+                return Ok(Some((reply[5], reply.get(7).copied().unwrap_or(0))));
             }
         }
-        Ok(false)
+        Ok(None)
     }
     fn rpc(&self, method: &str, params: Value) -> Result<Value, String> {
         let request = format!("{}\n", json!({"method":method,"params":params,"id":47201}));
         for chunk in request.as_bytes().chunks(61) {
             self.send(2, chunk)?;
         }
-        let until = Instant::now() + Duration::from_secs(2);
+        let until =
+            Instant::now() + Duration::from_secs(if method == "boot.commit" { 30 } else { 2 });
         let mut line = Vec::new();
         while let Some(bytes) = self.recv(2, until)? {
             line.extend(bytes);
@@ -83,10 +92,12 @@ impl Wire {
                     line.drain(..=end);
                     continue;
                 }
-                return reply
-                    .get("result")
-                    .cloned()
-                    .ok_or_else(|| "Device refused the update request.".into());
+                return reply.get("result").cloned().ok_or_else(|| {
+                    reply["error"]["message"]
+                        .as_str()
+                        .unwrap_or("Device refused the update request.")
+                        .to_owned()
+                });
             }
         }
         Err("The deck did not answer. Connect its USB cable and try again.".into())
@@ -130,8 +141,9 @@ fn candidates(api: &mut HidApi) -> Result<Vec<(String, std::ffi::CString)>, Stri
 }
 
 fn describe(wire: &Wire, serial: String) -> Result<Device, String> {
-    if wire.hello()? {
+    if let Some(protocol) = wire.hello()? {
         return Ok(Device {
+            recovery_protocol: Some(protocol),
             serial,
             recovery: true,
             ..Default::default()
@@ -156,6 +168,11 @@ fn describe(wire: &Wire, serial: String) -> Result<Device, String> {
         board,
         version: Some(version.into()),
         recovery: false,
+        recovery_protocol: result["recovery_protocol"]
+            .as_u64()
+            .and_then(|v| u8::try_from(v).ok())
+            .filter(|p| matches!(p, 1 | 2)),
+        maintenance: result["maintenance"].as_bool().unwrap_or(false),
     })
 }
 
@@ -195,112 +212,219 @@ fn wait<T>(mut f: impl FnMut() -> Option<T>, what: &str) -> Result<T, String> {
     }
 }
 
-pub fn install(
+pub(super) fn install(
     api: &mut HidApi,
-    expected: &Device,
-    board: &str,
-    version: &str,
-    image: &[u8],
-    mut progress: impl FnMut(&str, u8),
+    request: migration::Request<'_>,
+    images: &migration::Images,
+    backup_dir: &Path,
+    progress: impl FnMut(&str, u8, &str),
 ) -> Result<Device, String> {
-    let mut wire = open_serial(api, &expected.serial)?;
-    let current = describe(&wire, expected.serial.clone())?;
-    // Check again after download and before the first mutating USB command.
-    if current
-        .board
-        .as_deref()
-        .is_some_and(|actual| actual != board)
-        || current.version != expected.version
-        || current.recovery != expected.recovery
-    {
-        return Err(
-            "The connected deck changed since the update check. Check again before installing."
-                .into(),
-        );
+    let serial = request.expected.serial.clone();
+    let wire = Some(open_serial(api, &serial)?);
+    let mut io = UsbMigration {
+        api,
+        serial,
+        wire,
+        backup_dir,
+    };
+    migration::run(&mut io, request, images, progress)
+}
+
+struct UsbMigration<'a> {
+    api: &'a mut HidApi,
+    serial: String,
+    wire: Option<Wire>,
+    backup_dir: &'a Path,
+}
+
+impl migration::Io for UsbMigration<'_> {
+    fn describe(&mut self) -> Result<Device, String> {
+        describe(
+            self.wire.as_ref().ok_or("USB connection is closed.")?,
+            self.serial.clone(),
+        )
     }
-    if !current.recovery {
+
+    fn enter_recovery(&mut self) -> Result<u8, String> {
+        let wire = self.wire.as_ref().ok_or("USB connection is closed.")?;
+        if let Some(protocol) = wire.hello()? {
+            return Ok(protocol);
+        }
         wire.rpc("sys.reboot", json!({"mode":"recovery"}))?;
-        drop(wire);
-        wire = wait(
+        self.wire.take();
+        let wire = wait(
             || {
-                let w = open_serial(api, &expected.serial).ok()?;
-                w.hello().ok()?.then_some(w)
+                let w = open_serial(self.api, &self.serial).ok()?;
+                w.hello().ok()?.is_some().then_some(w)
             },
             "this deck's recovery mode",
         )?;
+        let protocol = wire.hello()?.ok_or("The deck left recovery mode.")?;
+        self.wire = Some(wire);
+        Ok(protocol)
     }
-    transfer(
-        image,
-        |op, payload, reply| {
-            if reply {
-                wire.command(op, payload)
-            } else {
-                let mut bytes = vec![op];
-                bytes.extend_from_slice(payload);
-                wire.send(RECOVERY, &bytes)?;
-                Ok(Vec::new())
+
+    fn transfer(
+        &mut self,
+        image: &[u8],
+        protocol: u8,
+        progress: &mut dyn FnMut(u8),
+    ) -> Result<(), String> {
+        let wire = self.wire.as_ref().ok_or("USB connection is closed.")?;
+        let (current, capabilities) = wire.hello_info()?.ok_or("The deck left recovery mode.")?;
+        if current != protocol {
+            return Err("Recovery protocol changed before transfer.".into());
+        }
+        if capabilities & 2 != 0 {
+            match super::bulk::Usb::open(&self.serial) {
+                Ok(mut usb) => return super::bulk::transfer(&mut usb, image, protocol, progress),
+                Err(error) => {
+                    tracing::warn!(%error, "Bulk unavailable; using compatible HID recovery")
+                }
             }
-        },
-        |percent| progress("installing", percent),
-    )?;
-    drop(wire);
-    progress("reconnecting", 100);
-    let updated = wait(
-        || {
-            let w = open_serial(api, &expected.serial).ok()?;
-            let d = describe(&w, expected.serial.clone()).ok()?;
-            (!d.recovery).then_some(d)
-        },
-        "the updated deck",
-    )?;
-    if updated.board.as_deref() != Some(board)
-        || updated.version.as_deref().and_then(firmware_version) != firmware_version(version)
-    {
-        return Err(
-            "The deck restarted, but did not report the expected firmware and board.".into(),
-        );
+        }
+        transfer_with_capabilities(
+            image,
+            protocol,
+            capabilities,
+            |op, payload, reply| {
+                if reply {
+                    wire.command(op, payload)
+                } else {
+                    let mut bytes = vec![op];
+                    bytes.extend_from_slice(payload);
+                    wire.send(RECOVERY, &bytes)?;
+                    Ok(Vec::new())
+                }
+            },
+            progress,
+        )
     }
-    Ok(updated)
+
+    fn wait_application(&mut self) -> Result<Device, String> {
+        self.wire.take();
+        let (wire, device) = wait(
+            || {
+                let w = open_serial(self.api, &self.serial).ok()?;
+                let d = describe(&w, self.serial.clone()).ok()?;
+                (!d.recovery).then_some((w, d))
+            },
+            "the updated deck",
+        )?;
+        self.wire = Some(wire);
+        Ok(device)
+    }
+
+    fn boot_existing(&mut self) -> Result<(), String> {
+        self.wire
+            .as_ref()
+            .ok_or("USB connection is closed.")?
+            .command(6, &[])?;
+        self.wait_application().map(|_| ())
+    }
+
+    fn rpc(&mut self, method: &str, params: Value) -> Result<Value, String> {
+        self.wire
+            .as_ref()
+            .ok_or("USB connection is closed.")?
+            .rpc(method, params)
+    }
+
+    fn backup(&mut self, bytes: &[u8]) -> Result<(), String> {
+        std::fs::create_dir_all(self.backup_dir)
+            .map_err(|e| format!("Cannot save bootloader backup: {e}"))?;
+        // Hash the serial instead of using externally supplied text as a path.
+        let serial = format!("{:x}", Sha256::digest(self.serial.as_bytes()));
+        let hash = format!("{:x}", Sha256::digest(bytes));
+        let path = self.backup_dir.join(format!("{serial}-{hash}.bin"));
+        let mut file = std::fs::File::create(&path)
+            .map_err(|e| format!("Cannot save bootloader backup: {e}"))?;
+        file.write_all(bytes)
+            .and_then(|()| file.sync_all())
+            .map_err(|e| format!("Cannot save bootloader backup: {e}"))?;
+        if std::fs::read(path).map_err(|e| e.to_string())? != bytes {
+            return Err("Bootloader backup verification failed.".into());
+        }
+        Ok(())
+    }
 }
 
+#[cfg(test)]
 fn transfer(
     image: &[u8],
+    protocol: u8,
+    command: impl FnMut(u8, &[u8], bool) -> Result<Vec<u8>, String>,
+    progress: impl FnMut(u8),
+) -> Result<(), String> {
+    transfer_with_capabilities(image, protocol, 0, command, progress)
+}
+
+fn transfer_with_capabilities(
+    image: &[u8],
+    protocol: u8,
+    capabilities: u8,
     mut command: impl FnMut(u8, &[u8], bool) -> Result<Vec<u8>, String>,
     mut progress: impl FnMut(u8),
 ) -> Result<(), String> {
-    command(2, &[], true)?;
+    preflight(image, protocol)?;
+    // Optional BEGIN extension; older recovery builds ignore these bytes.
+    // The resident screen counts verified sectors against the image span.
+    command(2, &(image.len() as u32).to_le_bytes(), true)?;
     for (index, sector) in image.chunks(SECTOR).enumerate() {
-        for (part, bytes) in sector.chunks(57).enumerate() {
-            let offset = (part * 57) as u16;
-            let mut payload = offset.to_le_bytes().to_vec();
-            payload.push(bytes.len() as u8);
-            payload.extend_from_slice(bytes);
-            command(3, &payload, false)?;
-        }
         let addr = APP_BASE + (index * SECTOR) as u32;
+        if (BONDS_START..BONDS_END).contains(&addr) {
+            continue;
+        }
+        let sparse = capabilities & 1 != 0 && sector.iter().all(|b| *b == 0xff);
+        if !sparse {
+            for (part, bytes) in sector.chunks(57).enumerate() {
+                let offset = (part * 57) as u16;
+                let mut payload = offset.to_le_bytes().to_vec();
+                payload.push(bytes.len() as u8);
+                payload.extend_from_slice(bytes);
+                command(3, &payload, false)?;
+            }
+        }
         let mut payload = addr.to_le_bytes().to_vec();
         payload.extend_from_slice(&(sector.len() as u16).to_le_bytes());
         payload.extend_from_slice(&crc32(sector).to_le_bytes());
-        let reply = command(4, &payload, true)?;
+        let reply = command(if sparse { 8 } else { 4 }, &payload, true)?;
         if reply.as_slice() != addr.to_le_bytes() {
             return Err("The bootloader acknowledged the wrong flash sector.".into());
         }
-        progress(((index * SECTOR + sector.len()) * 100 / image.len()) as u8);
+        progress(((index * SECTOR + sector.len()) * 100 / image.len()).min(99) as u8);
     }
     let reply = command(5, &[], true)?;
     if reply.first() != Some(&1) {
         return Err("The bootloader could not validate the new image. Retry from recovery.".into());
     }
+    progress(100);
     Ok(())
 }
 
-fn crc32(bytes: &[u8]) -> u32 {
+pub(super) fn preflight(image: &[u8], protocol: u8) -> Result<(), String> {
+    // Negotiate before OP_BEGIN erases the installed application's vectors.
+    validate_layout(image)?;
+    if !matches!(protocol, 1 | 2) {
+        return Err("Unsupported recovery protocol.".into());
+    }
+    if protocol == 1 && APP_BASE + image.len() as u32 > BONDS_START {
+        return Err("This firmware needs a recovery bootloader upgrade first. Follow the recovery upgrade procedure in native/README.md. The installed application has not been erased.".into());
+    }
+    Ok(())
+}
+
+pub(super) fn crc32(bytes: &[u8]) -> u32 {
+    const TABLE: [u32; 16] = [
+        0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158,
+        0x5005713c, 0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4,
+        0xa00ae278, 0xbdbdf21c,
+    ];
     let mut crc = !0u32;
     for &b in bytes {
         crc ^= b as u32;
-        for _ in 0..8 {
-            crc = (crc >> 1) ^ (0xedb88320 & (0u32.wrapping_sub(crc & 1)));
-        }
+        crc = (crc >> 4) ^ TABLE[(crc & 15) as usize];
+        crc = (crc >> 4) ^ TABLE[(crc & 15) as usize];
     }
     !crc
 }
@@ -309,17 +433,100 @@ fn crc32(bytes: &[u8]) -> u32 {
 mod tests {
     use super::*;
     #[test]
+    fn sparse_hid_sends_erase_requests_only_when_advertised() {
+        let image = vec![0xff; 4200];
+        let mut ops = Vec::new();
+        transfer_with_capabilities(
+            &image,
+            2,
+            1,
+            |op, data, _| {
+                ops.push(op);
+                Ok(match op {
+                    8 => data[..4].to_vec(),
+                    5 => vec![1],
+                    _ => vec![],
+                })
+            },
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(ops, [2, 8, 8, 5]);
+    }
+    #[test]
+    fn expanded_update_skips_bonds_and_refuses_old_recovery_before_erase() {
+        let mut image = vec![255; (BONDS_END - APP_BASE) as usize + 17];
+        image[0] = 1;
+        let mut addresses = Vec::new();
+        transfer(
+            &image,
+            2,
+            |op, data, _| {
+                if op == 4 {
+                    let address = u32::from_le_bytes(data[..4].try_into().unwrap());
+                    assert!(!(BONDS_START..BONDS_END).contains(&address));
+                    addresses.push(address);
+                    return Ok(data[..4].to_vec());
+                }
+                Ok(if op == 5 { vec![1] } else { vec![] })
+            },
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(addresses.last(), Some(&BONDS_END));
+        assert_eq!(
+            addresses.len(),
+            ((BONDS_START - APP_BASE) as usize / SECTOR) + 1
+        );
+        for protocol in [1, 3] {
+            let mut calls = 0;
+            assert!(transfer(
+                &image,
+                protocol,
+                |_, _, _| {
+                    calls += 1;
+                    Ok(vec![])
+                },
+                |_| {}
+            )
+            .is_err());
+            assert_eq!(calls, 0);
+        }
+        image[(BONDS_START - APP_BASE) as usize] = 0;
+        let mut calls = 0;
+        assert!(transfer(
+            &image,
+            2,
+            |_, _, _| {
+                calls += 1;
+                Ok(vec![])
+            },
+            |_| {}
+        )
+        .is_err());
+        assert_eq!(calls, 0);
+    }
+
+    #[test]
     fn transfer_matches_sector_protocol_including_short_final_sector() {
         assert_eq!(crc32(b"123456789"), 0xcbf43926);
+        assert_eq!(crc32(&[]), 0);
+        assert_eq!(crc32(&[0xa5; 32]), 0x775f2f85);
+        assert_eq!(crc32(&[0xa5; 104]), 0x497ecff0);
+        assert_eq!(crc32(&[0xa5; 4096]), 0x4a9d36c6);
         let image = vec![0xa5; 4200];
         let mut offset = 0;
         let mut staged = Vec::new();
         let mut completed = false;
         transfer(
             &image,
+            2,
             |op, data, reply| {
                 match op {
-                    2 => assert!(reply),
+                    2 => {
+                        assert!(reply);
+                        assert_eq!(data, (image.len() as u32).to_le_bytes());
+                    }
                     3 => {
                         assert!(!reply);
                         assert_eq!(
@@ -371,6 +578,7 @@ mod tests {
         let mut operations = Vec::new();
         let result = transfer(
             &[1; 12],
+            2,
             |op, _, _| {
                 operations.push(op);
                 if op == 4 {

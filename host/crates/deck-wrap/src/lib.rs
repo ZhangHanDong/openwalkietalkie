@@ -278,6 +278,22 @@ mod tests {
     }
 
     #[test]
+    fn chinese_replies_preserve_characters_and_fit_the_device_at_every_size() {
+        let text = "中文字体已经更新，简体和繁體都可以正常顯示。请检查设备上的消息和标点！".repeat(4);
+        for size in 0..=2 {
+            let (font, lines) = wrap_reply(&text, size);
+            assert_eq!(lines.concat(), text);
+            assert!(lines.len() > 4);
+            for line in lines {
+                assert!(ui::font::measure(face(font), &line) <= lane_width(DocKind::Reply));
+            }
+        }
+        let (font, lines) = wrap_question(&text);
+        assert_eq!(lines.concat(), text);
+        assert!(lines.iter().all(|line| ui::font::measure(face(font), line) <= question_width()));
+    }
+
+    #[test]
     fn an_empty_body_wraps_to_nothing() {
         let (font, lines) = wrap_question("");
         assert_eq!(font, DocFont::Title);

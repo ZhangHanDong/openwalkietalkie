@@ -1132,6 +1132,13 @@ fn project_with(snapshot: &Snapshot, now: Ts, aux: Option<&BTreeMap<AgentId, Age
         ));
     }
     for (key, value) in snapshot.settings.iter() {
+        // Older firmware cannot parse this key. The power-on Arcade entry
+        // advertises support even when we restore a customized legacy strip.
+        if key == crate::SetKey::Arcadesound
+            && !snapshot.device.faces.iter().any(|f| f.t == crate::Template::Arcade)
+        {
+            continue;
+        }
         ops.push(DeviceOp::Put(Key::Set(key), HostLine::Set { key, value }));
     }
     ops
@@ -1716,6 +1723,17 @@ mod tests {
             e,
             Effect::Device(DeviceOp::Put(Key::AgentState(Slot(2)), _))
         )));
+    }
+
+    #[test]
+    fn arcade_sound_is_projected_only_to_a_device_that_advertises_arcade() {
+        let mut snapshot = Snapshot::default();
+        snapshot.settings.arcadesound = 2;
+        let has_sound = |ops: Vec<DeviceOp>| ops.into_iter().any(|op| matches!(op,
+            DeviceOp::Put(Key::Set(crate::SetKey::Arcadesound), HostLine::Set { value: 2, .. })));
+        assert!(!has_sound(project(&snapshot, Ts::from_millis(0))));
+        snapshot.device.faces.push(FaceEntry { f: 6, t: Template::Arcade, n: "Arcade".into() });
+        assert!(has_sound(project(&snapshot, Ts::from_millis(0))));
     }
 
     #[test]

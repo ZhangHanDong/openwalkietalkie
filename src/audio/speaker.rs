@@ -9,6 +9,8 @@
 //! 300 ms with nothing, ends the stream and powers everything down. While a
 //! microphone stream is live the speaker stays silent: the deck is a
 //! walkie-talkie and its own speaker would land in its own microphone.
+//! Arcade music uses this same DAC owner and yields to incoming host speech.
+//! No local samples enter the host queue or the microphone path.
 use core::sync::atomic::Ordering;
 use embassy_time::{with_timeout, Duration, Instant, Timer};
 use sifli_hal::aud_pll::{AudPllFreq, AudioPll};
@@ -82,19 +84,47 @@ const WRITE_TIMEOUT: Duration = Duration::from_millis(250);
 #[embassy_executor::task]
 pub async fn task(mut speaker: Speaker) {
     let mut gate = SpeakerGate::default();
+    let mut synth = crate::ui::state::arcade::sound::Synth::default();
+    let mut last_local = 0;
+    let mut pending = None;
     loop {
-        let frame = SPEAKER_FRAMES.receive().await;
-        if muted() {
-            continue;
-        }
-        let parsed = codec::parse(frame.as_bytes());
-        let starts = admit(&mut gate, &parsed)
-            && matches!(
-                parsed,
-                codec::Frame::Start { .. } | codec::Frame::Audio { .. }
-            );
-        if starts {
-            play(&mut speaker, &mut gate, frame).await;
+        let frame = match pending.take() {
+            Some(frame) => Some(frame),
+            None if !crate::ui::state::arcade::sound::enabled(super::arcade::current()) => {
+                use embassy_futures::select::{select, Either};
+                match select(SPEAKER_FRAMES.receive(), super::arcade::CHANGED.wait()).await {
+                    Either::First(frame) => Some(frame),
+                    Either::Second(()) => None,
+                }
+            }
+            None => with_timeout(Duration::from_millis(20), SPEAKER_FRAMES.receive())
+                .await
+                .ok(),
+        };
+        if let Some(frame) = frame {
+            if muted() {
+                continue;
+            }
+            let parsed = codec::parse(frame.as_bytes());
+            if admit(&mut gate, &parsed)
+                && matches!(
+                    parsed,
+                    codec::Frame::Start { .. } | codec::Frame::Audio { .. }
+                )
+            {
+                pending = play(&mut speaker, &mut gate, Some(frame), &mut synth).await;
+            }
+        } else {
+            let word = super::arcade::current();
+            if crate::ui::state::arcade::sound::enabled(word)
+                && (word & 3 != 0 || word != last_local)
+                && !voice::CAPTURING.load(Ordering::Acquire)
+            {
+                pending = play(&mut speaker, &mut gate, None, &mut synth).await;
+                last_local = super::arcade::current();
+            } else if word == 0 {
+                last_local = 0;
+            }
         }
     }
 }
@@ -131,9 +161,17 @@ enum Ending {
     Idle,
     Muted,
     Stalled,
+    Preempted,
 }
 
-async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
+async fn play(
+    speaker: &mut Speaker,
+    gate: &mut SpeakerGate,
+    first: Option<Frame>,
+    synth: &mut crate::ui::state::arcade::sound::Synth,
+) -> Option<Frame> {
+    let local = first.is_none();
+    let mut pending = None;
     voice::PLAYING.store(true, Ordering::Release);
     let started = Instant::now();
     // Blocks for about 13 ms (PLL calibration and DAC settle). The DAC is
@@ -177,6 +215,7 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
     // SAFETY: the one stream alive at a time borrows it; this task is the
     // buffer's only user.
     let buffer = unsafe { &mut *core::ptr::addr_of_mut!(DMA_BUF) };
+    buffer.fill(0);
     let mut stream = dac.start_stream(buffer);
     // The ring's fill at the last write, and when that was: the DMA drains
     // it at exactly ENTRIES_PER_MS.
@@ -186,7 +225,7 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
     let mut up = Upsampler::default();
     let mut pcm = [0i16; codec::FRAME_SAMPLES];
     let mut out = [0u32; CHUNK];
-    let mut next = Some(first);
+    let mut next = first;
     #[cfg(feature = "audio-debug")]
     let mut bench_phase = 0usize;
     let mut quiet_ms = 0u32;
@@ -194,6 +233,7 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
     let ending = loop {
         let frame = match next.take() {
             Some(frame) => Some(frame),
+            None if local => SPEAKER_FRAMES.try_receive().ok(),
             None => {
                 // Wait for the host for as long as what is left in the ring
                 // can cover.
@@ -205,7 +245,7 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
                     .ok()
             }
         };
-        if muted() {
+        if muted() || (local && voice::CAPTURING.load(Ordering::Acquire)) {
             break Ending::Muted;
         }
         // A refused frame counts as a gap: silence, never a starved ring.
@@ -213,6 +253,20 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
             .as_ref()
             .map(|f| codec::parse(f.as_bytes()))
             .filter(|parsed| admit(gate, parsed));
+        if local
+            && matches!(
+                parsed,
+                Some(codec::Frame::Start { .. } | codec::Frame::Audio { .. })
+            )
+        {
+            pending = frame;
+            break Ending::Preempted;
+        }
+        let word = super::arcade::current();
+        if local && !crate::ui::state::arcade::sound::enabled(word) {
+            break Ending::Muted;
+        }
+        let mut local_end = false;
         let m = match parsed {
             Some(codec::Frame::Audio {
                 mut state, data, ..
@@ -222,7 +276,7 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
                 frames += 1;
                 up.run(&pcm[..n], &mut out)
             }
-            Some(codec::Frame::End { .. }) => break Ending::End,
+            Some(codec::Frame::End { .. }) if !local => break Ending::End,
             Some(_) => continue,
             #[cfg(feature = "audio-debug")]
             None if voice::bench::HOLD.load(Ordering::Acquire) => {
@@ -235,6 +289,11 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
                         up.run(&pcm, &mut out)
                     }
                 }
+            }
+            None if local => {
+                synth.run(word, &mut pcm);
+                local_end = word & 3 == 0 && !synth.pending();
+                up.run(&pcm, &mut out)
             }
             None => {
                 quiet_ms += codec::FRAME_MS as u32;
@@ -257,6 +316,9 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
             Err(_) => break Ending::Stalled,
         }
         wrote_at = Instant::now();
+        if local_end {
+            break Ending::End;
+        }
     };
     if matches!(ending, Ending::End | Ending::Idle) {
         // A full ring of silence: once it is accepted, everything before it
@@ -291,10 +353,12 @@ async fn play(speaker: &mut Speaker, gate: &mut SpeakerGate, first: Frame) {
             Ending::Idle => "timed out",
             Ending::Muted => "cut by the microphone",
             Ending::Stalled => "abandoned (DAC DMA stalled)",
+            Ending::Preempted => "yielded to host speech",
         },
         started.elapsed().as_millis(),
         frames,
         gaps,
         underruns
     );
+    pending
 }

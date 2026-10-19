@@ -249,6 +249,7 @@ impl Agent {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Settings {
+    pub arcade_sound: u8,
     /// 0..=10.
     pub speaker: u8,
     /// 0..=10.
@@ -269,6 +270,7 @@ impl Settings {
     pub const fn new() -> Self {
         Self {
             speaker: 6,
+            arcade_sound: 0,
             mic: 6,
             auto_announce: true,
             chime: true,
@@ -285,6 +287,7 @@ impl Settings {
     /// The value a `set` message or event carries for `key`.
     pub fn get(&self, key: SettingKey) -> u16 {
         match key {
+            SettingKey::ArcadeSound => self.arcade_sound as u16,
             SettingKey::Speaker => self.speaker as u16,
             SettingKey::Mic => self.mic as u16,
             SettingKey::Announce => self.auto_announce as u16,
@@ -300,6 +303,7 @@ impl Settings {
     pub fn set(&mut self, key: SettingKey, value: u16) -> bool {
         let before = self.get(key);
         match key {
+            SettingKey::ArcadeSound => self.arcade_sound = value.min(2) as u8,
             SettingKey::Speaker => self.speaker = value.min(10) as u8,
             SettingKey::Mic => self.mic = value.min(10) as u8,
             SettingKey::Announce => self.auto_announce = value != 0,

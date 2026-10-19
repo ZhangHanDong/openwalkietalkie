@@ -295,9 +295,9 @@ fn manager_with(selected: u8, first_visible: u8, grabbed: bool) -> Box<UiState> 
 #[test]
 fn manager_cards_sit_in_their_slots_and_the_selected_one_is_lifted() {
     let ui = manager_with(0, 0, false);
-    assert_eq!(ui.global.strip_len, 5);
-    for selected in 0..6u8 {
-        for first_visible in 0..3u8 {
+    assert_eq!(ui.global.strip_len, 6);
+    for selected in 0..7u8 {
+        for first_visible in 0..4u8 {
             let ui = manager_with(selected, first_visible, false);
             let frame = full(&ui);
             assert_eq!(lit_outside_safe_area(&frame), None);
@@ -308,7 +308,7 @@ fn manager_cards_sit_in_their_slots_and_the_selected_one_is_lifted() {
                 let card = layout::manager_card(slot);
                 let lifted = card.offset(0, -layout::MANAGER_LIFT);
                 let (x, _) = card.center();
-                if index == 5 {
+                if index == 6 {
                     // The "+" card: a plus in the middle, lifted with the selection.
                     let (px, py) = if index == selected { lifted.center() } else { card.center() };
                     assert_eq!(pixel(&frame, px, py), rgb(theme::PLUS), "{selected}/{first_visible}/{slot}");

@@ -155,9 +155,9 @@ Required fields have no `?`. Text capacities are in bytes of UTF-8.
 | `ws` | `active` 1-based (0 unknown) `<= count`, `count` `<= 9`, `sel` window row `< windows.length` (0 when empty), `windows?` up to 6 of `{c?, t}` with `c` `blue`/`amber`/`green`/`red`/`gray` (default gray) and `t` (48) | Omarchy face content. |
 | `macro` | `f` face id 1..8, `src?` (16, e.g. the dotfile name), `keys` up to 9 of `{l, b?, k?}`: `l` label (12), `b` `left`/`right`/`enter`/`cw`/`ccw`/`shift+left`/`shift+right`/`shift+enter`, `k` keystroke (32) | Labels of the Macropad instance `f` (there may be up to three). `k` is what the host posts to the desktop when the key is pressed, `ctrl+opt+shift+cmd+<key>` with any subset of the modifiers (`alt` = `opt`) and one key of: `a`–`z`, `0`–`9`, `f1`–`f12`, `up` `down` `left` `right`, `enter` `esc` `tab` `space` `backspace` `delete` `home` `end` `pageup` `pagedown`, `minus` `equal` `lbracket` `rbracket` `backslash` `semicolon` `quote` `comma` `period` `slash` `grave`; the deck shows it as ⌃⌥⇧⌘ glyphs in the key's corner and refuses an unknown one (`err unknown`). `b` is a hardware control of the deck that presses the key. A key with neither is touch-only; missing keys, and keys with an empty `l`, draw as "+ assign" (an empty label is how a cleared slot keeps the later keys in place). Send it when `hello.faces`/`faces`/`face` shows a Macropad instance you have labels for, and again after a `macrokey`. |
 | `usage` | `period` (12), `items` up to 6 of `{n (20), a? (48), p 0..100, r (24), c?}` | Usage face. `a` identifies the account for these percentages, displayed below the provider name; omitted on legacy reports. `c` overrides the bar tone (`<50` blue, `<80` green, `<95` amber, else red). |
-| `faces` | `list` up to 8 of `{f 1..8 unique, t, n (16)}`, `t` = `agents`/`omarchy`/`macropad`/`usage`/`settings` | Restore the strip (see `boot`). Ignored while the face manager, gallery or naming overlay is open. |
+| `faces` | `list` up to 8 of `{f 1..8 unique, t, n (16)}`, `t` = `agents`/`omarchy`/`macropad`/`usage`/`arcade`/`settings` | Restore the strip (see `boot`). Ignored while the face manager, gallery or naming overlay is open. |
 | `name` | `text` (16) | The spoken name for a new face; applies only while the naming overlay is open (after a `ptt ctx:name`). |
-| `set` | `k` `speaker`/`mic`/`announce`/`chime`/`autojump`/`brightness`/`idlehome`/`demo`, `v` | Host-side override of a setting; not echoed. Ranges: speaker/mic 0..10, announce/chime/autojump/demo 0/1, brightness 1..5, idlehome 0/30/60/120 (seconds; other values round up). |
+| `set` | `k` `speaker`/`mic`/`announce`/`chime`/`autojump`/`brightness`/`idlehome`/`demo`/`text`/`arcadesound`, `v` | Host-side override of a setting; not echoed. Ranges: speaker/mic 0..10, announce/chime/autojump/demo 0/1, brightness 1..5, idlehome 0/30/60/120 (seconds; other values round up), text 0/1/2, arcadesound 0 off / 1 SFX / 2 music + SFX. Arcade sound changes originate in the Arcade menu and are persisted like other settings. |
 
 ## Device → host
 
@@ -186,6 +186,13 @@ may need two reports (at most 77 bytes of JSON plus the LF).
 
 Booleans in device lines are `0`/`1`. Optional fields (`card`, `abort`) are
 omitted when zero/false.
+
+Arcade uses the local PTT button for Flappy Bird and emits no voice/key events
+for game controls. Its default face ID is 6, inserted before Settings (ID 5);
+the first four IDs are unchanged. Existing saved layouts remain valid. The new
+`arcade` template requires a host build that understands it. Boot synchronization
+only sends `arcadesound` when the device's reported strip includes Arcade, so
+older firmware does not receive an unknown setting.
 
 ## Examples
 

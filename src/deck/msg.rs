@@ -137,15 +137,19 @@ pub enum Template {
     Macropad,
     Usage,
     Settings,
+    Arcade,
 }
 impl Template {
-    pub const ALL: [Template; 5] = [
+    pub const ALL: [Template; 6] = [
         Template::Agents,
         Template::Omarchy,
         Template::Macropad,
         Template::Usage,
         Template::Settings,
+        Template::Arcade,
     ];
+    /// Keep the existing five face IDs stable when extending the default strip.
+    pub const fn default_id(self) -> u8 { self as u8 + 1 }
     /// Header label and the default instance name.
     pub const fn label(self) -> &'static str {
         match self {
@@ -154,6 +158,7 @@ impl Template {
             Template::Macropad => "Macropad",
             Template::Usage => "Usage",
             Template::Settings => "Settings",
+            Template::Arcade => "Arcade",
         }
     }
 }
@@ -171,6 +176,8 @@ pub enum SettingKey {
     /// How big documents are drawn: 0 small, 1 medium, 2 large. The host is
     /// told, because the host is what wraps them.
     TextSize,
+    /// 0 off, 1 effects only, 2 music and effects.
+    ArcadeSound,
 }
 
 /// Keys a host-rendered face forwards. SHIFT and PTT never travel as keys.

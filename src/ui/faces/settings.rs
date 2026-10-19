@@ -83,6 +83,7 @@ pub fn row_content(ui: &UiState, panel: u8, row: u8) -> Option<Row> {
                 _ => "2 min",
             }),
         ),
+        Some(SettingKey::ArcadeSound) => ("Arcade sound", text(crate::ui::state::arcade::sound_label(settings.arcade_sound))),
         Some(SettingKey::TextSize) => (
             "Text size",
             text(match settings.text_size {

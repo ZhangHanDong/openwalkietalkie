@@ -42,10 +42,13 @@ pub enum SessionState {
     Degraded,
 }
 
-/// The eight `set` keys the host persists and restores on `boot:1`.
+/// The `set` keys the host persists and restores on `boot:1`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(default)]
 pub struct Settings {
+    /// 0 off, 1 effects only, 2 music and effects; changed in the Arcade menu.
+    #[serde(default)]
+    pub arcadesound: u16,
     pub speaker: u16,
     pub mic: u16,
     pub announce: u16,
@@ -77,6 +80,7 @@ impl Default for Settings {
             idlehome: 120,
             demo: 1,
             textsize: 1,
+            arcadesound: 0,
         }
     }
 }
@@ -93,6 +97,7 @@ impl Settings {
             SetKey::Idlehome => self.idlehome,
             SetKey::Demo => self.demo,
             SetKey::Textsize => self.textsize,
+            SetKey::Arcadesound => self.arcadesound,
         }
     }
 
@@ -111,6 +116,7 @@ impl Settings {
             SetKey::Idlehome => &mut self.idlehome,
             SetKey::Demo => &mut self.demo,
             SetKey::Textsize => &mut self.textsize,
+            SetKey::Arcadesound => &mut self.arcadesound,
         };
         let changed = *slot != value;
         *slot = value;
@@ -400,6 +406,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn old_settings_default_arcade_sound_off_and_new_choice_round_trips() {
+        let mut json = serde_json::to_value(Settings::default()).unwrap();
+        json.as_object_mut().unwrap().remove("arcadesound");
+        let mut settings: Settings = serde_json::from_value(json).unwrap();
+        assert_eq!(settings.arcadesound, 0);
+        assert!(settings.set(SetKey::Arcadesound, 2));
+        assert!(!settings.set(SetKey::Arcadesound, 3));
+        let restored: Settings = serde_json::from_str(&serde_json::to_string(&settings).unwrap()).unwrap();
+        assert_eq!(restored.arcadesound, 2);
+    }
+
+    #[test]
     fn settings_default_to_the_firmware_and_validate_ranges() {
         let mut s = Settings::default();
         assert_eq!(s.get(SetKey::Idlehome), 120);
@@ -407,7 +425,7 @@ mod tests {
         assert!(!s.set(SetKey::Brightness, 3));
         assert!(!s.set(SetKey::Brightness, 9));
         assert_eq!(s.get(SetKey::Brightness), 3);
-        assert_eq!(s.iter().count(), 9);
+        assert_eq!(s.iter().count(), 10);
         assert_eq!(s.iter().next(), Some((SetKey::Speaker, 6)));
         let json = serde_json::to_string(&s).unwrap();
         assert!(json.contains("\"idlehome\":120"));

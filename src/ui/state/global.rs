@@ -303,6 +303,9 @@ pub(super) fn on_control(ui: &mut UiState, control: Control, at_ms: u32, out: &m
             }
             true
         }
+        Control::Button(Button::PushToTalk, Edge::Press) if super::arcade::active(ui) => {
+            super::arcade::on_control(ui, control, at_ms, out)
+        }
         Control::Button(Button::PushToTalk, Edge::Press) => {
             ptt_pressed(ui, at_ms, out);
             true
@@ -574,6 +577,7 @@ pub(super) fn holds(ui: &UiState, owner: Owner) -> bool {
 /// Context teardown: emit every owner's release now, swallow the physical
 /// releases later, drop the rest of a touch gesture.
 pub(super) fn release_owned(ui: &mut UiState, out: &mut Update) {
+    super::arcade::suspend(ui, out);
     for index in 0..ui.global.held.len() {
         if let Some(owner) = ui.global.held[index].take() {
             let source = match Button::ALL.get(index) {
@@ -677,7 +681,7 @@ fn release(ui: &mut UiState, _source: Source, owner: Owner, out: &mut Update) {
             index,
             act: 0,
         }),
-        Owner::Local => {}
+        Owner::Local | Owner::Arcade(_) => {}
     }
     owner_released(ui, owner, out);
 }
@@ -880,7 +884,7 @@ fn end_ptt(ui: &mut UiState, abort: bool, out: &mut Update) {
 
 fn idle_home(ui: &mut UiState, now_ms: u32, idle_ms: u32, out: &mut Update) {
     let limit = ui.deck.settings.idle_home_s as u32 * 1000;
-    if limit == 0 || idle_ms < limit {
+    if limit == 0 || idle_ms < limit || super::arcade::playing(ui) {
         ui.global.idle_homed = false;
         return;
     }

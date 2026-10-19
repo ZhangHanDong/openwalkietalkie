@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 91] = [
+const DECK_SCENES: [&str; 96] = [
     "question-answer",
     "chinese-reply",
     "chinese-question",
@@ -86,6 +86,11 @@ const DECK_SCENES: [&str; 91] = [
     "macropad-empty",
     "macropad-cursor",
     "macropad-edit",
+    "arcade",
+    "arcade-flappy",
+    "arcade-snake",
+    "arcade-raiden",
+    "arcade-paused",
     "usage",
     "usage-accounts",
     "usage-fable",
@@ -544,6 +549,22 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             ui.macropad.edit.keys = deck::msg::Keystroke::parse("cmd+shift+4").unwrap_or(deck::msg::Keystroke::NONE);
             ui.macropad.edit.row = 2;
             ui.macropad.edit.adjusting = true;
+        }
+        "arcade" | "arcade-flappy" | "arcade-snake" | "arcade-raiden" | "arcade-paused" => {
+            ui.deck.settings.demo = false;
+            ui.on_face(Template::Arcade);
+            if scene != "arcade" {
+                use control::{Button, Control, Edge};
+                ui.arcade.selection = match scene { "arcade-snake" => 1, "arcade-raiden" | "arcade-paused" => 2, _ => 0 };
+                for _ in 0..2 { for edge in [Edge::Press,Edge::Release] { ui.apply(Control::Button(Button::Enter,edge),0,&mut ui::Update::new()); } }
+                // Let the enemy formation enter the screen in Raiden previews.
+                let end_ms = if ui.arcade.selection == 2 { 2000 } else { 1000 };
+                for now in (20..=end_ms).step_by(20) {
+                    if scene == "arcade-flappy" && now % 300 == 0 { for edge in [Edge::Press,Edge::Release] { ui.apply(Control::Button(Button::PushToTalk,edge),now,&mut ui::Update::new()); } }
+                    ui.tick(now,0,true,&mut ui::Update::new());
+                }
+                if scene == "arcade-paused" { ui.apply(Control::Button(Button::Enter,Edge::Press),end_ms,&mut ui::Update::new()); }
+            }
         }
         "usage" => ui.on_face(Template::Usage),
         "usage-accounts" | "usage-fable" => {

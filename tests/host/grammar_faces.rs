@@ -17,6 +17,10 @@ const RELEASE: Edge = Edge::Release;
 fn fresh() -> Box<UiState> {
     let mut ui = Box::new(UiState::new());
     ui.reset();
+    // Retain coverage of restored pre-Arcade layouts. New defaults and Arcade
+    // controls are exercised in ui::state::arcade::tests.
+    ui.global.strip[4] = ui.global.strip[5];
+    ui.global.strip_len = 5;
     // These tests start from the demo session (off at power-on).
     ui.load_demo();
     ui
@@ -824,7 +828,10 @@ fn plus_opens_the_gallery_which_leads_to_naming_and_enter_accepts_the_default_na
     wheel(&mut ui, Wheel::Cw, 30);
     wheel(&mut ui, Wheel::Cw, 40);
     let out = wheel(&mut ui, Wheel::Cw, 60);
-    assert!(!out.dirty && ui.manager.gallery_sel == 2);
+    assert!(out.dirty && ui.manager.gallery_sel == 3);
+    let out = wheel(&mut ui, Wheel::Cw, 65);
+    assert!(!out.dirty && ui.manager.gallery_sel == 3);
+    wheel(&mut ui, Wheel::Ccw, 68);
     wheel(&mut ui, Wheel::Ccw, 70);
     assert_eq!(GALLERY[ui.manager.gallery_sel as usize], Template::Macropad);
     press(&mut ui, Button::Enter, 80);
@@ -1034,7 +1041,7 @@ fn malformed_faces_lists_are_rejected_with_range() {
     for (n, msg) in bad.iter().enumerate() {
         let out = host(&mut ui, msg, 5000 * n as u32);
         assert_eq!(events(&out), [Event::Err { why: ErrWhy::Range }], "list {n}");
-        assert_eq!(ids(&ui), [1, 2, 3, 4, 5]);
+        assert_eq!(ids(&ui), [1, 2, 3, 4, 6, 5]);
     }
     assert!(ui.still_default());
 }

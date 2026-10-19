@@ -10,11 +10,12 @@ use super::msg::{FaceEntry, HostMsg, Template};
 pub const MAX_FACES: usize = 8;
 
 /// The power-on strip (`src/ui/state/mod.rs`, `DEFAULT_STRIP`).
-pub const DEFAULT_STRIP: [Template; 5] = [
+pub const DEFAULT_STRIP: [Template; 6] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
+    Template::Arcade,
     Template::Settings,
 ];
 
@@ -50,7 +51,7 @@ impl UiState {
         self.deck.reset();
         for (index, template) in DEFAULT_STRIP.into_iter().enumerate() {
             let entry = &mut self.global.strip[index];
-            entry.id = index as u8 + 1;
+            entry.id = template.default_id();
             entry.template = template;
             entry.name.set(template.label());
         }
@@ -68,7 +69,7 @@ impl UiState {
             && usize::from(self.global.strip_len) == DEFAULT_STRIP.len()
             && DEFAULT_STRIP.iter().enumerate().all(|(index, template)| {
                 let entry = &self.global.strip[index];
-                entry.id == index as u8 + 1
+                entry.id == template.default_id()
                     && entry.template == *template
                     && entry.name == template.label()
             })

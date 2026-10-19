@@ -28,7 +28,9 @@ pub fn draw(band: &mut Band, ui: &UiState) {
         band.restore(window);
     }
     overlay::draw(band, ui);
-    super::bluetooth::draw(band, ui.bluetooth);
+    if !super::state::arcade::fullscreen(ui) {
+        super::bluetooth::draw(band, ui.bluetooth);
+    }
 }
 
 // A caller may already have moved the origin (tests sweep it); slide inside.
@@ -41,6 +43,7 @@ pub fn draw_face(band: &mut Band, ui: &UiState, face: FaceEntry) {
         Template::Agents => faces::agents::draw(band, ui, face.id),
         Template::Omarchy => faces::omarchy::draw(band, ui, face.id),
         Template::Macropad => faces::macropad::draw(band, ui, face.id),
+        Template::Arcade => faces::arcade::draw(band, ui, face.id),
         Template::Usage => faces::usage::draw(band, ui, face.id),
         Template::Settings => faces::settings::draw(band, ui, face.id),
     }
@@ -51,6 +54,7 @@ pub fn face_signature(ui: &UiState, face: FaceEntry, sig: &mut SigBuilder) {
         Template::Agents => faces::agents::signature(ui, face.id, sig),
         Template::Omarchy => faces::omarchy::signature(ui, face.id, sig),
         Template::Macropad => faces::macropad::signature(ui, face.id, sig),
+        Template::Arcade => faces::arcade::signature(ui, face.id, sig),
         Template::Usage => faces::usage::signature(ui, face.id, sig),
         Template::Settings => faces::settings::signature(ui, face.id, sig),
     }
@@ -80,5 +84,9 @@ pub fn signature(ui: &UiState, sig: &mut Signature) {
     }
     builder.set_origin_x(0);
     overlay::signature(ui, &mut builder);
-    super::bluetooth::signature(ui.bluetooth, &mut builder);
+    let fullscreen = super::state::arcade::fullscreen(ui);
+    builder.mode(fullscreen as u32);
+    if !fullscreen {
+        super::bluetooth::signature(ui.bluetooth, &mut builder);
+    }
 }

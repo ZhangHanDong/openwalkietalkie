@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenWalkieTalkie v0.6.0: Arcade on the deck · OpenWalkieTalkie</title>
+<meta name="description" content="Three full-screen games, physical controls, and original 8-bit music and effects with an Off switch." />
+<link rel="canonical" href="https://openwalkietalkie.org/blog/arcade-on-the-deck/" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="OpenWalkieTalkie" />
+<meta property="og:title" content="OpenWalkieTalkie v0.6.0: Arcade on the deck · OpenWalkieTalkie" />
+<meta property="og:description" content="Three full-screen games, physical controls, and original 8-bit music and effects with an Off switch." />
+<meta property="og:url" content="https://openwalkietalkie.org/blog/arcade-on-the-deck/" />
+<meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2e2bd" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131a3a" />
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<link rel="alternate" type="application/atom+xml" title="OpenWalkieTalkie Blog" href="/blog/feed.xml" />
+
+<link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/blog.css" />
+<script src="/js/theme-init.js"></script>
+<!-- No optional analytics or advertising scripts. -->
+</head>
+<body>
+
+<a class="skip-link" href="#content">Skip to content</a>
+
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="brand" href="/" aria-label="OpenWalkieTalkie — home">
+      <img class="logo-mark pixelated" src="/assets/logo-64.png" alt="" width="26" height="26" />
+      <span class="brand__text">OPEN WALKIE TALKIE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Sections">
+      <a href="/#pile">The Pile</a>
+      <a href="/#features">Features</a>
+      <a href="/#demo">Try It</a>
+      <a href="/#faces">Faces</a>
+      <a href="/#blueprint">Blueprint</a>
+      <a href="/blog/" aria-current="true">Blog</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle day and night theme" aria-pressed="false">
+      <span class="theme-toggle__track" aria-hidden="true">
+        <span class="theme-toggle__icon theme-toggle__icon--sun"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon"></span>
+        <span class="theme-toggle__knob"></span>
+      </span>
+      <span class="theme-toggle__label" id="themeLabel">DAY</span>
+    </button>
+
+    <button class="nav__burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main class="blog-main" id="content">
+<header class="post-head">
+  <p class="section-kicker">THE BLOG · RELEASE NOTES</p>
+  <h1>OpenWalkieTalkie v0.6.0: Arcade on the deck</h1>
+  <p class="post-meta"><span>October 19, 2026</span><span>App and firmware update</span></p>
+</header>
+<article class="post-body">
+  <p>The deck has a wheel, physical buttons, and a 480×480 screen. In 0.6.0, those controls get a new job: three small offline games on a new Arcade page.</p>
+  <h2>Three games, familiar controls</h2>
+  <ul>
+    <li><strong>Flappy Bird:</strong> press PTT to flap through the pipes. On Arcade, PTT belongs to the game and never opens the microphone.</li>
+    <li><strong>Snake:</strong> turn with the wheel, or use Left and Right. Clockwise turns right; counterclockwise turns left. The grid reaches the display edges, with walls around the rounded corners so food stays visible.</li>
+    <li><strong>Raiden (雷电):</strong> use Left and Right to move while the plane fires automatically. Dodge descending enemy aircraft and their shots. You have three lives.</li>
+  </ul>
+  <figure class="post-figure" style="max-width:480px;margin:2.2em auto"><img src="/assets/screens/arcade-060.png" alt="Arcade menu with Flappy Bird, Snake, Raiden and Sound set to Off" width="480" height="480" loading="lazy" /><figcaption>The new Arcade face. Sound starts Off.</figcaption></figure>
+  <h2>The whole display is the playfield</h2>
+  <p>Games fill the display, with a compact score overlaid at the top. Enlarged pixel art stays legible in the hand. Instructions appear when starting or pausing: Enter starts, pauses, resumes, or retries; Cancel returns to the game list. Switching to another face pauses play.</p>
+  <figure class="post-figure" style="max-width:480px;margin:2.2em auto"><img src="/assets/screens/arcade-raiden-060.png" alt="Raiden across the whole display, with red enemy planes facing down toward the blue player plane" width="480" height="480" loading="lazy" /><figcaption>Raiden uses the full screen. Enemy aircraft face toward the player.</figcaption></figure>
+  <h2>Original 8-bit sound, when you want it</h2>
+  <p>Each game has its own synthesized music loop, with short effects for actions, scores, hits, and game over. There are no audio downloads. Open <strong>Arcade → Sound</strong> to choose <strong>Off</strong>, <strong>SFX only</strong>, or <strong>Music + SFX</strong>. Off is the default, and volume follows the Speaker setting.</p>
+  <p>Game audio yields to host speech and capture. With the matching Mac service connected, your sound preference is saved and restored. Offline changes last for the current boot; a new boot starts Off. Best scores also reset when the device restarts.</p>
+  <h2>Add Arcade to your deck</h2>
+  <p>Update both the Mac app and device firmware to 0.6.0. Your existing face layout is preserved. To add Arcade, <strong>double-tap Shift → + → Arcade → Enter</strong>, then double-tap Shift to leave the manager. New default layouts already include it before Settings.</p>
+  <p>Use <strong>Check for Updates</strong> or <a href="/#download">download the signed and notarized Mac app</a> for Apple Silicon or Intel. macOS 13 or later is required. Connect one deck by USB-C and open <strong>Service → Updates → Check firmware</strong>.</p>
+  <p>Devices on the 0.4.0/0.5.0 partition layout and recovery protocol 2 receive a normal application update. <strong>Older bootloaders need the guided migration. Keep USB-C power connected and the Mac awake: losing power while replacing the bootloader can prevent startup and USB recovery and require hardware repair.</strong> Read the app's warning before proceeding.</p>
+  <h2>What we tested</h2>
+  <p>Game simulation, sound synthesis, protocol, saved settings, and retained-frame rendering have software coverage. Rev A development builds were flashed and tested during development, including full-screen play and the corrected enemy orientation. Rev B gameplay and audible music/effects still need physical testing. No device audio was played during this work.</p>
+  <p>The <a href="https://github.com/conol-ai/openwalkietalkie/releases/tag/v0.6.0">0.6.0 release</a> includes both Mac packages, Rev A/B firmware and migration files, factory images, checksums, build attestations, and a Chinese upgrade guide. <strong>Factory images overwrite the entire chip, including settings and pairing data; use the GUI updater for an existing device.</strong></p>
+</article>
+</main>
+
+<footer class="footer--mini">
+  <div class="inner">
+    <span>OpenWalkieTalkie · A COHDL project · MIT software · CERN-OHL-P hardware</span>
+    <nav aria-label="Footer">
+      <a href="/#waitlist">Join the waitlist</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/cookies/">Cookie information</a>
+      <a href="/cookies/" data-privacy-open>Privacy notice</a>
+      <a href="/">Home</a>
+      <a href="/#demo">Try It</a>
+      <a href="https://github.com/conol-ai/openwalkietalkie" rel="noopener">GitHub</a>
+      <a href="https://cohdl.org/" rel="noopener">CoHDL</a>
+      <a href="https://discord.gg/x7DXPvK66" rel="noopener" aria-label="Join the CoHDL and OpenWalkieTalkie community on Discord">Discord</a>
+      <a href="/blog/feed.xml">Feed</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/privacy.js"></script>
+</body>
+</html>

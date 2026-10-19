@@ -501,6 +501,7 @@ pub unsafe extern "C" fn owt_core_poll(now: u32) -> bool {
         }
     }
     let before = core.power.screen();
+    if ui::state::arcade::playing(&core.ui) && core.power.screen() != power::Screen::Off { core.power.notify(now); }
     let screen = core.power.tick(now);
     core.redraw |= before != screen;
     let battery_due =
@@ -608,7 +609,7 @@ pub unsafe extern "C" fn owt_core_wait_ms() -> u32 {
     if core.repeat.is_some() || core.inputs.as_ref().is_some_and(|d| d.busy(core.now)) {
         power::ACTIVE_POLL_MS
     } else if screen != power::Screen::Off && core.ui.animating() {
-        core.power.poll_ms().min(screen.animation_ms())
+        core.power.poll_ms().min(screen.animation_ms()).min(if ui::state::arcade::playing(&core.ui) { 33 } else { 500 })
     } else {
         core.power.poll_ms()
     }

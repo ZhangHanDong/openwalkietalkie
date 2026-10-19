@@ -73,6 +73,7 @@ ROSTER = [
 DEFAULT_FACES = [
     {"f": 1, "t": "agents", "n": "Agents"}, {"f": 2, "t": "omarchy", "n": "Omarchy"},
     {"f": 3, "t": "macropad", "n": "Macropad"}, {"f": 4, "t": "usage", "n": "Usage"},
+    {"f": 6, "t": "arcade", "n": "Arcade"},
     {"f": 5, "t": "settings", "n": "Settings"},
 ]
 SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"

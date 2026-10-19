@@ -674,11 +674,12 @@ One of: `absent`, `linked`, `await_hello`, `syncing`, `live`, `degraded`.
 
 ### `Settings`
 
-The eight `set` keys the host persists and restores on `boot:1`.
+The `set` keys the host persists and restores on `boot:1`.
 
 | field | type | required | default | description |
 |---|---|---|---|---|
 | `announce` | uint16 | no | `1` |  |
+| `arcadesound` | uint16 | no | `0` | 0 off, 1 effects only, 2 music and effects; changed in the Arcade menu. |
 | `autojump` | uint16 | no | `0` |  |
 | `brightness` | uint16 | no | `5` |  |
 | `chime` | uint16 | no | `1` |  |
@@ -723,7 +724,7 @@ One of: `pending`, `in_progress`, `completed`.
 
 ### `Template`
 
-One of: `agents`, `omarchy`, `macropad`, `usage`, `settings`.
+One of: `agents`, `omarchy`, `macropad`, `usage`, `settings`, `arcade`.
 
 
 ### `Terminal`

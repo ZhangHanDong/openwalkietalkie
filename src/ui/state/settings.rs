@@ -108,6 +108,7 @@ fn stepped(settings: &Settings, key: SettingKey, up: bool) -> u16 {
             };
             IDLE_HOME_STEPS[next]
         }
+        SettingKey::ArcadeSound => if up { (value + 1) % 3 } else { (value + 2) % 3 },
         SettingKey::TextSize => {
             if up {
                 (value + 1).min(2)

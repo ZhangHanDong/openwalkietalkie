@@ -7,6 +7,7 @@
 // Shared with deckd and the host tests, which use the parts this image does not.
 #[allow(dead_code)]
 pub mod codec;
+pub mod arcade;
 #[cfg_attr(not(feature = "hw-a"), allow(dead_code))]
 pub mod policy;
 #[cfg_attr(not(feature = "hw-a"), allow(dead_code))]

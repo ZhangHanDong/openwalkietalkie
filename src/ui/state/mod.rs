@@ -14,7 +14,7 @@
 //!   3. otherwise a wheel detent or button PRESS goes to `dispatch`: the open
 //!      overlay (`manager` for Manager/Gallery/Naming/ConfirmRemove, `notify`
 //!      for the Drawer) captures it, else the current face's `on_control`.
-//!      Faces never see a button Release, SHIFT, or PTT: global owns those.
+//!      Global owns Release/SHIFT/PTT; Arcade receives local PTT presses.
 //!   4. `global::after_control(.., consumed, ..)` (default owner, bookkeeping).
 //! `host(msg, at_ms, out)`: `Deck::apply` validates and applies the message
 //!   into `Effects`; a rejected message only reaches `global::on_reject`.
@@ -66,6 +66,7 @@ use crate::deck::msg::{ErrWhy, Event, FaceEntry, HostMsg, KeyId, Template};
 use super::layout::Rect;
 
 pub mod agents;
+pub mod arcade;
 pub mod global;
 pub mod macropad;
 pub mod manager;
@@ -94,6 +95,8 @@ pub const MAX_FACES: usize = 8;
 pub enum Owner {
     /// Handled on the device; the release means nothing to anyone.
     Local,
+    /// Local game input; teardown clears held movement.
+    Arcade(crate::control::Button),
     /// Forwarded as `Event::Key` from a host-rendered face.
     HostKey { face: u8, key: KeyId, shift: bool },
     /// A macropad key, pressed by its hardware binding or by touch.
@@ -232,11 +235,12 @@ impl Update {
 }
 
 /// Power-on strip; ids are 1..=5 in this order.
-pub const DEFAULT_STRIP: [Template; 5] = [
+pub const DEFAULT_STRIP: [Template; 6] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
+    Template::Arcade,
     Template::Settings,
 ];
 
@@ -269,6 +273,7 @@ pub struct UiState {
     pub omarchy: omarchy::View,
     pub macropad: macropad::View,
     pub usage: usage::View,
+    pub arcade: arcade::View,
     pub settings: settings::View,
     pub manager: manager::View,
     pub tutorial: tutorial::View,
@@ -293,6 +298,7 @@ impl UiState {
             omarchy: omarchy::View::new(),
             macropad: macropad::View::new(),
             usage: usage::View::new(),
+            arcade: arcade::View::new(),
             settings: settings::View::new(),
             manager: manager::View::new(),
             tutorial: tutorial::View::new(),
@@ -317,13 +323,14 @@ impl UiState {
         self.omarchy = omarchy::View::new();
         self.macropad = macropad::View::new();
         self.usage = usage::View::new();
+        self.arcade = arcade::View::new();
         self.settings = settings::View::new();
         self.manager = manager::View::new();
         self.tutorial = tutorial::View::new();
         self.demo = demo::Script::new();
         for (index, template) in DEFAULT_STRIP.into_iter().enumerate() {
             let entry = &mut self.global.strip[index];
-            entry.id = index as u8 + 1;
+            entry.id = template.default_id();
             entry.template = template;
             entry.name.set(template.label());
         }
@@ -421,6 +428,7 @@ impl UiState {
         omarchy::on_tick(self, now_ms, out);
         macropad::on_tick(self, now_ms, out);
         usage::on_tick(self, now_ms, out);
+        arcade::on_tick(self, now_ms, screen_on, out);
         settings::on_tick(self, now_ms, out);
         manager::on_tick(self, now_ms, out);
         tutorial::on_tick(self, now_ms, out);
@@ -441,6 +449,7 @@ impl UiState {
             || omarchy::animating(self)
             || macropad::animating(self)
             || usage::animating(self)
+            || arcade::playing(self)
             || settings::animating(self)
             || manager::animating(self)
             || tutorial::animating(self)
@@ -482,7 +491,7 @@ impl UiState {
             && self.global.strip_len as usize == DEFAULT_STRIP.len()
             && DEFAULT_STRIP.iter().enumerate().all(|(index, template)| {
                 let entry = &self.global.strip[index];
-                entry.id == index as u8 + 1
+                entry.id == template.default_id()
                     && entry.template == *template
                     && entry.name == template.label()
             })
@@ -633,6 +642,7 @@ pub(super) fn dispatch(ui: &mut UiState, control: Control, at_ms: u32, out: &mut
                 Template::Omarchy => omarchy::on_control(ui, face.id, control, at_ms, out),
                 Template::Macropad => macropad::on_control(ui, face.id, control, at_ms, out),
                 Template::Usage => usage::on_control(ui, face.id, control, at_ms, out),
+                Template::Arcade => arcade::on_control(ui, control, at_ms, out),
                 Template::Settings => settings::on_control(ui, face.id, control, at_ms, out),
             }
         }
@@ -645,6 +655,7 @@ pub(super) fn owner_released(ui: &mut UiState, owner: Owner, out: &mut Update) {
     match owner {
         Owner::Macro { face, index } => macropad::on_owner_released(ui, face, index, out),
         Owner::HostKey { face, key, .. } => omarchy::on_owner_released(ui, face, key, out),
+        Owner::Arcade(button) => arcade::released(ui, button),
         Owner::Local => {}
     }
 }
@@ -671,6 +682,7 @@ pub(super) fn touch_hit(ui: &UiState, x: i32, y: i32) -> Option<(Layer, Target)>
                 Template::Omarchy => omarchy::hit(ui, face.id, x, y),
                 Template::Macropad => macropad::hit(ui, face.id, x, y),
                 Template::Usage => usage::hit(ui, face.id, x, y),
+                Template::Arcade => arcade::hit(ui, x, y),
                 Template::Settings => settings::hit(ui, face.id, x, y),
             }
             .map(|target| (Layer::Face(face.template, face.id), target))
@@ -696,6 +708,7 @@ pub(super) fn touch_deliver(
             Template::Omarchy => omarchy::on_touch(ui, id, target, act, at_ms, out),
             Template::Macropad => macropad::on_touch(ui, id, target, act, at_ms, out),
             Template::Usage => usage::on_touch(ui, id, target, act, at_ms, out),
+            Template::Arcade => arcade::on_touch(ui, target, act, at_ms, out),
             Template::Settings => settings::on_touch(ui, id, target, act, at_ms, out),
         },
     }
@@ -829,25 +842,26 @@ mod tests {
             .map(|index| ui.face_at(index).unwrap())
             .map(|face| (face.id, face.template, face.name))
             .collect();
-        assert_eq!(templates.len(), 5);
+        assert_eq!(templates.len(), 6);
         for (index, template) in [
             Template::Agents,
             Template::Omarchy,
             Template::Macropad,
             Template::Usage,
+            Template::Arcade,
             Template::Settings,
         ]
         .into_iter()
         .enumerate()
         {
-            assert_eq!(templates[index].0, index as u8 + 1);
+            assert_eq!(templates[index].0, template.default_id());
             assert_eq!(templates[index].1, template);
             assert_eq!(templates[index].2, template.label());
         }
         assert_eq!(ui.current_face().template, Template::Agents);
         assert!(ui.strip_at_rest());
-        assert_eq!(ui.face_at(5), None);
-        assert_eq!(ui.index_of_face(5), Some(4));
+        assert_eq!(ui.face_at(6), None);
+        assert_eq!(ui.index_of_face(5), Some(5));
         assert_eq!(ui.user_brightness(), 5);
         assert!(ui.still_default());
         let mut renamed = fresh();

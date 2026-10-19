@@ -135,8 +135,10 @@ const TEMPLATES: &[(&str, Template)] = &[
     ("macropad", Template::Macropad),
     ("usage", Template::Usage),
     ("settings", Template::Settings),
+    ("arcade", Template::Arcade),
 ];
 const SETTINGS: &[(&str, SettingKey)] = &[
+    ("arcadesound", SettingKey::ArcadeSound),
     ("speaker", SettingKey::Speaker),
     ("mic", SettingKey::Mic),
     ("announce", SettingKey::Announce),
@@ -1330,7 +1332,7 @@ mod tests {
     #[test]
     fn hello_and_faces_carry_the_strip() {
         let mut ui = ui();
-        let strip = r#"[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":5,"t":"settings","n":"Settings"}]"#;
+        let strip = r#"[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]"#;
         assert_eq!(
             encoded(Event::Hello, &ui),
             std::format!(r#"{{"m":"hello","v":1,"fw":"{FW_VERSION}","sid":0,"boot":1,"rx":1024,"faces":{strip}}}"#)
@@ -1347,9 +1349,9 @@ mod tests {
         let json = encoded(Event::Faces, &ui);
         let mut out = Box::new(HostMsg::None);
         parse(json.as_bytes(), &mut out).unwrap();
-        let HostMsg::Faces { list, count: 5 } = *out else { panic!("{out:?}") };
+        let HostMsg::Faces { list, count: 6 } = *out else { panic!("{out:?}") };
         assert_eq!(list[1].name, "Desk");
-        assert_eq!(list[4].template, Template::Settings);
+        assert_eq!(list[5].template, Template::Settings);
         ui.global.strip_len = 0;
         assert_eq!(encoded(Event::Faces, &ui), r#"{"m":"faces","list":[]}"#);
     }

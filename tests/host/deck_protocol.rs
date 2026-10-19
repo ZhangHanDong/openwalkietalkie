@@ -359,7 +359,7 @@ const NAMES: &[&str] = &[
 const WORDS: &[&str] = &[
     "hello", "synced", "agent", "card", "reply", "transcript", "focus", "ws", "macro", "usage", "faces",
     "name", "set", "claude", "codex", "gemini", "other", "working", "question", "ready", "error", "idle",
-    "q", "r", "blue", "amber", "green", "red", "gray", "agents", "omarchy", "macropad", "usage", "settings",
+    "q", "r", "blue", "amber", "green", "red", "gray", "agents", "omarchy", "macropad", "usage", "arcade", "settings",
     "speaker", "mic", "announce", "chime", "autojump", "brightness", "idlehome", "demo", "left", "right",
     "enter", "cw", "ccw", "shift+left", "shift+right", "shift+enter", "19:42", "bogus", "",
 ];
@@ -456,8 +456,8 @@ fn random_shaped(rng: &mut Rng, out: &mut Vec<u8>) {
     const KINDS: &[&str] = &["claude", "codex", "gemini", "other"];
     const STATES: &[&str] = &["working", "question", "ready", "error", "idle"];
     const TONES: &[&str] = &["blue", "amber", "green", "red", "gray"];
-    const TEMPLATES: &[&str] = &["agents", "omarchy", "macropad", "usage", "settings"];
-    const KEYS: &[&str] = &["speaker", "mic", "announce", "chime", "autojump", "brightness", "idlehome", "demo"];
+    const TEMPLATES: &[&str] = &["agents", "omarchy", "macropad", "usage", "arcade", "settings"];
+    const KEYS: &[&str] = &["speaker", "mic", "announce", "chime", "autojump", "brightness", "idlehome", "demo", "text", "arcadesound"];
     const BINDINGS: &[&str] = &["left", "right", "enter", "cw", "ccw", "shift+left", "shift+right", "shift+enter"];
     out.clear();
     out.extend_from_slice(b"{\"m\":");

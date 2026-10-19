@@ -353,6 +353,7 @@ const SET_KEYS: &[(&str, SetKey)] = &[
     ("idlehome", SetKey::Idlehome),
     ("demo", SetKey::Demo),
     ("text", SetKey::Textsize),
+    ("arcadesound", SetKey::Arcadesound),
 ];
 
 fn doc_kind(name: &str) -> Result<crate::DocKind, DecodeError> {

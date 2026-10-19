@@ -86,7 +86,7 @@ pub async fn run(mut display: Option<Co5300>, band: &'static mut Band) -> ! {
             // Nothing animates on a dark panel; timers are read lazily on wake.
             power.poll_ms()
         } else {
-            power.screen().animation_ms().min(if power.held() { power.poll_ms() } else { 500 })
+            power.screen().animation_ms().min(if crate::ui::state::arcade::playing(state) { 33 } else { 500 }).min(if power.held() { power.poll_ms() } else { 500 })
         };
         dirty |= match select4(
             CONTROLS.receive(),
@@ -255,6 +255,10 @@ fn emit(state: &mut UiState, power: &mut Policy, scratch: &mut HostMsg, update: 
     if update.tutorial_done {
         // A few milliseconds with interrupts off: one journal slot.
         crate::link::save_prefs(crate::link::Prefs { tutorial_done: true });
+    }
+    crate::audio::arcade::publish(crate::ui::state::arcade::sound_command(state));
+    if crate::ui::state::arcade::playing(state) && power.screen() != Screen::Off {
+        power.notify(now_ms());
     }
     update.dirty
 }

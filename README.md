@@ -96,7 +96,7 @@ keypad: TCA8418 ready (5x4 matrix), PA11 interrupt + 50ms fallback
 
 The screen is a strip of faces, one on screen at a time. The default strip,
 left to right: **Agents** (the agent-session roster, home), **Omarchy** (a
-remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage** and
+remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage**, **Arcade** and
 **Settings**.
 
 - **Boot and home are the Agents face.** Until a deck host says hello the deck
@@ -111,8 +111,8 @@ remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage** and
 - **Double-SHIFT** (two quick taps of HOME, nothing else in between) opens the
   face manager: reorder, add and remove faces (at most eight, three Macropads).
   Agents and Settings stay pinned.
-- **PTT talks to an agent from any face**, over a full-screen LISTENING
-  overlay.
+- **PTT talks to an agent from work faces**, over a full-screen LISTENING
+  overlay. On Arcade it is a local game button and never opens the microphone.
 - **A new question or finished task raises a toast** for 4 seconds; tapping it
   jumps to the card. Unread notices wait in a drawer (swipe down from the top
   edge), flagged by a pill at the top of the screen, red while a question waits.
@@ -194,6 +194,46 @@ Codex app-server, which also pushes them after every turn. One bar per window
 reset; ENTER on the face probes both at once. `[usage] providers` in
 `config.toml` picks the providers, and a chained `deckd hook claude-statusline`
 is read too when the operator has one.
+
+### Arcade
+
+Three offline games with original pixel art and synthesized 8-bit music:
+
+Gameplay uses the full 480×480 display with an overlaid score. Control hints
+appear when starting or pausing; Enter pauses and Cancel returns to the game list.
+Snake's corner walls follow the rounded panel so food always stays visible.
+
+| Game | Controls |
+| --- | --- |
+| Flappy Bird | Tap PTT to fly; avoid pipes and the top/bottom edges. |
+| Snake | Turn the wheel clockwise/right or counter-clockwise/left. Left/Right buttons also turn relative to the snake's heading. |
+| Raiden (雷电) | Hold Left/Right to move; the plane fires automatically. Three lives. |
+
+Use the wheel and Enter, or touch a menu row, to choose a game. Enter starts,
+pauses, resumes or retries; Cancel returns to the game list. Shift+wheel still
+changes faces. Leaving the game, opening an overlay or sleeping pauses it.
+Best scores last until the device restarts.
+
+**Arcade → Sound → Enter** cycles **Off → SFX only → Music + SFX** (touch works
+too). Off is the default; volume follows the Speaker setting. The three original
+music loops and seven effects are synthesized locally, with no recorded audio
+assets. Pausing/leaving stops sound, host speech takes priority, and microphone
+capture silences game audio. A connected app remembers the sound preference;
+without the app it lasts for the current boot (the next boot starts Off).
+
+Arcade is in the new default strip before Settings. For a previously saved
+layout, double-tap Shift → **+** → **Arcade** to add it. Use matching firmware and
+host builds: the wire vocabulary now includes `arcade` and `arcadesound`.
+
+Silent development checks and previews:
+
+```sh
+python3 tools/preview-all.py --board hw-a --out target/arcade-preview arcade arcade-flappy arcade-snake arcade-raiden arcade-paused
+cargo run --manifest-path native/core/Cargo.toml --example arcade-audio --locked --offline --target aarch64-apple-darwin --target-dir target/native-core-preview -- target/arcade-audio
+```
+
+The second command writes three BGM WAVs and seven SFX WAVs without opening an
+audio device. These are review exports; the firmware runs the same synthesizer.
 
 ## The screen
 

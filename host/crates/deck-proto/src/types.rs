@@ -173,6 +173,7 @@ pub enum Template {
     Macropad,
     Usage,
     Settings,
+    Arcade,
 }
 
 /// One strip entry: face id `f` (1..=8), template `t`, spoken name `n`.
@@ -201,11 +202,12 @@ pub enum SetKey {
     /// the text — a size the two sides disagreed about would break every line
     /// in a different place.
     Textsize,
+    Arcadesound,
 }
 
 impl SetKey {
     /// Every key, in the order a `boot:1` sync pushes them.
-    pub const ALL: [SetKey; 9] = [
+    pub const ALL: [SetKey; 10] = [
         SetKey::Speaker,
         SetKey::Mic,
         SetKey::Announce,
@@ -215,6 +217,7 @@ impl SetKey {
         SetKey::Idlehome,
         SetKey::Demo,
         SetKey::Textsize,
+        SetKey::Arcadesound,
     ];
 
     pub const fn name(self) -> &'static str {
@@ -228,6 +231,7 @@ impl SetKey {
             SetKey::Idlehome => "idlehome",
             SetKey::Demo => "demo",
             SetKey::Textsize => "text",
+            SetKey::Arcadesound => "arcadesound",
         }
     }
 
@@ -240,7 +244,7 @@ impl SetKey {
             SetKey::Brightness => value >= 1 && value <= 5,
             SetKey::Idlehome => true,
             // 0 small, 1 medium, 2 large.
-            SetKey::Textsize => value <= 2,
+            SetKey::Textsize | SetKey::Arcadesound => value <= 2,
         }
     }
 }
@@ -586,6 +590,7 @@ pub(crate) const TEMPLATES: &[(&str, Template)] = &[
     ("macropad", Template::Macropad),
     ("usage", Template::Usage),
     ("settings", Template::Settings),
+    ("arcade", Template::Arcade),
 ];
 pub(crate) const BINDINGS: &[(&str, Binding)] = &[
     ("left", Binding::Left),
@@ -667,7 +672,7 @@ mod tests {
         assert!(SetKey::Idlehome.accepts(45));
         assert!(SetKey::Textsize.accepts(2));
         assert!(!SetKey::Textsize.accepts(3));
-        assert_eq!(SetKey::ALL.len(), 9);
+        assert_eq!(SetKey::ALL.len(), 10);
     }
 
     #[test]

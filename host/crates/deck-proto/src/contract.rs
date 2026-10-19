@@ -120,6 +120,7 @@ fn fw_template(t: Template) -> msg::Template {
         Template::Macropad => msg::Template::Macropad,
         Template::Usage => msg::Template::Usage,
         Template::Settings => msg::Template::Settings,
+        Template::Arcade => msg::Template::Arcade,
     }
 }
 
@@ -148,6 +149,7 @@ fn fw_set_key(k: SetKey) -> msg::SettingKey {
         SetKey::Idlehome => msg::SettingKey::IdleHome,
         SetKey::Demo => msg::SettingKey::Demo,
         SetKey::Textsize => msg::SettingKey::TextSize,
+        SetKey::Arcadesound => msg::SettingKey::ArcadeSound,
     }
 }
 
@@ -440,12 +442,13 @@ fn assert_same(mine: &HostLine, fw: &HostMsg) {
 // ---- corpora -----------------------------------------------------------------
 
 const ALL_TONES: [Tone; 5] = [Tone::Blue, Tone::Amber, Tone::Green, Tone::Red, Tone::Gray];
-const ALL_TEMPLATES: [Template; 5] = [
+const ALL_TEMPLATES: [Template; 6] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
     Template::Settings,
+    Template::Arcade,
 ];
 const ALL_BINDINGS: [Binding; 8] = [
     Binding::Left,
@@ -459,22 +462,9 @@ const ALL_BINDINGS: [Binding; 8] = [
 ];
 
 fn default_faces() -> Vec<FaceEntry> {
-    ["Agents", "Omarchy", "Macropad", "Usage", "Settings"]
-        .iter()
-        .zip([
-            Template::Agents,
-            Template::Omarchy,
-            Template::Macropad,
-            Template::Usage,
-            Template::Settings,
-        ])
-        .enumerate()
-        .map(|(i, (n, t))| FaceEntry {
-            f: i as u8 + 1,
-            t,
-            n: (*n).to_string(),
-        })
-        .collect()
+    fw::ui::DEFAULT_STRIP.iter().map(|t| FaceEntry {
+        f: t.default_id(), t: ALL_TEMPLATES.into_iter().find(|h| fw_template(*h) == *t).unwrap(), n: t.label().into(),
+    }).collect()
 }
 
 /// Every `HostLine` variant, the protocol's examples, every enum member,
@@ -1121,7 +1111,7 @@ fn the_deck_sim_mockup_session_is_byte_identical() {
         r#"{"m":"ws","active":2,"count":4,"sel":0,"windows":[{"c":"blue","t":"term · claude — header refactor"},{"c":"amber","t":"firefox — github · pulls"},{"c":"green","t":"term · codex — compiling..."}]}"#,
         r#"{"m":"macro","f":3,"src":"deck.toml","keys":[{"l":"build","b":"left"},{"l":"test","b":"right"},{"l":"deploy","b":"enter"},{"l":"git push","b":"shift+left"},{"l":"screenshot"},{"l":"lock"},{"l":"mute","b":"shift+right"},{"l":"term","b":"shift+enter"}]}"#,
         r#"{"m":"usage","period":"SEP 2026","items":[{"n":"Claude Pro","p":62,"r":"resets in 4 days"},{"n":"Codex · OpenAI","p":81,"r":"resets tomorrow"},{"n":"Gemini","p":12,"r":"resets in 11 days"}]}"#,
-        r#"{"m":"faces","list":[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":5,"t":"settings","n":"Settings"}]}"#,
+        r#"{"m":"faces","list":[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]}"#,
         r#"{"m":"synced"}"#,
         r#"{"m":"agent","id":3,"title":"Compiling openmicro ⠋ 0"}"#,
         r#"{"m":"agent","id":3,"title":"Compiling openmicro ⠙ 1"}"#,

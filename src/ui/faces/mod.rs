@@ -9,6 +9,7 @@
 //! is.
 
 pub mod agents;
+pub mod arcade;
 pub mod macropad;
 pub mod omarchy;
 pub mod settings;

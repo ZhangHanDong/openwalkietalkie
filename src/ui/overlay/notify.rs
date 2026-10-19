@@ -89,8 +89,12 @@ fn indicator_color(deck: &Deck) -> Option<u32> {
 }
 
 /// Indicator and toast; called for every frame, draws only what is showing.
+fn visible_indicator(ui: &UiState) -> Option<u32> {
+    if crate::ui::state::arcade::fullscreen(ui) { None } else { indicator_color(&ui.deck) }
+}
+
 pub fn draw(band: &mut Band, ui: &UiState) {
-    if let Some(color) = indicator_color(&ui.deck) {
+    if let Some(color) = visible_indicator(ui) {
         kit::round(band, layout::INDICATOR, 2, color);
     }
     let Some(toast) = ui.notify.toast else {
@@ -196,7 +200,7 @@ pub fn header_inputs(ui: &UiState, h: &mut Hasher) {
 /// Always registers the same two lanes, so the list keeps its shape.
 pub fn signature(ui: &UiState, sig: &mut SigBuilder) {
     sig.region_with(layout::INDICATOR, |h| {
-        h.opt_u32(indicator_color(&ui.deck));
+        h.opt_u32(visible_indicator(ui));
     });
     sig.region_with(layout::TOAST_LANE, |h| {
         let Some(toast) = ui.notify.toast else {

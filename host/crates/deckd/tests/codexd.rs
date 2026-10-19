@@ -45,6 +45,7 @@ enum Seen {
 
 /// The fake daemon: one connection, scripted.
 struct Fake {
+    loaded: Arc<Mutex<Vec<String>>>,
     methods: Arc<Mutex<Vec<String>>>,
     settings: Arc<Mutex<(String, String)>>,
     reject_settings: Arc<std::sync::atomic::AtomicBool>,
@@ -90,6 +91,8 @@ async fn fake_daemon(path: PathBuf) -> Fake {
     let history_stalled = stall_history.clone();
     let history: Arc<Mutex<Vec<Value>>> = Arc::default();
     let current_history = history.clone();
+    let loaded = Arc::new(Mutex::new(vec!["t1".to_string()]));
+    let current_loaded = loaded.clone();
     tokio::spawn(async move {
         let (stream, _) = listener.accept().await.unwrap();
         let ws = match tokio_tungstenite::accept_async(stream).await {
@@ -151,7 +154,7 @@ async fn fake_daemon(path: PathBuf) -> Fake {
                                     if let Some(e) = params["effort"].as_str() { selected.1 = e.into(); }
                                     json!({})
                                 }
-                                "thread/loaded/list" => json!({"data": ["t1"], "nextCursor": null}),
+                                "thread/loaded/list" => json!({"data": *current_loaded.lock().unwrap(), "nextCursor": null}),
                                 "thread/items/list" => {
                                     let history = current_history.lock().unwrap();
                                     let mut entries: Vec<Value> = history.iter().flat_map(|turn| {
@@ -199,6 +202,7 @@ async fn fake_daemon(path: PathBuf) -> Fake {
         }
     });
     Fake {
+        loaded,
         methods,
         settings,
         reject_settings,
@@ -210,6 +214,43 @@ async fn fake_daemon(path: PathBuf) -> Fake {
         push: push_tx,
         account,
     }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_desktop_turn_finished_before_subscription_is_restored_from_history() {
+    let path = socket_path("desktop-fast");
+    let mut fake = fake_daemon(path.clone()).await;
+    let daemon = Daemon::with(Options {
+        codex_socket: Some(path),
+        ..Options::default()
+    }).await;
+    let (stop, stop_rx) = tokio::sync::watch::channel(false);
+    let client = tokio::spawn(deckd::codexd::run(daemon.api.clone(), stop_rx));
+    agent_with_key(&daemon, "codex:t1").await;
+    fake.request("thread/items/list").await;
+
+    // Desktop announces a new thread immediately, but other connections do
+    // not receive its items until they resume/subscribe on the next poll.
+    fake.push.send(json!({"method":"thread/started", "params":{"thread":{
+        "id":"desktop-fast", "name":"Desktop link test", "cwd":"/test"
+    }}})).unwrap();
+    let agent = agent_with_key(&daemon, "codex:desktop-fast").await;
+    *fake.history.lock().unwrap() = vec![json!({"id":"fast-turn", "status":"completed", "items":[
+        {"id":"test-prompt", "type":"userMessage", "content":[{"type":"text", "text":"Reply exactly DESKTOP-LINK-OK."}]},
+        {"id":"test-reply", "type":"agentMessage", "text":"DESKTOP-LINK-OK"}
+    ]})];
+    fake.loaded.lock().unwrap().push("desktop-fast".into());
+    tokio::time::timeout(Duration::from_secs(deckd::codexd::ROSTER_S + 5), async {
+        loop {
+            let restored = daemon.api.bus.snapshot().agents.get(&agent.id).is_some_and(|a|
+                a.messages.iter().any(|m| m.message.id == "test-reply" && m.text == "DESKTOP-LINK-OK"));
+            if restored { break; }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    }).await.expect("the completed Desktop reply must survive the subscription gap");
+    stop.send(true).unwrap();
+    client.await.unwrap();
+    daemon.shutdown().await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

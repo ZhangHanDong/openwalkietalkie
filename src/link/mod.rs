@@ -23,6 +23,7 @@
 
 mod bond_flash;
 mod bond_record;
+mod nor_flash;
 pub use bond_record::Prefs;
 #[cfg(feature = "hw-a")]
 mod boot_info;

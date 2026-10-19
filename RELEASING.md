@@ -84,6 +84,41 @@ An unrelated development daemon is left alone.
 Source and ad-hoc builds keep Sparkle installation disabled. They still
 support firmware checks and updates through the running daemon.
 
+## Factory full-chip images
+
+Build the normal firmware and recovery assets for both boards first. Generate
+a fresh flash table from the pinned SDK; never package a connected device's
+flash dump. For example, for firmware 0.5.0:
+
+```sh
+source target/soc-build-env.sh
+python3 "$SIFLI_SDK/tools/build/gen_ftab.py" \
+  --ptab native/boards/openwalkietalkie/ptab.yaml \
+  --output target/factory-ftab.bin \
+  --bootloader-size 0x10000 --main-size 0x6E0000
+python3 tools/factory-image.py \
+  --firmware-dir dist/firmware \
+  --ftab target/factory-ftab.bin --version 0.5.0 \
+  --output dist/OpenWalkieTalkie-0.5.0-factory
+python3 dist/OpenWalkieTalkie-0.5.0-factory/verify.py
+```
+
+Use a fresh output directory. The packager validates the flash table, board
+markers, recovery vectors, normal application/ELF agreement and empty pairing
+storage. It creates two full 16 MiB binaries, a component/hash manifest,
+Chinese instructions, a standalone verifier, SHA256SUMS and a ZIP with its own
+checksum. The README is generated from `docs/factory-flashing-zh.md`.
+The release workflow generates the table with the pinned SDK and packages
+the exact application and recovery artifacts distributed in that release.
+
+Factory images start at **0x12000000 through the MCU UART downloader**, or
+**offset 0 on a standalone SPI programmer**. They erase all external flash
+contents, including device settings, bonds and any board-specific data. Use
+them for blank-board provisioning; retain normal USB updates for shipped
+devices. Qualify the board/flash combination on a first article before a
+production run. This software packaging check does not replace a blank-board
+programming and cold-boot test.
+
 ## Device firmware updates
 
 With one deck connected by **USB**, open **Service → Updates → Check

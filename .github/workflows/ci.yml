@@ -78,6 +78,17 @@ jobs:
           export PYTHONPATH="$SIFLI_SDK/tools/build"
           export RTT_CC=gcc RTT_EXEC_PATH=/usr/bin SIFLI_SF_PKG_OFFLINE=1
           bash tools/build-firmware-release.sh "$BOARD" dist/firmware
+          if [[ "$BOARD" == hw-a ]]; then
+            python3 "$SIFLI_SDK/tools/build/gen_ftab.py" \
+              --ptab native/boards/openwalkietalkie/ptab.yaml \
+              --output target/factory-ftab.bin --bootloader-size 0x10000 --main-size 0x6E0000
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: matrix.board == 'hw-a'
+        with:
+          name: factory-ftab
+          path: target/factory-ftab.bin
+          if-no-files-found: error
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: matrix.board != 'lilygo'
         with:

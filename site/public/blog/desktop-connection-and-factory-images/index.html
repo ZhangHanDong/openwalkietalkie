@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenWalkieTalkie v0.5.0: Desktop connected, factory ready · OpenWalkieTalkie</title>
+<meta name="description" content="Codex Desktop connection fixes, reliable short replies, alternate flash support, and factory programming images." />
+<link rel="canonical" href="https://openwalkietalkie.org/blog/desktop-connection-and-factory-images/" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="OpenWalkieTalkie" />
+<meta property="og:title" content="OpenWalkieTalkie v0.5.0: Desktop connected, factory ready · OpenWalkieTalkie" />
+<meta property="og:description" content="Codex Desktop connection fixes, reliable short replies, alternate flash support, and factory programming images." />
+<meta property="og:url" content="https://openwalkietalkie.org/blog/desktop-connection-and-factory-images/" />
+<meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2e2bd" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131a3a" />
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<link rel="alternate" type="application/atom+xml" title="OpenWalkieTalkie Blog" href="/blog/feed.xml" />
+
+<link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/blog.css" />
+<script src="/js/theme-init.js"></script>
+<!-- No optional analytics or advertising scripts. -->
+</head>
+<body>
+
+<a class="skip-link" href="#content">Skip to content</a>
+
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="brand" href="/" aria-label="OpenWalkieTalkie — home">
+      <img class="logo-mark pixelated" src="/assets/logo-64.png" alt="" width="26" height="26" />
+      <span class="brand__text">OPEN WALKIE TALKIE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Sections">
+      <a href="/#pile">The Pile</a>
+      <a href="/#features">Features</a>
+      <a href="/#demo">Try It</a>
+      <a href="/#faces">Faces</a>
+      <a href="/#blueprint">Blueprint</a>
+      <a href="/blog/" aria-current="true">Blog</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle day and night theme" aria-pressed="false">
+      <span class="theme-toggle__track" aria-hidden="true">
+        <span class="theme-toggle__icon theme-toggle__icon--sun"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon"></span>
+        <span class="theme-toggle__knob"></span>
+      </span>
+      <span class="theme-toggle__label" id="themeLabel">DAY</span>
+    </button>
+
+    <button class="nav__burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main class="blog-main" id="content">
+<header class="post-head">
+  <p class="section-kicker">THE BLOG · RELEASE NOTES</p>
+  <h1>OpenWalkieTalkie v0.5.0: Desktop connected, factory ready</h1>
+  <p class="post-meta"><span>October 19, 2026</span><span>App and firmware update</span></p>
+</header>
+<article class="post-body">
+  <p>OpenWalkieTalkie 0.5.0 fixes the connection between Codex Desktop and your deck. It also adds firmware support for two alternative flash chips and packages full-chip images for factory programming.</p>
+  <h2>Desktop tasks reach the shared service</h2>
+  <p>The previous launcher could open Desktop successfully while leaving its conversations invisible to OpenWalkieTalkie. Desktop’s default plugin settings caused its implicit shared-service mode to fall back to a private server. The updated launcher selects the shared local connection explicitly.</p>
+  <p>Compatible installations named either ChatGPT.app or Codex.app are detected. The launcher reuses the existing Codex service and leaves running Desktop tasks alone. A separate fix restores replies from short tasks that finish before OpenWalkieTalkie subscribes to their conversation.</p>
+  <h2>Repair the integration after updating</h2>
+  <p>Install the 0.5.0 app and check that its service also reports 0.5.0. Open <strong>Integrations → Codex Desktop</strong> and install or repair the integration. When your Desktop tasks are idle, quit Codex Desktop / ChatGPT and open <code>~/Applications/Codex with OpenWalkieTalkie.app</code>.</p>
+  <p>This is a small launcher for your installed Desktop app. Use it for future launches too: opening the original app directly does not enable the shared connection. Unsupported Desktop builds produce an error instead of silently opening a disconnected session.</p>
+  <h2>More flash options and factory images</h2>
+  <p>The firmware now accepts Puya PY25Q128HA-SUH-IR (C5354566) and GigaDevice GD25Q128ESIGR (C2928891), alongside the existing Winbond W25Q128JVSIQ (C97521). Its settings, pairing, and bootloader writers verify a stable supported chip ID before enabling writes. Boards populated with the alternative parts still need physical qualification.</p>
+  <p>The release includes a factory ZIP with separate 16 MiB images for Rev A and Rev B. Each combines the exact released application and recovery binaries with a fresh flash table and empty unit storage. Chinese instructions, component hashes, and a standalone verifier are included.</p>
+  <p><strong>Factory images overwrite all flash contents, including settings and pairing data.</strong> They are for blank-board provisioning. Existing devices should use the app’s normal USB updater.</p>
+  <h2>Updating an existing deck</h2>
+  <p>Connect one deck over USB-C and open <strong>Service → Updates → Check firmware</strong>. The partition layout and recovery protocol are unchanged from 0.4.0, so devices already on recovery protocol 2 receive a normal application update.</p>
+  <p><strong>Devices still on the old bootloader need the guided migration. Keep power connected and the Mac awake: losing power during bootloader replacement can prevent startup and USB recovery and require hardware repair.</strong> The app displays this warning before migration. Do not manually install bootstrap or recovery files as application firmware.</p>
+  <h2>What we verified</h2>
+  <p>The launcher and transport regression tests pass. In a live test on the development Mac, Desktop connected to the shared service and its <code>DESKTOP-LINK-OK</code> reply appeared in the OpenWalkieTalkie GUI. USB delivery to the connected Rev A was healthy; the final physical screen check was not recorded.</p>
+  <p>Both board variants pass software checks. The preceding 0.4.1 development firmware with the same flash support completed an old-bootloader migration on the existing Rev A. The CI-built 0.5.0 files were not flashed in that test. A shipped Rev B, boards with the alternate chips, and blank-board factory programming still need hardware validation. No device audio test was performed.</p>
+  <h2>Get v0.5.0</h2>
+  <p>Use <strong>Check for Updates</strong> or <a href="/#download">download the signed and notarized Mac app</a> for Apple Silicon or Intel. macOS 13 or later is required.</p>
+  <p>The <a href="https://github.com/conol-ai/openwalkietalkie/releases/tag/v0.5.0">GitHub release</a> includes firmware, factory images, checksums, build attestations, and a Chinese upgrade guide. The guide is also included in each DMG.</p>
+</article>
+</main>
+
+<footer class="footer--mini">
+  <div class="inner">
+    <span>OpenWalkieTalkie · A COHDL project · MIT software · CERN-OHL-P hardware</span>
+    <nav aria-label="Footer">
+      <a href="/#waitlist">Join the waitlist</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/cookies/">Cookie information</a>
+      <a href="/cookies/" data-privacy-open>Privacy notice</a>
+      <a href="/">Home</a>
+      <a href="/#demo">Try It</a>
+      <a href="https://github.com/conol-ai/openwalkietalkie" rel="noopener">GitHub</a>
+      <a href="https://cohdl.org/" rel="noopener">CoHDL</a>
+      <a href="https://discord.gg/x7DXPvK66" rel="noopener" aria-label="Join the CoHDL and OpenWalkieTalkie community on Discord">Discord</a>
+      <a href="/blog/feed.xml">Feed</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/privacy.js"></script>
+</body>
+</html>

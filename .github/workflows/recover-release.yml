@@ -86,6 +86,12 @@ jobs:
             cp "$directory"/*.dmg "$directory/appcast-$arch.xml" "$directory/package-manifest-$arch.json" dist/release/
           done
           for board in hw-a hw-b; do cp dist/source-artifacts/firmware-$board/* dist/release/; done
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
+          output="dist/factory/OpenWalkieTalkie-$version-factory"
+          python3 tools/factory-image.py --firmware-dir dist/release \
+            --ftab dist/source-artifacts/factory-ftab/factory-ftab.bin --version "$version" --output "$output"
+          python3 "$output/verify.py"
+          cp "$output.zip" "$output.zip.sha256" dist/release/
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: recovered-release

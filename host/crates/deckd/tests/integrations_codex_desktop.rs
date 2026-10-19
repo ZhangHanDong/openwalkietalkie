@@ -5,6 +5,7 @@
 
 use deckd::integrations::{self, codex_desktop, testdir::TestDir, Status, Target, Verb};
 use std::os::unix::fs::PermissionsExt;
+use std::os::unix::{fs::symlink, net::UnixListener};
 use std::path::Path;
 
 const INSTALL: Verb = Verb::Install { trust: false };
@@ -89,6 +90,15 @@ fn launcher_uses_bundled_cli_and_keeps_home_literal_and_existing_sessions_alive(
     // Both apostrophes and shell substitutions are literal path characters.
     env.home = dir.sub("home with ' quotes $(touch INJECTED)");
     env.codex_home = Some(dir.sub("codex with ' quotes $(touch INJECTED)"));
+    // Like the real daemon, keep the socket at a short path and expose it
+    // through a symlink under CODEX_HOME, which need not be URL-safe.
+    let sockets = TestDir::new("ws");
+    let socket = sockets.path().join("s");
+    let _listener = UnixListener::bind(&socket).unwrap();
+    let control = env.codex_dir().join("app-server-control");
+    std::fs::create_dir_all(&control).unwrap();
+    let socket_link = control.join("app-server-control.sock");
+    symlink(&socket, &socket_link).unwrap();
     integrations::run(&env, Target::CodexDesktop, INSTALL).unwrap();
     let fake_app = env.home.join("Applications/Codex.app");
     let log = dir.path().join("calls");
@@ -105,7 +115,13 @@ fn launcher_uses_bundled_cli_and_keeps_home_literal_and_existing_sessions_alive(
     executable(&fake_app.join("Contents/Resources/codex-cli/bin/codex"),
         "#!/bin/sh\nprintf 'codex\\n%s\\n' \"$CODEX_HOME\" >> \"$CALL_LOG\"\nprintf '%s\\n' \"$@\" >> \"$CALL_LOG\"\nexit \"${FAKE_START_EXIT:-0}\"\n");
     let archive = fake_app.join("Contents/Resources/app.asar");
-    std::fs::write(&archive, "CODEX_APP_SERVER_USE_LOCAL_DAEMON").unwrap();
+    std::fs::write(&archive, "CODEX_APP_SERVER_WS_URL ws+unix:").unwrap();
+    // Bundled Git only disables Desktop's implicit local-daemon mode;
+    // it must not prevent an explicit WebSocket connection.
+    executable(
+        &fake_app.join("Contents/Resources/git/bin/git"),
+        "#!/bin/sh\n",
+    );
     let script_path = codex_desktop::launcher(&env).join("Contents/MacOS/launch-codex");
     let script = std::fs::read_to_string(script_path)
         .unwrap()
@@ -134,8 +150,30 @@ fn launcher_uses_bundled_cli_and_keeps_home_literal_and_existing_sessions_alive(
         ]
     );
     assert!(calls.contains("CODEX_APP_SERVER_USE_LOCAL_DAEMON=1\n"));
+    assert!(calls.contains(&format!(
+        "CODEX_APP_SERVER_WS_URL=ws+unix://localhost{}:/rpc\n",
+        socket.canonicalize().unwrap().display()
+    )));
     assert!(calls.contains(&format!("CODEX_HOME={}\n", env.codex_dir().display())));
     assert!(!dir.path().join("INJECTED").exists());
+    std::fs::remove_file(&log).unwrap();
+    // Missing and cyclic socket links fail without opening an unshared UI.
+    std::fs::remove_file(&socket_link).unwrap();
+    assert!(!command().output().unwrap().status.success());
+    assert!(!std::fs::read_to_string(&log).unwrap().contains("open\n"));
+    std::fs::remove_file(&log).unwrap();
+    symlink("socket-alias", &socket_link).unwrap();
+    symlink("app-server-control.sock", control.join("socket-alias")).unwrap();
+    assert!(!command().output().unwrap().status.success());
+    assert!(!std::fs::read_to_string(&log).unwrap().contains("open\n"));
+    std::fs::remove_file(&log).unwrap();
+    std::fs::remove_file(control.join("socket-alias")).unwrap();
+    symlink(&socket, control.join("socket-alias")).unwrap();
+    assert!(command().output().unwrap().status.success());
+    assert!(std::fs::read_to_string(&log).unwrap().contains(&format!(
+        "CODEX_APP_SERVER_WS_URL=ws+unix://localhost{}:/rpc\n",
+        socket.canonicalize().unwrap().display()
+    )));
     std::fs::remove_file(&log).unwrap();
     assert!(!command()
         .env("FAKE_RUNNING", "true")
@@ -155,10 +193,30 @@ fn launcher_uses_bundled_cli_and_keeps_home_literal_and_existing_sessions_alive(
         "do not launch when daemon start fails"
     );
     std::fs::remove_file(&log).unwrap();
-    std::fs::write(&archive, "older desktop").unwrap();
+    std::fs::write(&archive, "CODEX_APP_SERVER_USE_LOCAL_DAEMON").unwrap();
     assert!(!command().output().unwrap().status.success());
     assert!(
         !log.exists(),
         "an unsupported desktop must not start a daemon or launch"
     );
+
+    // The renamed ChatGPT bundle must win over a stale Codex installation,
+    // in both status detection and the actual launcher. All commands remain
+    // fake; never launch either real app during the regression test.
+    let renamed = env.home.join("Applications/ChatGPT.app");
+    executable(
+        &renamed.join("Contents/Resources/codex-cli/bin/codex"),
+        "#!/bin/sh\nprintf 'chatgpt\\n' >> \"$CALL_LOG\"\n",
+    );
+    std::fs::write(
+        renamed.join("Contents/Resources/app.asar"),
+        "CODEX_APP_SERVER_WS_URL ws+unix:",
+    )
+    .unwrap();
+    assert!(command().output().unwrap().status.success());
+    let calls = std::fs::read_to_string(&log).unwrap();
+    assert!(calls.starts_with("chatgpt\nopen\n"));
+    assert!(calls.contains(&format!("-a\n{}\n", renamed.display())));
+    env.probe_clis = true;
+    assert_eq!(codex_desktop::status(&env).detected.unwrap().path, renamed);
 }

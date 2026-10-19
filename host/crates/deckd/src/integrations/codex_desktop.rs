@@ -1,8 +1,10 @@
 //! Codex Desktop's opt-in shared app-server transport, inspected in
 //! Codex.app 26.930.51102 (bundled codex-cli 0.160.0).
 //!
-//! Desktop normally owns a private stdio server. Its local-daemon switch
-//! lets `codexd` observe and control the same threads as the native UI.
+//! Desktop normally owns a private stdio server. An explicit WebSocket URL
+//! over the shared daemon's Unix socket lets `codexd` track the same threads.
+//! The implicit local-daemon switch is insufficient: Desktop's default plugin
+//! config overrides make that path fall back to a private server.
 //! Install a separate launcher: no app-bundle patch, global launchctl
 //! environment, hook trust, or second owner of the CLI's hooks.json.
 use super::backup::{self, FileSnapshot, Planned};
@@ -27,6 +29,17 @@ pub fn launcher(env: &Env) -> PathBuf {
     env.home.join("Applications").join(NAME)
 }
 
+// Per-user installations take precedence. Within each location prefer the
+// renamed desktop app; an older Codex.app can remain after the rename.
+fn desktop_apps(env: &Env) -> [PathBuf; 4] {
+    [
+        env.home.join("Applications/ChatGPT.app"),
+        env.home.join("Applications/Codex.app"),
+        PathBuf::from("/Applications/ChatGPT.app"),
+        PathBuf::from("/Applications/Codex.app"),
+    ]
+}
+
 fn contents(env: &Env) -> Vec<(PathBuf, Vec<u8>, u32)> {
     let script: String = include_str!("codex_desktop.sh")
         .lines()
@@ -35,14 +48,13 @@ fn contents(env: &Env) -> Vec<(PathBuf, Vec<u8>, u32)> {
                 "export CODEX_HOME={}\n",
                 markers::shell_word(&env.codex_dir().display().to_string())
             ),
-            "app=@USER_APP@" => format!(
-                "app={}\n",
-                markers::shell_word(
-                    &env.home
-                        .join("Applications/Codex.app")
-                        .display()
-                        .to_string()
-                )
+            "for candidate in @DESKTOP_APPS@; do" => format!(
+                "for candidate in {}; do\n",
+                desktop_apps(env)
+                    .iter()
+                    .map(|path| markers::shell_word(&path.display().to_string()))
+                    .collect::<Vec<_>>()
+                    .join(" ")
             ),
             _ => format!("{line}\n"),
         })
@@ -107,13 +119,13 @@ pub fn plan(env: &Env, verb: Verb, receipt: Option<&Value>) -> Result<Plan, Stri
         plan.note("Removes only the desktop launcher. The shared Codex daemon and its sessions keep running.");
     } else {
         plan.receipt = Some(json!({"schema": 1, "files": hashes}));
-        plan.note(format!("Creates {}. Opening it starts or reuses Codex's local daemon and launches Codex Desktop with CODEX_APP_SERVER_USE_LOCAL_DAEMON=1.", launcher(env).display()));
+        plan.note(format!("Creates {}. Opening it starts or reuses Codex's local daemon and connects Desktop directly to its Unix socket using CODEX_APP_SERVER_WS_URL. No TCP listener is opened.", launcher(env).display()));
         plan.note(format!(
             "The launcher uses CODEX_HOME={}; Codex CLI hooks and trust are managed separately.",
             env.codex_dir().display()
         ));
         plan.step(format!("Quit Codex Desktop, then open {} for desktop sessions on the deck. Keep deckd running with [codex] daemon = true and its default socket for this CODEX_HOME.", launcher(env).display()));
-        plan.step("Requires a Codex Desktop build with local-daemon support (inspected in 26.930.51102). Custom codex_cli_command or app config overrides can make Desktop fall back to a private server; those sessions will not appear on the deck.");
+        plan.step("Requires Desktop's explicit WebSocket transport (inspected in Codex 26.930.51102 and ChatGPT 26.1007.71326). The shared daemon supplies server configuration; Desktop's private-server CLI overrides do not apply to it.");
     }
     Ok(plan)
 }
@@ -162,16 +174,13 @@ pub fn status(env: &Env) -> Report {
         Status::Outdated
     };
     if env.probe_clis {
-        report.detected = [
-            env.home.join("Applications/Codex.app"),
-            PathBuf::from("/Applications/Codex.app"),
-        ]
-        .into_iter()
-        .find(|p| p.join("Contents/Resources/codex-cli/bin/codex").is_file())
-        .map(|path| Detected {
-            path,
-            version: String::new(),
-        });
+        report.detected = desktop_apps(env)
+            .into_iter()
+            .find(|p| p.join("Contents/Resources/codex-cli/bin/codex").is_file())
+            .map(|path| Detected {
+                path,
+                version: String::new(),
+            });
     }
     report.detail = Some(if current {
         "Desktop launcher installed; quit Codex and open Codex with OpenWalkieTalkie to connect desktop sessions."

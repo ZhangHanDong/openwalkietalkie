@@ -551,6 +551,25 @@ The two intervening 64 KiB Bluetooth stores retain their original addresses;
 the initial 128 KiB retains the flash table and bootloader. New large assets
 can use `.flash_assets.*` sections without taking space from the lower bank.
 
+Firmware 0.5.0 supports these U4 flash choices on both board revisions:
+
+| LCSC part | Device | JEDEC ID (wire order) |
+| --- | --- | --- |
+| C97521 | Winbond W25Q128JVSIQ | `EF 40 18` |
+| C5354566 | Puya PY25Q128HA-SUH-IR | `85 20 18` |
+| C2928891 | GigaDevice GD25Q128ESIGR | `C8 40 18` |
+
+All are 3 V, 16 MiB parts and use the same partition map. Recovery's pinned
+SDK already recognizes all three; the application's settings/bond journal
+and temporary bootloader updater use the same explicit ID allowlist and
+reject unstable or unknown IDs before enabling writes. Existing program and
+erase timeouts cover the specified industrial parts. Flash clock and quad-read
+configuration remain under the SDK's control. The alternate parts still need
+physical cold-boot, XIP, settings/bond persistence and USB recovery/migration
+qualification on populated boards; software checks alone do not qualify a
+production substitution. See the [Puya datasheet](https://www.puyasemi.com/download_path/%E6%95%B0%E6%8D%AE%E6%89%8B%E5%86%8C/Flash/PY25Q128HA_Datasheet_V2.3.pdf)
+and [GigaDevice datasheet](https://download.gigadevice.com/Datasheet/DS-00480-GD25Q128E-Rev1.4.pdf).
+
 **Existing Rev A/B devices need the protocol-2 recovery bootloader before an
 image using upper flash can be installed over USB.** The desktop updater can
 perform this migration using a temporary lower-bank app and the board's recovery

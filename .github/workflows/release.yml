@@ -110,6 +110,19 @@ jobs:
           path: dist/release
           merge-multiple: true
           digest-mismatch: error
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: factory-ftab
+          path: dist/factory-input
+          digest-mismatch: error
+      - name: Package full-chip factory images
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
+          output="dist/factory/OpenWalkieTalkie-$version-factory"
+          python3 tools/factory-image.py --firmware-dir dist/release \
+            --ftab dist/factory-input/factory-ftab.bin --version "$version" --output "$output"
+          python3 "$output/verify.py"
+          cp "$output.zip" "$output.zip.sha256" dist/release/
       - name: Create the updater manifest and checksums
         env:
           TAG: ${{ needs.validate.outputs.tag }}

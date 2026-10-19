@@ -176,23 +176,23 @@ unsafe fn erase_block(offset: u32) -> u32 {
         if !command(0xd8, offset, false, false, true) {
             status = 2;
         }
-        // Block erase: 2 s at most on the W25Q128JV, 150 ms typical. A try
-        // is one status read of a few microseconds.
+        // The supported industrial parts take at most 2 s for a 64 KiB
+        // erase (Winbond is the slowest). A try is one status read.
         wait_idle(2_000_000);
     }
     restore(saved);
     status
 }
 
-/// Identify the W25Q128JV and set its write-enable latch. 0 = ready, 1 =
-/// not this flash, 2 = the controller did not answer.
+/// Identify a supported NOR and set its write-enable latch. 0 = ready,
+/// 1 = unsupported/unstable ID, 2 = the controller did not answer.
 #[inline(always)]
 unsafe fn write_enable() -> u32 {
     let mpi = pac::MPI2;
     let mut status = 0;
     // The shared AHB/command receive path can initially expose bytes from
     // the last XIP burst. Repeat this harmless command entirely in SRAM;
-    // require the last two replies to identify this board's W25Q128JV.
+    // require the last two replies to identify the same supported part.
     // Never clear its FIFO while an AHB read may still be finishing.
     let mut last_id = 0;
     let mut id = 0;
@@ -205,7 +205,7 @@ unsafe fn write_enable() -> u32 {
         last_id = id;
         id = mpi.dr().read().0 & 0x00ff_ffff;
     }
-    if status == 0 && (id != 0x1840ef || last_id != id) {
+    if status == 0 && !super::nor_flash::supported_stable_id(last_id, id) {
         status = 1;
     }
     if status == 0 {

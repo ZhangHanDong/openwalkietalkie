@@ -25,6 +25,8 @@ mod bond_record;
 mod charger;
 #[path = "../../src/link/wire.rs"]
 mod link_wire;
+#[path = "../../src/link/nor_flash.rs"]
+mod nor_flash;
 #[path = "../../src/input/cst9220.rs"]
 mod cst9220;
 #[path = "../../src/input/direct.rs"]

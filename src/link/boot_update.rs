@@ -264,8 +264,8 @@ fn crc32(data: &[u8]) -> u32 {
 // The rules of `bond_flash::program_slot` apply: everything that runs while
 // the NOR is busy lives in SRAM and calls nothing in flash. A null `bytes`
 // erases the 4 KiB sector at `offset`; otherwise one 64-byte chunk is
-// programmed there. Status 0 = done, 1 = not this board's W25Q128JV, 2 = the
-// controller did not respond.
+// programmed there. Status 0 = done, 1 = unsupported/unstable NOR ID,
+// 2 = the controller did not respond.
 #[inline(never)]
 #[link_section = ".data.boot_update"]
 unsafe fn nor_op(offset: u32, bytes: *const u8) -> u32 {
@@ -292,7 +292,7 @@ unsafe fn nor_op(offset: u32, bytes: *const u8) -> u32 {
         last_id = id;
         id = mpi.dr().read().0 & 0x00ff_ffff;
     }
-    if status == 0 && (id != 0x1840ef || last_id != id) {
+    if status == 0 && !super::nor_flash::supported_stable_id(last_id, id) {
         status = 1;
     }
     if status == 0 {

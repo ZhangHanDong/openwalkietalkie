@@ -312,7 +312,7 @@ transport and does not replace the task title. Quoted examples and malformed
 envelopes remain ordinary text.
 
 **Codex Desktop (macOS)** can use that same connection through its experimental
-local-daemon mode. Install from the app's **Integrations → Codex Desktop** row,
+WebSocket transport over a local Unix socket. Install from the app's **Integrations → Codex Desktop** row,
 or run:
 
 ```sh
@@ -321,23 +321,40 @@ deckd integrations install codex-desktop
 open "$HOME/Applications/Codex with OpenWalkieTalkie.app"
 ```
 
-Quit Codex Desktop before opening the launcher. The launcher uses the Codex CLI
-bundled in `~/Applications/Codex.app` or `/Applications/Codex.app` to start or
-reuse the shared daemon, then opens Desktop with
-`CODEX_APP_SERVER_USE_LOCAL_DAEMON=1` and the installer's `CODEX_HOME`. Keep
+Quit Codex Desktop / ChatGPT before opening the launcher. The launcher uses the Codex CLI
+bundled in `ChatGPT.app` (the renamed desktop app) or `Codex.app` to start or
+reuse the shared daemon, then opens Desktop with the installer's `CODEX_HOME`
+and `CODEX_APP_SERVER_WS_URL=ws+unix://localhost<resolved-socket>:/rpc`. The
+socket is resolved from `$CODEX_HOME/app-server-control/app-server-control.sock`;
+no TCP port is opened. Keep
 deckd running with `[codex] daemon = true` (the default) and the default socket
 for that same home. Desktop's local sessions then use the existing roster,
 approval, question, session-control, and voice-order paths. No separate CLI
 installation or hook trust is needed. Use this launcher whenever you reopen
 Desktop; opening Codex normally does not opt into this mode.
 
-The launch switch was inspected in Codex Desktop **26.930.51102**, bundled CLI
-**0.160.0**. It is an experimental desktop interface: custom app config
-overrides or `codex_cli_command` can force its private stdio server, and builds
-with bundled Git cannot use this mode. Cloud and SSH sessions are outside this
-local integration. `installed` confirms the launcher files, not that Desktop
+App discovery checks `~/Applications` before `/Applications` and prefers
+`ChatGPT.app` over `Codex.app` within each directory. This avoids launching an
+older Codex installation left behind after the desktop app was renamed.
+
+The transport was inspected in Codex Desktop **26.930.51102** (bundled CLI
+**0.160.0**) and ChatGPT **26.1007.71326**. Setting only
+`CODEX_APP_SERVER_USE_LOCAL_DAEMON=1` is insufficient in these builds: Desktop's
+default plugin configuration adds CLI overrides, causing that branch to fall
+back silently to a private stdio server. The explicit WebSocket URL selects
+the shared socket directly. The shared daemon's configuration applies;
+Desktop's private-server CLI overrides are not applied to the daemon.
+Cloud and SSH sessions are outside this local integration.
+`installed` confirms the launcher files, not that Desktop
 has attached; confirm a local session appears in the roster. The launcher
 refuses to interrupt a running Desktop and never restarts an existing daemon.
+It also refuses to launch if the socket is missing, cyclic, or cannot be
+represented safely in a WebSocket URL. Desktop's startup log should show
+`hostId=local transport=websocket`; `transport=stdio` means it is still using
+its private server. Launch the **Codex with OpenWalkieTalkie** application,
+not the ordinary Codex/ChatGPT icon. An older OpenWalkieTalkie installer can
+replace the launcher with its older template, so update the host app before
+using its Install or Repair action.
 `deckd integrations uninstall codex-desktop` removes the launcher while leaving
 Codex, CLI hooks, and running sessions in place. Modified launcher files are
 preserved and reported as conflicts.
@@ -351,6 +368,9 @@ On reconnect, thread history restores unanswered questions without reviving
 answered ones. History loads in small background pages, so large conversations
 cannot delay live prompts with one oversized resume response. These cards do
 not expire, and a failed send restores the card for another attempt.
+The first successful subscription also loads history for threads announced
+while deckd is running, so a short Desktop task's reply is recovered even if
+the task finishes before the next roster poll.
 
 Nothing about a CLI's prompt is ever hostage to a bug of ours. Every failure
 path — an unparseable payload, a refused card, a full core, a daemon that is

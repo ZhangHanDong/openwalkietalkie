@@ -51,7 +51,7 @@ use deck_model::{
 };
 use futures_util::{SinkExt, StreamExt};
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -1469,6 +1469,10 @@ async fn session(
     // History must never block live questions, answers, or connection upkeep.
     // Dropping the set cancels outstanding hydration on disconnect.
     let mut histories = tokio::task::JoinSet::new();
+    // A thread/started notification can register a Desktop thread before
+    // polling subscribes us. A short turn may finish in that gap, so roster
+    // membership alone must never suppress its first history load.
+    let mut history_requested = HashSet::new();
 
     // The reader is its own task: a request of ours is answered on the
     // same socket, so a loop that awaited a reply while also being the
@@ -1574,19 +1578,20 @@ async fn session(
                         if let Ok(catalog) = read_models(&rpc).await { model.catalog = catalog; }
                         catalog_read = std::time::Instant::now();
                     }
-                    match loaded_threads(&rpc, &model).await {
+                    match loaded_threads(&rpc).await {
                         Ok(listed) => {
-                            for thread in &listed {
-                                if !model.threads.contains_key(&thread.id) {
+                            history_requested.retain(|id| listed.threads.iter().any(|t| &t.id == id));
+                            for id in &listed.resumed {
+                                if history_requested.insert(id.clone()) {
                                     let rpc = rpc.clone();
-                                    let id = thread.id.clone();
+                                    let id = id.clone();
                                     histories.spawn(async move {
                                         let history = history::read(&rpc, &id).await;
                                         (id, history)
                                     });
                                 }
                             }
-                            let effects = model.loaded(&listed);
+                            let effects = model.loaded(&listed.threads);
                             apply(api, &rpc, &principal, session_id, &mut model, &mail_tx, &mut waiters, &mut steering, effects).await;
                         }
                         Err(why) => {
@@ -1730,7 +1735,12 @@ async fn change_settings(rpc: &Rpc, model: &mut Model, thread: &str, params: Val
 
 /// `thread/loaded/list`, then `thread/resume` on each id for its name and
 /// status — resume is also what subscribes this connection to the thread.
-async fn loaded_threads(rpc: &Rpc, _model: &Model) -> Result<Vec<LoadedThread>, String> {
+struct LoadedRoster {
+    threads: Vec<LoadedThread>,
+    resumed: Vec<String>,
+}
+
+async fn loaded_threads(rpc: &Rpc) -> Result<LoadedRoster, String> {
     let listed = rpc.request("thread/loaded/list", json!({})).await?;
     let ids: Vec<String> = listed["data"]
         .as_array()
@@ -1741,6 +1751,7 @@ async fn loaded_threads(rpc: &Rpc, _model: &Model) -> Result<Vec<LoadedThread>, 
         .map(str::to_string)
         .collect();
     let mut out = Vec::new();
+    let mut resumed = Vec::new();
     for id in ids {
         match rpc
             .request(
@@ -1751,6 +1762,7 @@ async fn loaded_threads(rpc: &Rpc, _model: &Model) -> Result<Vec<LoadedThread>, 
             .await
         {
             Ok(result) => {
+                resumed.push(id.clone());
                 let thread = result.get("thread").unwrap_or(&result);
                 let mut loaded = LoadedThread::from_thread(thread).unwrap_or(LoadedThread {
                     settings: None,
@@ -1788,7 +1800,10 @@ async fn loaded_threads(rpc: &Rpc, _model: &Model) -> Result<Vec<LoadedThread>, 
             }
         }
     }
-    Ok(out)
+    Ok(LoadedRoster {
+        threads: out,
+        resumed,
+    })
 }
 
 /// ENTER on the deck reads again only when the last read is older than

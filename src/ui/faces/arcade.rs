@@ -106,11 +106,7 @@ pub fn draw(b: &mut Band, ui: &UiState, _id: u8) {
                 b,
                 r.left() + 64,
                 r.top() + 30,
-                if game == Game::Raiden {
-                    "RAIDEN · 雷电"
-                } else {
-                    game.title()
-                },
+                game.title(),
                 theme::TEXT_PRIMARY,
                 Font::Name,
                 296,

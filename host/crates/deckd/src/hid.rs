@@ -1469,6 +1469,32 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn arcade_sound_waits_for_a_compatible_device_in_boot_and_live_lanes() {
+        for modern in [false, true] {
+            let mut link = Link::new(&cfg());
+            let mut t = Instant::now();
+            let sound = |value| DeviceOp::Put(
+                Key::Set(deck_proto::SetKey::Arcadesound),
+                HostLine::Set { key: deck_proto::SetKey::Arcadesound, value },
+            );
+            link.apply(sound(2), t);
+            link.link_up(t);
+            written(&mut link, &mut t);
+            let mut hello: serde_json::Value = serde_json::from_str(HELLO_BOOT).unwrap();
+            if modern {
+                hello["fw"] = "0.6.0".into();
+                hello["faces"].as_array_mut().unwrap().push(serde_json::json!({"f":6,"t":"arcade","n":"Arcade"}));
+            }
+            feed(&mut link, &hello.to_string(), t);
+            let lines = written(&mut link, &mut t);
+            assert_eq!(lines.iter().any(|l| l.contains("arcadesound")), modern, "boot barrier");
+            link.apply(sound(1), t);
+            let lines = written(&mut link, &mut t);
+            assert_eq!(lines.iter().any(|l| l.contains("arcadesound")), modern, "live settings lane");
+        }
+    }
+
+    #[test]
     fn device_edits_never_echo_and_the_face_gates_ws() {
         let mut link = Link::new(&cfg());
         let mut t = Instant::now();

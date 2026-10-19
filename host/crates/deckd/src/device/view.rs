@@ -121,6 +121,12 @@ impl DeviceView {
         self.faces = faces;
     }
 
+    /// New settings require a template advertised by the device, not merely
+    /// one in the host's saved layout. Legacy firmware rejects unknown keys.
+    pub fn set_allowed(&self, key: SetKey) -> bool {
+        key != SetKey::Arcadesound || self.faces.iter().any(|f| f.t == Template::Arcade)
+    }
+
     /// The strip that gates `macro`/`ws`: the `faces` line the host pushes
     /// (the persisted strip on `boot:1`, which the device never echoes,
     /// P:102-104), else the one the device reported.
@@ -203,7 +209,8 @@ impl DeviceView {
                 Key::Card(..) | Key::DocText(..) | Key::Reply(_) | Key::Focus | Key::Usage => true,
                 Key::Macro(face) => self.macro_allowed(*face),
                 Key::Ws => self.ws_gate() != WsGate::No,
-                Key::Faces | Key::Set(_) => boot,
+                Key::Faces => boot,
+                Key::Set(key) => boot && self.set_allowed(*key),
                 _ => false,
             };
             if keep {
@@ -211,11 +218,11 @@ impl DeviceView {
             }
         }
         if boot {
-            // Every set key, even those the view has no entry for, keeps the
-            // device's defaults explicit (P:95-97).
+            // Every supported set key, even those the view has no entry for,
+            // keeps the device's defaults explicit (P:95-97).
             let defaults = deck_model::Settings::default();
             for key in SetKey::ALL {
-                if !self.entries.contains_key(&Key::Set(key)) {
+                if self.set_allowed(key) && !self.entries.contains_key(&Key::Set(key)) {
                     out.push(BarrierItem::SetDefault(key, defaults.get(key)));
                 }
             }
@@ -426,6 +433,25 @@ mod tests {
         assert_eq!(plan.last(), Some(&BarrierItem::Synced));
         assert!(plan.contains(&BarrierItem::SetDefault(SetKey::Demo, 1)));
         assert_eq!(v.slots(), vec![Slot(1), Slot(2)]);
+    }
+
+    #[test]
+    fn arcade_defaults_and_saved_values_require_device_advertisement() {
+        let mut v = view();
+        let has_sound = |v: &DeviceView| v.barrier(true).iter().any(|line|
+            matches!(line, HostLine::Set { key: SetKey::Arcadesound, .. }));
+        assert!(!has_sound(&v));
+        let arcade = vec![FaceEntry { f: 6, t: Template::Arcade, n: "Arcade".into() }];
+        // A saved layout alone must not make an older firmware accept it.
+        v.apply(&DeviceOp::Put(Key::Faces, HostLine::Faces { list: arcade.clone() }));
+        assert!(!has_sound(&v));
+        v.set_faces(arcade);
+        assert!(v.barrier_plan(true).contains(&BarrierItem::SetDefault(SetKey::Arcadesound, 0)));
+        v.apply(&DeviceOp::Put(Key::Set(SetKey::Arcadesound), HostLine::Set { key: SetKey::Arcadesound, value: 2 }));
+        assert!(v.barrier(true).contains(&HostLine::Set { key: SetKey::Arcadesound, value: 2 }));
+        // A retained setting must not leak when a legacy deck is connected.
+        v.set_faces(vec![]);
+        assert!(!has_sound(&v));
     }
 
     #[test]

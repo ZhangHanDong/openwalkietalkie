@@ -728,6 +728,7 @@ impl Outbox {
                     WsGate::No => false,
                 },
                 Key::Macro(face) => view.macro_allowed(*face),
+                Key::Set(key) => view.set_allowed(*key),
                 Key::AgentGone(_) => true,
                 _ => true,
             };

@@ -1,13 +1,20 @@
 import importlib.util
+import json
 from pathlib import Path
 import struct
+import tempfile
 import unittest
+import zipfile
 
-from test_release import image, recovery, bootstrap
+from test_release import image, recovery, bootstrap, elf
 
 SPEC = importlib.util.spec_from_file_location("factory_image", Path(__file__).resolve().parents[1] / "factory-image.py")
 factory = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(factory)
+VERIFY_SPEC = importlib.util.spec_from_file_location(
+    "factory_verify", Path(__file__).resolve().parents[1] / "verify-factory-package.py")
+verifier = importlib.util.module_from_spec(VERIFY_SPEC)
+VERIFY_SPEC.loader.exec_module(verifier)
 
 
 def ftab():
@@ -27,6 +34,50 @@ def ftab():
 
 
 class FactoryImageTests(unittest.TestCase):
+    def test_packages_keep_boards_and_chinese_spi_instructions_separate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            table = root / "ftab.bin"
+            table.write_bytes(ftab())
+            for letter in ("A", "B"):
+                stem = f"OpenWalkieTalkie-1.2.3-hw-{letter.lower()}"
+                app = image(letter) + b"1.2.3-openwalkietalkie"
+                (root / f"{stem}.bin").write_bytes(app)
+                (root / f"{stem}.elf").write_bytes(elf(app))
+                (root / f"OpenWalkieTalkie-1.2.3-recovery-hw-{letter.lower()}.bin").write_bytes(recovery(letter))
+            for letter in ("A", "B"):
+                board = "hw-" + letter.lower()
+                output = root / f"OpenWalkieTalkie-1.2.3-factory-{board}"
+                factory.package(root, table, "1.2.3", output, board)
+                manifest = json.loads((output / "manifest.json").read_text())
+                self.assertEqual(list(manifest["variants"]), [board])
+                verifier.verify(output)
+                with zipfile.ZipFile(str(output) + ".zip") as archive:
+                    binaries = [name for name in archive.namelist() if name.endswith(".bin")]
+                    self.assertEqual(binaries, [f"{output.name}/{manifest['variants'][board]['file']}"])
+                    self.assertEqual(len(archive.read(binaries[0])), factory.FLASH_SIZE)
+                readme = (output / "README.md").read_text()
+                self.assertIn(f"仅用于 Rev {letter}", readme)
+                self.assertNotIn("Rev " + ("B" if letter == "A" else "A"), readme)
+                self.assertIn("0x00000000", readme)
+                self.assertIn("全片读回校验", readme)
+                for forbidden in ("@VERSION@", "@BOARD@", "@REV@", "sftool", "UART", "0x12000000"):
+                    self.assertNotIn(forbidden, readme)
+                # Reusing an extraction directory with another image must fail.
+                extra = output / "wrong-board.bin"
+                extra.write_bytes(b"other board")
+                with self.assertRaisesRegex(ValueError, "额外文件"):
+                    verifier.verify(output)
+                extra.unlink()
+                (output / "README.md").write_text(readme + "\nchanged")
+                with self.assertRaisesRegex(ValueError, "SHA256"):
+                    verifier.verify(output)
+
+    def test_board_selection_and_archive_name_are_mandatory(self):
+        for board, name in (("both", "combined"), ("hw-b", "OpenWalkieTalkie-1.2.3-factory-hw-a")):
+            with self.assertRaises(ValueError):
+                factory.package(Path("unused"), Path("unused"), "1.2.3", Path(name), board)
+
     def test_full_chip_merge_exact_placement_and_empty_unit_storage(self):
         for board in ("A", "B"):
             app, boot, table = image(board), recovery(board), ftab()

@@ -118,11 +118,13 @@ jobs:
       - name: Package full-chip factory images
         run: |
           version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
-          output="dist/factory/OpenWalkieTalkie-$version-factory"
-          python3 tools/factory-image.py --firmware-dir dist/release \
-            --ftab dist/factory-input/factory-ftab.bin --version "$version" --output "$output"
-          python3 "$output/verify.py"
-          cp "$output.zip" "$output.zip.sha256" dist/release/
+          for board in hw-a hw-b; do
+            output="dist/factory/OpenWalkieTalkie-$version-factory-$board"
+            python3 tools/factory-image.py --firmware-dir dist/release --board "$board" \
+              --ftab dist/factory-input/factory-ftab.bin --version "$version" --output "$output"
+            python3 "$output/verify.py"
+            cp "$output.zip" "$output.zip.sha256" dist/release/
+          done
       - name: Create the updater manifest and checksums
         env:
           TAG: ${{ needs.validate.outputs.tag }}

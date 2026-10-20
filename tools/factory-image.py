@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package full-chip Rev A/B factory images from validated release components.
+"""Package one board's full-chip factory image from validated release components.
 
 Generate a fresh ftab with the pinned SDK's gen_ftab.py first. Never use a
 device dump: the full image intentionally starts with empty unit storage.
@@ -71,9 +71,13 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def package(firmware_dir, ftab_path, version, output):
+def package(firmware_dir, ftab_path, version, output, board):
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise ValueError("version must be MAJOR.MINOR.PATCH")
+    if board not in ("hw-a", "hw-b"):
+        raise ValueError("select exactly one board: hw-a or hw-b")
+    if output.name != f"OpenWalkieTalkie-{version}-factory-{board}":
+        raise ValueError("output directory must identify the version and hardware board")
     if output.exists():
         raise ValueError("output directory already exists; use a fresh destination")
     archive = output.with_name(output.name + ".zip")
@@ -81,25 +85,24 @@ def package(firmware_dir, ftab_path, version, output):
         raise ValueError("output archive already exists")
     ftab = ftab_path.read_bytes()
     images, variants = {}, {}
-    for board in ("hw-a", "hw-b"):
-        app_path = firmware_dir / f"OpenWalkieTalkie-{version}-{board}.bin"
-        recovery_path = firmware_dir / f"OpenWalkieTalkie-{version}-recovery-{board}.bin"
-        app, recovery = app_path.read_bytes(), recovery_path.read_bytes()
-        if (version + "-openwalkietalkie").encode() not in app:
-            raise ValueError(f"application does not contain firmware version {version}")
-        # Require the raw release image to agree with its checked ELF.
-        elf = app_path.with_suffix(".elf").read_bytes()
-        if release.image_from_elf(elf, board) != app:
-            raise ValueError(f"{board} application differs from its ELF")
-        merged = merge_image(ftab, recovery, app, board)
-        name = f"Rev-{board[-1].upper()}/OpenWalkieTalkie-{version}-factory-{board}.bin"
-        images[name] = merged
-        variants[board] = {
-            "file": name, "size": len(merged), "sha256": digest(merged),
-            "components": [{"kind": kind, "offset": offset, "size": len(data), "sha256": digest(data)}
-                           for kind, offset, data in (("flash_table", 0, ftab),
-                               ("recovery_2", BOOT_OFFSET, recovery), ("application", APP_OFFSET, app))],
-        }
+    app_path = firmware_dir / f"OpenWalkieTalkie-{version}-{board}.bin"
+    recovery_path = firmware_dir / f"OpenWalkieTalkie-{version}-recovery-{board}.bin"
+    app, recovery = app_path.read_bytes(), recovery_path.read_bytes()
+    if (version + "-openwalkietalkie").encode() not in app:
+        raise ValueError(f"application does not contain firmware version {version}")
+    # Require the raw release image to agree with its checked ELF.
+    elf = app_path.with_suffix(".elf").read_bytes()
+    if release.image_from_elf(elf, board) != app:
+        raise ValueError(f"{board} application differs from its ELF")
+    merged = merge_image(ftab, recovery, app, board)
+    name = f"Rev-{board[-1].upper()}/OpenWalkieTalkie-{version}-factory-{board}.bin"
+    images[name] = merged
+    variants[board] = {
+        "file": name, "size": len(merged), "sha256": digest(merged),
+        "components": [{"kind": kind, "offset": offset, "size": len(data), "sha256": digest(data)}
+                       for kind, offset, data in (("flash_table", 0, ftab),
+                           ("recovery_2", BOOT_OFFSET, recovery), ("application", APP_OFFSET, app))],
+    }
     manifest = {
         "schema": 1, "product": "OpenWalkieTalkie", "firmware_version": version,
         "purpose": "factory_full_chip", "flash_size": FLASH_SIZE,
@@ -115,7 +118,10 @@ def package(firmware_dir, ftab_path, version, output):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    readme = (ROOT / "docs/factory-flashing-zh.md").read_text(encoding="utf-8").replace("@VERSION@", version)
+    readme = (ROOT / "docs/factory-flashing-zh.md").read_text(encoding="utf-8")
+    for placeholder, value in (("@VERSION@", version), ("@BOARD@", board),
+                               ("@REV@", board[-1].upper())):
+        readme = readme.replace(placeholder, value)
     (output / "README.md").write_text(readme, encoding="utf-8")
     shutil.copyfile(ROOT / "tools/verify-factory-package.py", output / "verify.py")
     files = sorted(p for p in output.rglob("*") if p.is_file())
@@ -133,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--firmware-dir", type=Path, required=True)
     parser.add_argument("--ftab", type=Path, required=True)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--board", choices=("hw-a", "hw-b"), required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    package(args.firmware_dir, args.ftab, args.version, args.output)
+    package(args.firmware_dir, args.ftab, args.version, args.output, args.board)

@@ -48,9 +48,9 @@ def image_from_elf(data, board, bootstrap=False):
             if paddr < BONDS_END and paddr + length > BONDS_START:
                 raise ValueError("segment overlaps protected Bluetooth storage")
             segments.append((paddr, data[offset:offset + length]))
-            # Current images execute in place; older releases copied code
-            # into PSRAM. Board identity, not that memory placement, selects
-            # the hardware. Keep supporting both for recovery/downgrades.
+            # Rev A copies into PSRAM; other boards execute in place.
+            # Board identity, not memory placement, selects the hardware.
+            # Accept both layouts for recovery/downgrades too.
             executable |= bool(flags & 1) and (
                 vaddr == paddr or 0x60000000 <= vaddr < 0x60800000
             )

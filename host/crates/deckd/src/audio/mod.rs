@@ -55,6 +55,8 @@ pub mod route;
 pub mod cloud;
 pub mod sidecar;
 #[cfg(any(target_os = "macos", test))]
+mod speaker_eq;
+#[cfg(any(target_os = "macos", test))]
 mod speech_level;
 #[cfg(target_os = "macos")]
 pub mod whisper;

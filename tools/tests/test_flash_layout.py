@@ -83,14 +83,18 @@ class FlashLayoutTests(unittest.TestCase):
             flash.validate_padding(b"\xff" * (flash.APP_END - flash.APP_BASE + 1))
 
     def test_elf_high_bank_is_loaded_but_bond_segment_is_rejected(self):
-        for address in (flash.BONDS_END, flash.BONDS_START, flash.APP_END):
+        for address, virtual in (
+            (address, virtual)
+            for address in (flash.BONDS_END, flash.BONDS_START, flash.APP_END)
+            for virtual in (address, 0x60150000)
+        ):
             low = image()
             data = bytearray(116) + low + b"asset"
             data[:7] = b"\x7fELF\x01\x01\x01"
             struct.pack_into("<I", data, 28, 52)
             struct.pack_into("<HH", data, 42, 32, 2)
             struct.pack_into("<8I", data, 52, 1, 116, flash.APP_BASE, flash.APP_BASE, len(low), len(low), 5, 4)
-            struct.pack_into("<8I", data, 84, 1, 116 + len(low), address, address, 5, 5, 4, 4)
+            struct.pack_into("<8I", data, 84, 1, 116 + len(low), virtual, address, 5, 5, 4, 4)
             if address == flash.BONDS_END:
                 expected = release.image_from_elf(data, "hw-a")
                 self.assertEqual(flash.image_from_elf(data), expected)

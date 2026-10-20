@@ -104,7 +104,7 @@ for board in lilygo hw-a hw-b; do
     [ "$board" != lilygo ] && features=(--features "$board")
     run_step "embassy release build [$board]" built \
         cargo build --release --locked --offline ${features[@]+"${features[@]}"}
-    run_step "XIP layout [$board]" verified \
+    run_step "execution layout [$board]" verified \
         python3 tools/check-xip-image.py target/thumbv8m.main-none-eabihf/release/openwalkietalkie-fw
 done
 

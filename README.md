@@ -574,19 +574,22 @@ flashing a good one — no JTAG rescue needed. `memory.x` records the partition
 map, read back off the board itself with
 `sftool read_flash ftab.bin@0x12000000:256`.
 
-**All boards execute directly from NOR flash.** The corrected clock
-configuration resolved the Rev A audio issue that had motivated copying
-code and constants into PSRAM. Builds now use cortex-m-rt's `link.x`:
-`.text`, `.rodata`, `.flash_assets` (including the Chinese fonts) and the
-vector table stay in application flash. `src/xip.rs` only sets the stack limit.
-Normal `.data` initialization still copies mutable data and the small
-flash-writing/shutdown routines into SRAM. PSRAM is available for runtime
-buffers; its final MiB is reserved for bench diagnostics.
+**Rev A executes from PSRAM to suppress flash-coupled speaker hiss.**
+`hw-a` without `hw-b` selects `link-psram.x`: Reset and the startup copy
+routine stay in NOR, while `.text`, `.rodata` and `.flash_assets` (including
+the Chinese fonts) run/read from PSRAM. `src/xip.rs` copies and verifies
+these regions and moves the interrupt vector table to SRAM. Three failed
+copies return to USB recovery. Rev B and LilyGo use cortex-m-rt's `link.x`
+and execute directly from NOR. On every board, normal `.data`
+initialization copies mutable data and the small flash-writing/shutdown
+routines into SRAM. PSRAM's final MiB is reserved for bench diagnostics;
+Rev A's copies and runtime buffers must fit in its first 7 MiB.
 
 The 16 MiB NOR now provides **15.75 MiB for application code and assets**.
 The lower bank (`0x12020000..0x126FFFFF`, 6.875 MiB) holds code, ordinary
 constants and SRAM initialization data. `flash-assets.x` places the Chinese
 atlas and metrics in the upper bank (`0x12720000..0x12FFFFFF`, 8.875 MiB).
+Rev A's `flash-assets-psram.x` keeps their load image at the same address.
 The two intervening 64 KiB Bluetooth stores retain their original addresses;
 the initial 128 KiB retains the flash table and bootloader. New large assets
 can use `.flash_assets.*` sections without taking space from the lower bank.

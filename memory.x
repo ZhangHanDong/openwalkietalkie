@@ -29,7 +29,8 @@ MEMORY
  * requires 8-byte alignment. Override cortex-m-rt's unaligned default. */
 _stext = ALIGN(ADDR(.vector_table) + SIZEOF(.vector_table), 8);
 
-/* Code and font atlases stay in FLASH. PSRAM is available for runtime buffers;
- * keep the last MiB free for audio-debug's destructive memory test. */
+/* Rev A's code, constants and font copies precede the PSRAM runtime buffers.
+ * Other boards use NOR directly. Keep the last MiB free on every board for
+ * audio-debug's destructive memory test. */
 __psram_scratch_start = ORIGIN(PSRAM) + 7M;
 __psram_scratch_end = ORIGIN(PSRAM) + LENGTH(PSRAM);

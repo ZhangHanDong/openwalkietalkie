@@ -222,9 +222,10 @@ fixed 300 kΩ feedback whatever the gain resistors are. Place R4/R5 at the
 amplifier's input pins, keep AMP_INP/AMP_INN short and away from the flash
 (MPI2) and panel QSPI lines with ground between, and never let them cross
 those lines on an adjacent layer. BodyV6.13 r6 routes AMP_INN across four
-flash lines. Earlier audio tests motivated a temporary PSRAM execution
-workaround; the subsequent clock-configuration correction resolved the issue,
-and current firmware executes directly from NOR (hardware/rev-a/README.md).
+flash lines. Rev A retains the PSRAM execution workaround: code, constants
+and fonts are copied to PSRAM, with interrupt vectors in SRAM. Removing it
+after the clock correction led to hiss recurring in the 2026-10-20 listening
+test (hardware/rev-a/README.md). Rev B and LilyGo execute directly from NOR.
 
 **HW-009:** The Alps EC05E1220401 is on a physically separate raised PCB;
 the main board retains A/B pull-ups, series resistors and filters connected

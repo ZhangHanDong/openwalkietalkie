@@ -71,6 +71,30 @@ terminal's Bluetooth grant, while the installed daemon needs its own grant.
 The complete transport contract and bench status are in
 [design §7.9](../docs/host-service.md#79-the-ble-transport-voice-transport--ble-the-default).
 
+### Speaker EQ
+
+`deckd` applies a fixed Rev A speaker preset to all mixed speech and chimes
+on the 16 kHz device output, over both USB and BLE. It runs after resampling
+and mono downmix, before PCM quantization and ADPCM encoding:
+
+| Filter | Frequency | Gain | Q |
+| --- | --- | --- | --- |
+| High-pass (12 dB/octave) | 250 Hz | — | 0.707 |
+| Bell | 1.1 kHz | −5 dB | 1.0 |
+| Bell | 6.3 kHz | −6 dB | 4.0 |
+
+The preset leaves 3 dB of headroom and clamps exceptional sample peaks at
+−1 dBFS. Filter state continues across audio blocks and silence and resets
+when the output reopens. It adds no buffering or dependencies.
+
+These are conservative estimates from the supplied speaker's 0.1 W / 0.1 m
+frequency-response plot, not a measured enclosure calibration. The bass
+roll-off and narrow nulls are not boosted; peaks above the 8 kHz Nyquist
+limit cannot be corrected on this transport. The legacy CoreAudio path and
+raw `deckd ble probe` measurement tones do not use this Rev A preset.
+Rebuild and restart `deckd` to apply it; listening and an in-enclosure
+measurement are still needed to refine the preset.
+
 ## Crates
 
 | Crate | Kind | What it holds |

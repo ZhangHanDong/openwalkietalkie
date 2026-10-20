@@ -46,6 +46,7 @@
 //! that own a thread each.
 use super::engine::OutputSink;
 use super::lanes::Mixer;
+use super::speaker_eq::SpeakerEq;
 use super::traits::{
     AudioError, CaptureOpen, CaptureOpened, CaptureSink, CaptureSource, DeviceSide, Fault,
     RouteEvent, StreamFaults,
@@ -997,18 +998,6 @@ impl Pacer {
     }
 }
 
-/// The mixer's interleaved stereo f32 as the codec's mono `i16`: the mean of
-/// the two channels, rounded and clamped.
-pub fn downmix(stereo: &[f32], mono: &mut [i16]) {
-    let (frames, _) = stereo.as_chunks::<2>();
-    for (out, [left, right]) in mono.iter_mut().zip(frames) {
-        let sample = (0.5 * (left + right) * 32768.0).round();
-        // `as` saturates and maps NaN to 0, so a glitching lane costs a
-        // sample, never a panic.
-        *out = sample.clamp(-32768.0, 32767.0) as i16;
-    }
-}
-
 /// `deckd-ble-out`: render, frame and pace until told to stop, then end an
 /// open spurt and give the mixer (and with it the lanes) back.
 fn speak(
@@ -1020,6 +1009,9 @@ fn speak(
 ) -> Spurts {
     let mut stereo = vec![0.0f32; 2 * BLOCK];
     let mut mono = vec![0i16; BLOCK];
+    // Both USB and BLE use this output. Filter the final mono signal before
+    // quantization, quiet detection, and ADPCM so speech and chimes match.
+    let mut eq = SpeakerEq::new();
     let mut pacer = Pacer::new(Instant::now());
     loop {
         if pacer.catch_up(Instant::now()) {
@@ -1027,7 +1019,7 @@ fn speak(
         }
         while pacer.next_due() <= Instant::now() {
             mixer.render(&mut stereo);
-            downmix(&stereo, &mut mono);
+            eq.render(&stereo, &mut mono);
             let dropped = spurts.stats().dropped;
             match spurts.block(&mono, ble) {
                 Step::Started => tracing::debug!(stream = ?spurts.live(), "speaker spurt started"),
@@ -2216,31 +2208,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn downmix_averages_rounds_and_clamps() {
-        let stereo = [
-            0.5,
-            0.5,
-            -1.0,
-            -1.0,
-            1.0,
-            1.0,
-            0.25,
-            -0.25,
-            f32::NAN,
-            0.0,
-            2.0,
-            2.0,
-            1.0 / 32768.0,
-            1.0 / 32768.0,
-            0.4 / 32768.0,
-            0.0,
-        ];
-        let mut mono = [99i16; 8];
-        downmix(&stereo, &mut mono);
-        assert_eq!(mono, [16_384, -32_768, 32_767, 0, 0, 32_767, 1, 0]);
-    }
-
     // -- the speaker --------------------------------------------------------
 
     /// Poll the fake deck until an END arrives (or 5 s pass).
@@ -2255,6 +2222,78 @@ mod tests {
             std::thread::sleep(ms(5));
         }
         frames
+    }
+
+    /// Measure what the device decodes against an uncorrected mixer at the
+    /// same rate. This catches a bypass or EQ applied after PCM encoding,
+    /// independently of the filter's own response tests.
+    #[test]
+    fn the_speaker_eq_reaches_the_encoded_device_stream() {
+        let tones = [100.0, 1100.0, 3000.0, 6300.0];
+        let fill = || {
+            let lanes = Lanes::new();
+            let mut producer = lanes.take_producer(Lane::Chime).unwrap();
+            for hz in tones {
+                for i in 0..LANE_RATE / 4 {
+                    let sample = (0.25
+                        * (std::f64::consts::TAU * hz * f64::from(i) / f64::from(LANE_RATE)).sin())
+                        as f32;
+                    producer.push(sample).unwrap();
+                    producer.push(sample).unwrap();
+                }
+            }
+            lanes
+        };
+        let reference = fill();
+        let mut raw = vec![0.0; RATE as usize * 2];
+        reference.take_mixer_at(RATE).unwrap().render(&mut raw);
+        let raw: Vec<i16> = raw
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|[l, r]| (0.5 * (l + r) * 32768.0).round() as i16)
+            .collect();
+
+        let lanes = fill();
+        let (ble, deck) = BleAudio::with_fake();
+        deck.attach(244, Some(INFO));
+        let mut out = BleOutput::new(ble);
+        out.open(
+            RATE,
+            lanes.take_mixer_at(RATE).unwrap(),
+            Arc::new(StreamFaults::new()),
+        )
+        .unwrap();
+        let frames = until_end(&deck);
+        out.close();
+        let decoded: Vec<i16> = decode(&frames)
+            .into_iter()
+            .filter_map(|e| match e {
+                MicEvent::Audio {
+                    samples,
+                    lost_frames,
+                    ..
+                } => {
+                    assert_eq!(lost_frames, 0);
+                    Some(samples)
+                }
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        assert!(decoded.len() >= RATE as usize);
+        for (i, (hz, expected)) in tones.into_iter().zip([-19.1, -8.0, -3.6, -9.0]).enumerate() {
+            // The middle 100 ms avoids the mixer fade and tone transitions.
+            let start = i * RATE as usize / 4 + RATE as usize / 10;
+            let end = start + RATE as usize / 10;
+            let correction = crate::ble::signal::tone_dbfs(&decoded[start..end], hz)
+                - crate::ble::signal::tone_dbfs(&raw[start..end], hz);
+            assert!(
+                (correction - expected).abs() < 1.0,
+                "{hz} Hz: decoded correction {correction} dB, expected {expected} dB"
+            );
+        }
+        assert_eq!(out.stats().dropped, 0);
     }
 
     /// The device end to end, on its own thread: a chime in the lanes comes

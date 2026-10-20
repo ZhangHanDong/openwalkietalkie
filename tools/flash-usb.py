@@ -62,8 +62,8 @@ def image_from_elf(data, xip=False):
     address inside the application window, gaps filled with 0xFF (what sftool
     does when it flashes an ELF).
 
-    Current images execute directly from NOR; older releases copy code into
-    PSRAM. Both are accepted, with board identity checked independently.
+    Rev A copies code/fonts into PSRAM; other boards execute from NOR.
+    Both layouts are accepted, with board identity checked independently.
     `xip` is retained for compatibility with old callers; it is no longer an
     override for an unidentified/dev-board image."""
     if len(data) < 52 or data[:7] != b"\x7fELF\x01\x01\x01":

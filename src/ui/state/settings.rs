@@ -244,7 +244,7 @@ pub(super) fn on_control(
             }
         }
         Control::Wheel(wheel) => {
-            if let Some((panel, row)) = neighbour(panel, row, wheel == Wheel::Cw) {
+            if let Some((panel, row)) = neighbour(panel, row, super::selection_step(wheel) > 0) {
                 ui.settings.panel = panel;
                 ui.settings.row = row;
                 out.dirty = true;

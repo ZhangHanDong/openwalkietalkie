@@ -1,5 +1,5 @@
 //! Device session controls. The host owns catalogs and confirms every change.
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::msg::{Event, HostMsg, SessionMenu, Template};
 use crate::deck::text::Text;
 use crate::display::Band;
@@ -219,15 +219,16 @@ pub fn control(ui: &mut UiState, control: Control, at: u32, out: &mut Update) ->
         Control::Button(Button::Left, Edge::Press) => move_page(ui, false, at, out),
         Control::Button(Button::Right, Edge::Press) => move_page(ui, true, at, out),
         Control::Wheel(wheel) => {
+            let forward = crate::ui::state::selection_step(wheel) > 0;
             let v = &mut ui.agents.settings;
             if !v.waiting && v.menu.status != 2 {
                 let count = if v.field == 0 { 2 } else { v.menu.count };
-                if wheel == Wheel::Cw && v.highlight + 1 < count {
+                if forward && v.highlight + 1 < count {
                     v.highlight += 1;
-                } else if wheel == Wheel::Ccw && v.highlight > 0 {
+                } else if !forward && v.highlight > 0 {
                     v.highlight -= 1;
                 } else {
-                    move_page(ui, wheel == Wheel::Cw, at, out);
+                    move_page(ui, forward, at, out);
                 }
                 out.dirty = true;
             }
@@ -494,6 +495,7 @@ pub fn signature(ui: &UiState, sig: &mut SigBuilder) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::control::Wheel;
     fn fixture() -> Box<UiState> {
         let mut ui = Box::new(UiState::new());
         ui.reset();
@@ -534,7 +536,7 @@ mod tests {
             })
         ));
         ready(&mut ui, 0, 1);
-        control(&mut ui, Control::Wheel(Wheel::Cw), 2, &mut Update::new());
+        control(&mut ui, Control::Wheel(Wheel::Ccw), 2, &mut Update::new());
         let mut out = Update::new();
         control(
             &mut ui,

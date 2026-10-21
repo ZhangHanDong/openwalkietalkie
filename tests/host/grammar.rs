@@ -381,7 +381,7 @@ fn a_session_from_hello_to_answer() {
     assert_eq!((ui.current_face().template, ui.agents.view, ui.agents.agent), (Template::Agents, AgentsView::Card, 5));
     assert_eq!(ui.agents.choice, Some(0));
     assert_eq!(press(&mut ui, Button::Enter, 7200).deck_events().count(), 0, "guarded");
-    apply(&mut ui, Control::Wheel(Wheel::Cw), 7700);
+    apply(&mut ui, Control::Wheel(Wheel::Ccw), 7700);
     let out = press(&mut ui, Button::Enter, 7800);
     assert_eq!(events(&out), [Event::Answer { agent: 5, card: 7, choice: 1 }]);
     assert_eq!(ui.agents.view, AgentsView::Channel);

@@ -1,10 +1,13 @@
+/// Consecutive counterclockwise detents needed to unlock a sleeping deck.
+pub const UNLOCK_TICKS: u8 = 4;
+
 /// One detent of the scroll wheel.
 #[cfg_attr(target_os = "none", derive(defmt::Format))]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Wheel {
-    /// Clockwise -- "forward" through a list.
+    /// Physical clockwise rotation.
     Cw,
-    /// Counter-clockwise -- "back" through a list.
+    /// Physical counterclockwise rotation.
     Ccw,
 }
 

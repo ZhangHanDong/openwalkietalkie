@@ -1,7 +1,8 @@
 //! Everything drawn over the strip, in precedence order: the notice indicator
 //! and toast, the drawer, the manager family, the factory-reset dialog, the
 //! global PTT overlay, and above everything the power-off hold dialog. The
-//! tutorial stands alone: nothing else is drawn while it is up (no toast,
+//! screen lock covers everything. Otherwise the tutorial stands alone:
+//! nothing else is drawn while it is up (no toast,
 //! no PTT session exists), only the power-off dialog over it.
 //!
 //!   pub fn draw(band: &mut Band, ui: &UiState)
@@ -19,6 +20,7 @@ pub mod notify;
 pub mod power;
 pub mod ptt;
 pub mod reset;
+pub mod screen_lock;
 pub mod tutorial;
 
 /// The LISTENING overlay is up: a PTT session exists.
@@ -27,13 +29,13 @@ pub fn ptt_visible(ui: &UiState) -> bool {
 }
 
 /// Nothing of the strip shows through: the drawer, the manager, the gallery,
-/// naming, the tutorial and the LISTENING overlay each START with
+/// naming, the tutorial, screen lock and LISTENING overlay each START with
 /// `band.fill(CANVAS)` and own every pixel, so `scene` neither draws nor
 /// signs the faces beneath them (a hidden face costs no render time and
 /// causes no damage). The two confirm dialogs and the toast/indicator are
 /// not opaque.
 pub fn opaque(ui: &UiState) -> bool {
-    ptt_visible(ui)
+    ui.screen_lock.is_some() || ptt_visible(ui)
         || matches!(
             ui.global.overlay,
             Overlay::Drawer
@@ -46,6 +48,10 @@ pub fn opaque(ui: &UiState) -> bool {
 }
 
 pub fn draw(band: &mut Band, ui: &UiState) {
+    if ui.screen_lock.is_some() {
+        screen_lock::draw(band, ui);
+        return;
+    }
     if ui.global.overlay == Overlay::Tutorial {
         tutorial::draw(band, ui);
         power::draw(band, ui);
@@ -68,6 +74,11 @@ pub fn draw(band: &mut Band, ui: &UiState) {
 }
 
 pub fn signature(ui: &UiState, sig: &mut SigBuilder) {
+    sig.mode(ui.screen_lock.is_some() as u32);
+    if ui.screen_lock.is_some() {
+        screen_lock::signature(ui, sig);
+        return;
+    }
     sig.mode(
         ui.global.overlay as u32
             | (ptt_visible(ui) as u32) << 8

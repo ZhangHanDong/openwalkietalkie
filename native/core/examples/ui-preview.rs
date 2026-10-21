@@ -31,7 +31,9 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 96] = [
+const DECK_SCENES: [&str; 98] = [
+    "screen-locked",
+    "screen-unlocking",
     "question-answer",
     "chinese-reply",
     "chinese-question",
@@ -159,6 +161,9 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
     ui.deck.host_present = true;
     ui.connected = true;
     match scene {
+        "screen-locked" | "screen-unlocking" => {
+            ui.set_screen_lock(Some(if scene == "screen-locked" { 0 } else { 2 }));
+        }
         "question-answer" => {
             let agent = &mut ui.deck.agents[0];
             agent.name.set("Project setup");

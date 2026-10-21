@@ -754,3 +754,31 @@ fn the_key_editor_and_the_grid_cursor_stay_inside_the_arcs_and_refresh_partially
     assert_eq!(lit_outside_safe_area(&frame), None);
     assert_hint_bar_fits(&frame, "cursor");
 }
+
+#[test]
+fn screen_lock_progress_and_unlock_match_full_redraw_and_fit_round_panel() {
+    let mut ui = hosted(Template::Omarchy);
+    let original = ui.clone();
+    let mut screens = Screens::new(&ui);
+    for progress in [Some(0), Some(1), Some(2), Some(0), Some(1), Some(2), Some(3), None] {
+        let before = ui.clone();
+        assert!(ui.set_screen_lock(progress));
+        update(&mut screens, &before, &ui);
+        assert_eq!(lit_outside_safe_area(&full(&ui)), None);
+    }
+    assert_frame(&full(&ui), &full(&original), "unlock restores the face without wheel navigation");
+    assert!(crate::ui::font::measure(crate::ui::font::Font::Body, "Turn wheel counterclockwise") <= 416);
+}
+
+#[test]
+fn screen_lock_hides_tutorial_ptt_and_dialogs() {
+    let mut ui = hosted(Template::Omarchy);
+    ui.set_screen_lock(Some(2));
+    let locked = full(&ui);
+    for overlay in [Overlay::Tutorial, Overlay::ConfirmReset, Overlay::Manager, Overlay::Drawer] {
+        ui.global.overlay = overlay;
+        ui.global.ptt = Some(crate::ui::state::PttSession::new(1, crate::deck::msg::PttCtx::Talk, 0, 0));
+        ui.invalidate();
+        assert_frame(&full(&ui), &locked, "lock owns the full display above other overlays");
+    }
+}

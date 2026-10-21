@@ -138,7 +138,7 @@ fn dma_buffers_are_distinct_and_input_changes_wait_for_the_next_snapshot() {
         let row = (*core::ptr::addr_of!(CORE)).ui.settings.row;
         (*core::ptr::addr_of_mut!(CORE))
             .ui
-            .apply(Control::Wheel(Wheel::Cw), 0, &mut Update::new());
+            .apply(Control::Wheel(Wheel::Ccw), 0, &mut Update::new());
         assert_ne!((*core::ptr::addr_of!(CORE)).ui.settings.row, row);
         assert_eq!((*core::ptr::addr_of!(FRAME)).settings.row, row);
         let mut slot = 0;
@@ -246,8 +246,8 @@ fn keypad_keys_reach_the_host_through_the_shared_keymap() {
         (33, std::vec![key_line("right", 1)], std::vec![key_line("right", 0)]),
         // SHIFT never acts alone.
         (43, std::vec![], std::vec![]),
-        (21, std::vec![key_line("cw", 2)], std::vec![]),
-        (41, std::vec![key_line("ccw", 2)], std::vec![]),
+        (21, std::vec![key_line("ccw", 2)], std::vec![]),
+        (41, std::vec![key_line("cw", 2)], std::vec![]),
         (
             44,
             std::vec![line(r#"{"m":"ptt","act":1,"agent":1,"ctx":"talk","p":1}"#)],
@@ -278,7 +278,7 @@ fn held_wheel_key_repeats_in_the_direction_of_its_first_detent() {
     let _guard = lock(&CORE_LOCK);
     let core = hosted(Template::Omarchy);
     core.devices = 2;
-    for (number, name) in [(21, "cw"), (41, "ccw")] {
+    for (number, name) in [(21, "ccw"), (41, "cw")] {
         let start = u32::MAX - 200; // Hold across the clock wrap.
         heartbeat(core, start);
         key(number, true, start);

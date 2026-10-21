@@ -45,12 +45,13 @@ pub const SETTLE_POLL_MS: u32 = 2;
 /// presses.
 pub const SETTLE_MS: u32 = 30;
 
-/// Which encoder phase leads for a clockwise detent. Clockwise is "forward"
-/// (down a list, right along the face strip). The sense depends on which
+/// Which encoder phase leads for a physical clockwise detent. The UI chooses
+/// how that rotation navigates or adjusts values. The sense depends on which
 /// way the wheel sits over the encoder, and the `encoder-wheel/` board swaps
-/// A/B in copper to keep it the same, so this is verified on the bench
-/// (bring-up guide, Stage 3), not derived.
-pub const A_LEADS_CLOCKWISE: bool = true;
+/// A/B in copper to keep it the same. Field testing the assembled Rev A deck
+/// confirmed B leads clockwise; assuming A leads made the CCW screen-lock
+/// gesture run clockwise. Rev B uses the same wheel and input wiring.
+pub const A_LEADS_CLOCKWISE: bool = false;
 
 /// SHIFT first: within one sample presses go out in this order and releases
 /// in the reverse, so a chord whose two edges settle together reaches the UI
@@ -388,10 +389,12 @@ mod tests {
         [IDLE & !ENC_B, IDLE & !ENC_A & !ENC_B, IDLE & !ENC_A, IDLE]
     }
     fn expected(a_leads: bool) -> Control {
-        Control::Wheel(if a_leads == A_LEADS_CLOCKWISE {
-            Wheel::Cw
-        } else {
+        // Fixed physical expectation, independent of the decoder setting:
+        // field testing the assembled wheel confirmed A-leading is CCW.
+        Control::Wheel(if a_leads {
             Wheel::Ccw
+        } else {
+            Wheel::Cw
         })
     }
 

@@ -81,8 +81,8 @@ fn deck_events_flow_after_hello_without_any_channel2_request() {
     let core = connected();
     // Demo: SHIFT+SCROLL slides but nothing reaches the wire.
     key(43, true, 200);
-    key(21, true, 210);
-    key(21, false, 220);
+    key(41, true, 210);
+    key(41, false, 220);
     key(43, false, 230);
     assert_eq!(core.ui.current_face().template, Template::Omarchy);
     assert_eq!(drained(), (Vec::new(), Vec::new()));
@@ -90,8 +90,8 @@ fn deck_events_flow_after_hello_without_any_channel2_request() {
     deck_lines();
     // Past the 150 ms detent limit of the first slide.
     key(43, true, 400);
-    key(21, true, 410);
-    key(21, false, 420);
+    key(41, true, 410);
+    key(41, false, 420);
     key(43, false, 430);
     assert_eq!(core.ui.current_face().template, Template::Macropad);
     assert_eq!(deck_lines(), [r#"{"m":"face","f":3}"#]);
@@ -257,8 +257,8 @@ fn nothing_is_transmitted_on_channel5_before_the_host_spoke_there() {
     assert!(!core.ui.deck.host_present && !core.deck_rx);
     unsafe { owt_core_hid_connected(true) };
     key(43, true, 200);
-    key(21, true, 210);
-    key(21, false, 220);
+    key(41, true, 210);
+    key(41, false, 220);
     key(43, false, 230);
     assert!(drained().1.is_empty());
 }
@@ -328,16 +328,15 @@ fn a_new_card_lights_the_dark_screen_but_host_chatter_does_not() {
     host_line(br#"{"m":"card","agent":1,"id":40,"type":"q","text":"Ship it?","choices":["Yes","No"]}"#);
     assert_eq!(core.power.screen(), power::Screen::Active);
     assert!(core.redraw);
-    let toast = core.ui.notify.toast.unwrap();
-    assert_eq!(toast.notice(), Some((1, 40)));
-    // The toast's time starts when the wake frame is on the glass.
+    // The lock is opaque: retain the notice in the drawer for after unlock.
+    assert!(core.ui.notify.toast.is_none());
+    assert!(core.ui.deck.notices.iter().any(|n| n.agent == 1 && n.card == 40 && n.in_drawer));
+    assert_eq!(core.ui.screen_lock, Some(0));
     unsafe {
         owt_core_poll(100 + power::OFF_AFTER_MS + 300);
         owt_core_frame_ready();
     }
-    let shown = core.ui.notify.toast.unwrap();
-    assert_eq!(shown.until_ms, 100 + power::OFF_AFTER_MS + 300 + ui::state::notify::TOAST_MS);
-    assert!(shown.until_ms > toast.until_ms);
+    assert_eq!(core.ui.screen_lock, Some(0));
     // Lit for the notice window, then dark again without input.
     unsafe {
         owt_core_poll(100 + power::OFF_AFTER_MS + power::NOTIFY_MS - 1);
@@ -359,7 +358,7 @@ fn a_new_card_lights_the_dark_screen_but_host_chatter_does_not() {
 }
 
 /// A card showing under a dark screen is not answered by the
-/// ENTER that wakes it; the same ENTER answers once the wake frame is shown.
+/// ENTER that wakes it; ENTER answers only after the wheel unlocks it.
 #[test]
 fn card_under_dark_screen_not_answered_by_wake_enter() {
     let _guard = lock(&CORE_LOCK);
@@ -390,11 +389,20 @@ fn card_under_dark_screen_not_answered_by_wake_enter() {
     assert_eq!(core.ui.agents.view, ui::state::AgentsView::Card, "still the card");
     assert!(deck_lines().is_empty(), "the wake ENTER answers nothing");
     assert_eq!(core.ui.deck.card(1).unwrap().pending_answer, None);
-    // The wake frame is on the glass and the guard has passed: ENTER answers.
+    // A visible wake frame alone does not unlock the card.
     unsafe {
         owt_core_poll(dark + 300);
         owt_core_frame_ready();
     }
+    key(31, true, dark + 350);
+    key(31, false, dark + 360);
+    assert!(deck_lines().is_empty());
+    for tick in 0..4 {
+        key(41, true, dark + 400 + tick * 20);
+        key(41, false, dark + 410 + tick * 20);
+        assert!(deck_lines().is_empty());
+    }
+    assert_eq!(core.ui.screen_lock, None);
     let at = dark + 300 + ui::state::global::GUARD_MS;
     key(31, true, at);
     key(31, false, at + 10);
@@ -505,7 +513,7 @@ fn a_session_from_boot_through_the_demo_to_a_real_host_and_its_loss() {
     // SHIFT+SCROLL to the far end of the strip and back, one face per detent.
     let faces = core.ui.global.strip_len as usize;
     key(43, true, now);
-    for (wheel, expect) in [(21, faces - 1), (41, 0)] {
+    for (wheel, expect) in [(41, faces - 1), (21, 0)] {
         for _ in 0..faces + 1 {
             now += 170;
             key(wheel, true, now);
@@ -612,9 +620,9 @@ fn heartbeat_loss_with_the_link_up_owes_a_held_host_key_an_up() {
 }
 
 /// main.c: the Off tick lands while a frame is in flight, so the panel never
-/// sleeps and no wake frame follows; only the waking detent is swallowed.
+/// sleeps and no wake frame follows; the lock still needs all four detents.
 #[test]
-fn an_off_tick_the_panel_never_slept_through_leaves_the_buttons_live() {
+fn an_off_tick_locks_even_when_the_panel_is_busy() {
     let _guard = lock(&CORE_LOCK);
     let core = connected();
     host_line(HELLO);
@@ -628,8 +636,16 @@ fn an_off_tick_the_panel_never_slept_through_leaves_the_buttons_live() {
     key(21, false, off + 10);
     assert_eq!(core.power.screen(), power::Screen::Active);
     assert_eq!(core.ui.agents.highlight, highlight, "the waking detent only wakes");
-    key(21, true, off + 10_000);
-    key(21, false, off + 10_030);
+    key(21, true, off + 100);
+    key(21, false, off + 110);
+    assert_eq!(core.ui.agents.highlight, highlight);
+    for tick in 0..4 {
+        key(41, true, off + 200 + tick * 20);
+        key(41, false, off + 210 + tick * 20);
+        assert_eq!(core.ui.agents.highlight, highlight);
+    }
+    key(41, true, off + 10_000);
+    key(41, false, off + 10_030);
     assert_ne!(core.ui.agents.highlight, highlight);
     // After a real sleep the wake frame gates input until it is shown.
     unsafe {
@@ -644,8 +660,13 @@ fn an_off_tick_the_panel_never_slept_through_leaves_the_buttons_live() {
     }
     assert_eq!(core.ui.agents.highlight, highlight);
     unsafe { owt_core_frame_ready() };
-    key(41, true, at + 300);
-    key(41, false, at + 310);
+    for step in 2..4 {
+        key(41, true, at + step * 100);
+        key(41, false, at + step * 100 + 10);
+        assert_eq!(core.ui.agents.highlight, highlight);
+    }
+    key(21, true, at + 400);
+    key(21, false, at + 410);
     assert_ne!(core.ui.agents.highlight, highlight);
 }
 

@@ -157,7 +157,7 @@ fn enter_held_in_omarchy_then_slide_emits_omarchy_release_and_swallows_physical_
     let mut ui = on(Template::Omarchy);
     press(&mut ui, Button::Enter, 10);
     press(&mut ui, Button::Shift, 20);
-    let out = wheel(&mut ui, Wheel::Cw, 30);
+    let out = wheel(&mut ui, Wheel::Ccw, 30);
     assert_eq!(events(&out), [key(KeyId::Enter, 0, false, 2), Event::Face { id: 3 }]);
     assert_eq!(ui.current_face().template, Template::Macropad);
     button(&mut ui, Button::Shift, RELEASE, 40);
@@ -168,14 +168,14 @@ fn enter_held_in_omarchy_then_slide_emits_omarchy_release_and_swallows_physical_
 fn omarchy_scroll_sends_act_2_and_moves_the_highlight_until_the_next_ws_push() {
     let mut ui = on(Template::Omarchy);
     assert_eq!(ui.omarchy.selected_window, 0);
-    let out = wheel(&mut ui, Wheel::Cw, 10);
+    let out = wheel(&mut ui, Wheel::Ccw, 10);
     assert_eq!(events(&out), [key(KeyId::Cw, 2, false, 2)]);
     assert!(out.dirty && ui.omarchy.selected_window == 1);
-    wheel(&mut ui, Wheel::Cw, 20);
-    let out = wheel(&mut ui, Wheel::Cw, 30);
+    wheel(&mut ui, Wheel::Ccw, 20);
+    let out = wheel(&mut ui, Wheel::Ccw, 30);
     assert_eq!(events(&out), [key(KeyId::Cw, 2, false, 2)]);
     assert!(!out.dirty && ui.omarchy.selected_window == 2, "hard end at the last window");
-    assert_eq!(events(&wheel(&mut ui, Wheel::Ccw, 40)), [key(KeyId::Ccw, 2, false, 2)]);
+    assert_eq!(events(&wheel(&mut ui, Wheel::Cw, 40)), [key(KeyId::Ccw, 2, false, 2)]);
     assert_eq!(ui.omarchy.selected_window, 1);
     assert_eq!(events(&button(&mut ui, Button::Enter, RELEASE, 45)), [], "a step holds nothing");
     let ws = HostMsg::Workspaces {
@@ -191,8 +191,8 @@ fn omarchy_scroll_sends_act_2_and_moves_the_highlight_until_the_next_ws_push() {
     // A push with fewer windows keeps the highlight in range (a `sel` past
     // the windows is rejected whole by the model, so the host's is in range).
     let mut ui = on(Template::Omarchy);
-    wheel(&mut ui, Wheel::Cw, 10);
-    wheel(&mut ui, Wheel::Cw, 20);
+    wheel(&mut ui, Wheel::Ccw, 10);
+    wheel(&mut ui, Wheel::Ccw, 20);
     let ws = HostMsg::Workspaces {
         active: 2,
         count: 4,
@@ -356,7 +356,7 @@ fn touch_down_on_macro_then_jump_does_not_confirm_anything_on_up() {
     // Something jumps the strip while the finger is down: the key is released
     // now and the Up lands nowhere.
     press(&mut ui, Button::Shift, 20);
-    let out = wheel(&mut ui, Wheel::Ccw, 30);
+    let out = wheel(&mut ui, Wheel::Cw, 30);
     assert_eq!(events(&out), [mac(0, 0), Event::Face { id: 2 }]);
     button(&mut ui, Button::Shift, RELEASE, 40);
     assert_eq!(events(&touch(&mut ui, TouchPhase::Up, at, 50)), []);
@@ -396,20 +396,20 @@ fn usage_msg(count: u8) -> HostMsg {
 #[test]
 fn usage_scroll_moves_the_viewport_within_the_list() {
     let mut ui = on(Template::Usage);
-    let out = wheel(&mut ui, Wheel::Cw, 10);
+    let out = wheel(&mut ui, Wheel::Ccw, 10);
     assert!(!out.dirty && ui.usage.top_row == 0, "three items fit: nothing to scroll");
     host(&mut ui, &usage_msg(6), 20);
-    let out = wheel(&mut ui, Wheel::Cw, 30);
+    let out = wheel(&mut ui, Wheel::Ccw, 30);
     assert!(out.dirty && ui.usage.top_row == 1);
-    wheel(&mut ui, Wheel::Cw, 40);
-    let out = wheel(&mut ui, Wheel::Cw, 50);
+    wheel(&mut ui, Wheel::Ccw, 40);
+    let out = wheel(&mut ui, Wheel::Ccw, 50);
     assert!(!out.dirty && ui.usage.top_row == 2, "hard end");
-    wheel(&mut ui, Wheel::Ccw, 60);
+    wheel(&mut ui, Wheel::Cw, 60);
     assert_eq!(ui.usage.top_row, 1);
-    assert_eq!(events(&wheel(&mut ui, Wheel::Ccw, 70)), []);
+    assert_eq!(events(&wheel(&mut ui, Wheel::Cw, 70)), []);
     // A shorter list pulls the viewport back.
-    wheel(&mut ui, Wheel::Cw, 80);
-    wheel(&mut ui, Wheel::Cw, 90);
+    wheel(&mut ui, Wheel::Ccw, 80);
+    wheel(&mut ui, Wheel::Ccw, 90);
     host(&mut ui, &usage_msg(5), 100);
     assert_eq!(ui.usage.top_row, 1);
     host(&mut ui, &usage_msg(2), 110);
@@ -448,14 +448,14 @@ fn usage_rows_are_scroll_targets_only() {
 fn settings_scroll_selects_across_panels_and_left_right_jump_panels() {
     let mut ui = on(Template::Settings);
     assert_eq!((ui.settings.panel, ui.settings.row), (0, 0));
-    // CCW at the first row is the hard end.
-    let out = wheel(&mut ui, Wheel::Ccw, 10);
+    // CW at the first row is the hard end.
+    let out = wheel(&mut ui, Wheel::Cw, 10);
     assert!(!out.dirty && events(&out).is_empty());
-    // CW walks every row of every panel in order, the tab following.
+    // CCW walks every row of every panel in order, the tab following.
     let before = ui.deck.settings;
     let mut walk = vec![(0, 0)];
     for at in 0..20 {
-        let out = wheel(&mut ui, Wheel::Cw, 20 + at);
+        let out = wheel(&mut ui, Wheel::Ccw, 20 + at);
         assert!(events(&out).is_empty(), "selecting never sets anything");
         walk.push((ui.settings.panel, ui.settings.row));
     }
@@ -465,10 +465,10 @@ fn settings_scroll_selects_across_panels_and_left_right_jump_panels() {
         .collect();
     assert_eq!(walk, expected, "hard end at the last row of About");
     assert_eq!(ui.deck.settings, before, "no value moved");
-    // CCW from a panel's first row lands on the previous panel's last row.
+    // CW from a panel's first row lands on the previous panel's last row.
     ui.settings.panel = 3;
     ui.settings.row = 0;
-    wheel(&mut ui, Wheel::Ccw, 50);
+    wheel(&mut ui, Wheel::Cw, 50);
     assert_eq!((ui.settings.panel, ui.settings.row), (2, 1));
     // LEFT/RIGHT jump to a panel's first row; the ends are hard.
     let out = press(&mut ui, Button::Right, 60);
@@ -505,7 +505,7 @@ fn settings_enter_adjusts_a_value_with_hard_ends_and_emits_set_once() {
     // ENTER ends adjusting; SCROLL selects again.
     let out = press(&mut ui, Button::Enter, 60);
     assert!(out.dirty && !ui.settings.adjusting && events(&out).is_empty());
-    wheel(&mut ui, Wheel::Cw, 70);
+    wheel(&mut ui, Wheel::Ccw, 70);
     assert_eq!((ui.settings.row, ui.deck.settings.speaker), (1, 9));
     // CANCEL ends adjusting too, without going home.
     press(&mut ui, Button::Enter, 80);
@@ -536,7 +536,7 @@ fn settings_brightness_and_idle_home_step_through_their_values() {
     }
     assert_eq!(ui.user_brightness(), 1);
     press(&mut ui, Button::Enter, 40);
-    wheel(&mut ui, Wheel::Cw, 41);
+    wheel(&mut ui, Wheel::Ccw, 41);
     press(&mut ui, Button::Enter, 42);
     assert_eq!(ui.deck.settings.idle_home_s, 120);
     let mut seen = Vec::new();
@@ -560,7 +560,7 @@ fn settings_enter_flips_a_toggle_and_read_only_rows_ignore_it() {
     assert_eq!(events(&out), [Event::Set { key: SettingKey::Chime, value: 0 }]);
     assert!(!ui.deck.settings.chime && !ui.settings.adjusting, "a toggle flips, it is not adjusted");
     assert_eq!(events(&press(&mut ui, Button::Enter, 20)), [Event::Set { key: SettingKey::Chime, value: 1 }]);
-    wheel(&mut ui, Wheel::Cw, 30);
+    wheel(&mut ui, Wheel::Ccw, 30);
     assert_eq!(events(&press(&mut ui, Button::Enter, 40)), [Event::Set { key: SettingKey::AutoJump, value: 1 }]);
     assert!(ui.deck.settings.auto_jump);
     // A read-only row (About → Firmware) neither flips nor adjusts.
@@ -590,7 +590,7 @@ fn settings_adjusting_ends_when_the_face_is_left_or_a_panel_or_row_is_picked() {
     assert!(ui.settings.adjusting);
     // Sliding away ends it: coming back, SCROLL selects.
     press(&mut ui, Button::Shift, 50);
-    wheel(&mut ui, Wheel::Ccw, 60);
+    wheel(&mut ui, Wheel::Cw, 60);
     button(&mut ui, Button::Shift, RELEASE, 70);
     tick(&mut ui, 400);
     assert!(!ui.settings.adjusting);
@@ -672,19 +672,19 @@ fn manager_scroll_selects_with_the_viewport_following_and_plus_last() {
     let mut ui = fresh();
     manager(&mut ui);
     for expected in 1..=5 {
-        let out = wheel(&mut ui, Wheel::Cw, 10);
+        let out = wheel(&mut ui, Wheel::Ccw, 10);
         assert!(out.dirty && ui.manager.selected == expected);
         assert!(ui.manager.first_visible <= expected);
         assert!(expected < ui.manager.first_visible + layout::MANAGER_VISIBLE);
     }
     assert_eq!(ui.manager.first_visible, 2);
-    let out = wheel(&mut ui, Wheel::Cw, 20);
+    let out = wheel(&mut ui, Wheel::Ccw, 20);
     assert!(!out.dirty && ui.manager.selected == 5, "the '+' card is the last one");
     for _ in 0..8 {
-        wheel(&mut ui, Wheel::Ccw, 30);
+        wheel(&mut ui, Wheel::Cw, 30);
     }
     assert_eq!((ui.manager.selected, ui.manager.first_visible), (0, 0));
-    assert_eq!(events(&wheel(&mut ui, Wheel::Ccw, 40)), [], "nothing reaches the host");
+    assert_eq!(events(&wheel(&mut ui, Wheel::Cw, 40)), [], "nothing reaches the host");
     assert_eq!(ui.global.overlay, Overlay::Manager);
 }
 
@@ -692,17 +692,17 @@ fn manager_scroll_selects_with_the_viewport_following_and_plus_last() {
 fn manager_enter_grabs_moves_and_drops_with_one_faces_event() {
     let mut ui = fresh();
     manager(&mut ui);
-    wheel(&mut ui, Wheel::Cw, 10);
+    wheel(&mut ui, Wheel::Ccw, 10);
     let out = press(&mut ui, Button::Enter, 20);
     assert!(out.dirty && ui.manager.grabbed && events(&out).is_empty());
-    wheel(&mut ui, Wheel::Cw, 30);
+    wheel(&mut ui, Wheel::Ccw, 30);
     assert_eq!(ids(&ui), [1, 3, 2, 4, 5]);
-    let out = wheel(&mut ui, Wheel::Cw, 40);
+    let out = wheel(&mut ui, Wheel::Ccw, 40);
     assert_eq!(ids(&ui), [1, 3, 4, 2, 5]);
     assert!(out.dirty && events(&out).is_empty(), "a move is not a completed change");
     assert_eq!(ui.manager.selected, 3);
     for _ in 0..3 {
-        wheel(&mut ui, Wheel::Cw, 50);
+        wheel(&mut ui, Wheel::Ccw, 50);
     }
     assert_eq!(ids(&ui), [1, 3, 4, 2, 5], "Settings is never displaced");
     assert_eq!(ui.manager.selected, 3);
@@ -721,8 +721,8 @@ fn cancel_while_grabbed_reverts_order() {
     let mut ui = on(Template::Usage);
     manager(&mut ui);
     press(&mut ui, Button::Enter, 10);
-    wheel(&mut ui, Wheel::Ccw, 20);
-    wheel(&mut ui, Wheel::Ccw, 30);
+    wheel(&mut ui, Wheel::Cw, 20);
+    wheel(&mut ui, Wheel::Cw, 30);
     assert_eq!(ids(&ui), [1, 4, 2, 3, 5]);
     assert_eq!(ui.global.current, 1, "the current face follows its card");
     let out = press(&mut ui, Button::Cancel, 40);
@@ -736,7 +736,7 @@ fn cancel_while_grabbed_reverts_order() {
 fn manager_cancel_on_a_removable_card_asks_and_enter_removes() {
     let mut ui = on(Template::Usage);
     manager(&mut ui);
-    wheel(&mut ui, Wheel::Ccw, 10);
+    wheel(&mut ui, Wheel::Cw, 10);
     let out = press(&mut ui, Button::Cancel, 20);
     assert!(out.dirty && events(&out).is_empty());
     assert_eq!((ui.global.overlay, ui.manager.confirm_face), (Overlay::ConfirmRemove, 3));
@@ -755,16 +755,16 @@ fn manager_cancel_on_pinned_does_nothing_and_confirm_cancel_keeps() {
     let out = press(&mut ui, Button::Cancel, 10);
     assert!(!out.dirty && ui.global.overlay == Overlay::Manager);
     for _ in 0..4 {
-        wheel(&mut ui, Wheel::Cw, 20);
+        wheel(&mut ui, Wheel::Ccw, 20);
     }
     assert_eq!(ui.face_at(ui.manager.selected).unwrap().template, Template::Settings);
     press(&mut ui, Button::Cancel, 30);
     assert_eq!(ui.global.overlay, Overlay::Manager);
-    wheel(&mut ui, Wheel::Cw, 40);
+    wheel(&mut ui, Wheel::Ccw, 40);
     press(&mut ui, Button::Cancel, 50);
     assert_eq!(ui.global.overlay, Overlay::Manager, "'+' is not removable");
-    wheel(&mut ui, Wheel::Ccw, 60);
-    wheel(&mut ui, Wheel::Ccw, 70);
+    wheel(&mut ui, Wheel::Cw, 60);
+    wheel(&mut ui, Wheel::Cw, 70);
     press(&mut ui, Button::Cancel, 80);
     assert_eq!(ui.global.overlay, Overlay::ConfirmRemove);
     let out = press(&mut ui, Button::Cancel, 90);
@@ -772,7 +772,7 @@ fn manager_cancel_on_pinned_does_nothing_and_confirm_cancel_keeps() {
     assert!(events(&out).is_empty() && ids(&ui) == [1, 2, 3, 4, 5]);
     // The pinned ends cannot be grabbed either.
     for _ in 0..5 {
-        wheel(&mut ui, Wheel::Ccw, 100);
+        wheel(&mut ui, Wheel::Cw, 100);
     }
     let out = press(&mut ui, Button::Enter, 110);
     assert_eq!(ui.global.overlay, Overlay::None, "ENTER on a pinned card goes there");
@@ -784,8 +784,8 @@ fn manager_cancel_on_pinned_does_nothing_and_confirm_cancel_keeps() {
 fn removing_face_left_of_current_keeps_current_face() {
     let mut ui = on(Template::Usage);
     manager(&mut ui);
-    wheel(&mut ui, Wheel::Ccw, 10);
-    wheel(&mut ui, Wheel::Ccw, 20);
+    wheel(&mut ui, Wheel::Cw, 10);
+    wheel(&mut ui, Wheel::Cw, 20);
     press(&mut ui, Button::Cancel, 30);
     press(&mut ui, Button::Enter, 40);
     assert_eq!(ids(&ui), [1, 3, 4, 5]);
@@ -793,8 +793,8 @@ fn removing_face_left_of_current_keeps_current_face() {
     assert!(ui.strip_at_rest());
     // Removing the current face itself falls back to its left neighbour.
     assert_eq!(ui.manager.selected, 0, "the removed card's left neighbour");
-    wheel(&mut ui, Wheel::Cw, 50);
-    wheel(&mut ui, Wheel::Cw, 55);
+    wheel(&mut ui, Wheel::Ccw, 50);
+    wheel(&mut ui, Wheel::Ccw, 55);
     assert_eq!(ui.manager.selected, 2);
     press(&mut ui, Button::Cancel, 60);
     press(&mut ui, Button::Enter, 70);
@@ -807,7 +807,7 @@ fn manager_exit_lands_on_selected_face() {
     let mut ui = on(Template::Macropad);
     manager(&mut ui);
     for _ in 0..2 {
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
     }
     let out = press(&mut ui, Button::Enter, 20);
     assert_eq!(ui.global.overlay, Overlay::None);
@@ -821,18 +821,18 @@ fn plus_opens_the_gallery_which_leads_to_naming_and_enter_accepts_the_default_na
     let mut ui = fresh();
     manager(&mut ui);
     for _ in 0..5 {
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
     }
     let out = press(&mut ui, Button::Enter, 20);
     assert!(out.dirty && ui.global.overlay == Overlay::Gallery && ui.manager.gallery_sel == 0);
-    wheel(&mut ui, Wheel::Cw, 30);
-    wheel(&mut ui, Wheel::Cw, 40);
-    let out = wheel(&mut ui, Wheel::Cw, 60);
+    wheel(&mut ui, Wheel::Ccw, 30);
+    wheel(&mut ui, Wheel::Ccw, 40);
+    let out = wheel(&mut ui, Wheel::Ccw, 60);
     assert!(out.dirty && ui.manager.gallery_sel == 3);
-    let out = wheel(&mut ui, Wheel::Cw, 65);
+    let out = wheel(&mut ui, Wheel::Ccw, 65);
     assert!(!out.dirty && ui.manager.gallery_sel == 3);
-    wheel(&mut ui, Wheel::Ccw, 68);
-    wheel(&mut ui, Wheel::Ccw, 70);
+    wheel(&mut ui, Wheel::Cw, 68);
+    wheel(&mut ui, Wheel::Cw, 70);
     assert_eq!(GALLERY[ui.manager.gallery_sel as usize], Template::Macropad);
     press(&mut ui, Button::Enter, 80);
     assert_eq!(ui.global.overlay, Overlay::Naming);
@@ -869,7 +869,7 @@ fn late_name_message_ignored() {
     assert_eq!(ids(&ui), [1, 2, 3, 4, 5]);
     // Picking again starts with an empty name; the host's name is accepted.
     press(&mut ui, Button::Enter, 80);
-    wheel(&mut ui, Wheel::Cw, 85);
+    wheel(&mut ui, Wheel::Ccw, 85);
     press(&mut ui, Button::Enter, 90);
     assert!(ui.manager.naming_text.is_empty());
     host(&mut ui, &HostMsg::Name { text: Text::from_str("Ops") }, 100);
@@ -914,7 +914,7 @@ fn gallery_refuses_a_fourth_macropad_and_plus_hides_at_eight_faces() {
     assert_eq!(ui.global.strip_len, 8);
     // Eight faces: no "+" card, SCROLL stops on Settings.
     for _ in 0..4 {
-        wheel(&mut ui, Wheel::Cw, 100);
+        wheel(&mut ui, Wheel::Ccw, 100);
     }
     assert_eq!(ui.manager.selected, 7);
     assert_eq!(ui.face_at(7).unwrap().template, Template::Settings);
@@ -925,7 +925,7 @@ fn gallery_refuses_a_fourth_macropad_and_plus_hides_at_eight_faces() {
 fn ids_are_allocated_lowest_free() {
     let mut ui = fresh();
     manager(&mut ui);
-    wheel(&mut ui, Wheel::Cw, 10);
+    wheel(&mut ui, Wheel::Ccw, 10);
     press(&mut ui, Button::Cancel, 20);
     press(&mut ui, Button::Enter, 30);
     assert_eq!(ids(&ui), [1, 3, 4, 5]);
@@ -999,9 +999,9 @@ fn host_faces_restore_tears_down_a_held_key_and_frees_stale_macro_sets() {
 fn faces_push_during_grab_is_deferred() {
     let mut ui = fresh();
     manager(&mut ui);
-    wheel(&mut ui, Wheel::Cw, 10);
+    wheel(&mut ui, Wheel::Ccw, 10);
     press(&mut ui, Button::Enter, 20);
-    wheel(&mut ui, Wheel::Cw, 30);
+    wheel(&mut ui, Wheel::Ccw, 30);
     let restore = faces_msg(&[(1, Template::Agents), (5, Template::Usage), (6, Template::Settings)]);
     let out = host(&mut ui, &restore, 40);
     assert_eq!(ids(&ui), [1, 3, 2, 4, 5]);
@@ -1096,7 +1096,7 @@ fn overlays_capture_everything_and_forward_nothing() {
         all.extend(events(&button(&mut ui, Button::Left, RELEASE, 20)));
         all.extend(events(&press(&mut ui, Button::Right, 30)));
         all.extend(events(&button(&mut ui, Button::Right, RELEASE, 40)));
-        all.extend(events(&wheel(&mut ui, Wheel::Cw, 50)));
+        all.extend(events(&wheel(&mut ui, Wheel::Ccw, 50)));
         assert_eq!(all, [], "{overlay:?}");
         assert_eq!(ui.global.overlay, overlay);
         assert_eq!(ui.current_face().template, Template::Omarchy);

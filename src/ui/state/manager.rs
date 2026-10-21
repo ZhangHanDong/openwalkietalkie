@@ -27,7 +27,7 @@ use super::{
     global, global::Overlay, Target, TargetKind, TouchAct, UiState, Update, FACE_W, MAX_FACES,
     STRIP_ONE,
 };
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::model::{Effects, MAX_MACRO_SETS};
 use crate::deck::msg::{ErrWhy, Event, FaceEntry, HostMsg, Template};
 use crate::deck::text::Text;
@@ -331,8 +331,9 @@ pub(super) fn on_control(ui: &mut UiState, control: Control, at_ms: u32, out: &m
     }
     // Sideways steps are the wheel's; anything else is a press or nothing.
     let step = match control {
-        Control::Wheel(Wheel::Cw) | Control::Button(Button::Right, Edge::Press) => 1,
-        Control::Wheel(Wheel::Ccw) | Control::Button(Button::Left, Edge::Press) => -1,
+        Control::Wheel(wheel) => super::selection_step(wheel),
+        Control::Button(Button::Right, Edge::Press) => 1,
+        Control::Button(Button::Left, Edge::Press) => -1,
         _ => 0,
     };
     let enter = control == Control::Button(Button::Enter, Edge::Press);
@@ -670,6 +671,7 @@ pub(super) fn cancel_all(ui: &mut UiState) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::control::Wheel;
 
     fn fresh() -> std::boxed::Box<UiState> {
         let mut ui = std::boxed::Box::new(UiState::new());
@@ -699,7 +701,7 @@ mod tests {
         open(&mut ui, 0, &mut out);
         assert_eq!(ui.global.overlay, Overlay::Manager);
         assert_eq!((ui.manager.selected, ui.manager.origin, ui.manager.first_visible), (3, 3, 0));
-        on_control(&mut ui, Control::Wheel(Wheel::Cw), 10, &mut out);
+        on_control(&mut ui, Control::Wheel(Wheel::Ccw), 10, &mut out);
         assert_eq!((ui.manager.selected, ui.manager.first_visible), (4, 1));
         let mut out = Update::new();
         close(&mut ui, 30, &mut out);
@@ -814,7 +816,7 @@ mod tests {
         let mut out = Update::new();
         open(&mut ui, 0, &mut out);
         ui.manager.grabbed = true;
-        for (selected, step) in [(0, Wheel::Cw), (5, Wheel::Ccw), (6, Wheel::Ccw)] {
+        for (selected, step) in [(0, Wheel::Ccw), (5, Wheel::Cw), (6, Wheel::Cw)] {
             ui.manager.selected = selected;
             ui.manager.grabbed = true;
             on_control(&mut ui, Control::Wheel(step), 10, &mut out);

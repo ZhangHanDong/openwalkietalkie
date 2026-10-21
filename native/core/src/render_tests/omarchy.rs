@@ -248,7 +248,7 @@ fn partial_refresh_matches_full_through_a_scripted_session() {
     assert!(moved <= 2 * 416 * 48 + 2 * 480, "{moved} px for a highlight move");
     session.step(|ui| {
         let mut out = Update::new();
-        ui.apply(Control::Wheel(Wheel::Cw), 100, &mut out);
+        ui.apply(Control::Wheel(Wheel::Ccw), 100, &mut out);
     });
     session.host(windows(6, 3, 4));
     session.step(|ui| {

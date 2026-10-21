@@ -264,7 +264,7 @@ pub(super) fn on_control(ui: &mut UiState, control: Control, at_ms: u32, out: &m
             }
             Step::Panels if ui.global.shift => {
                 let last = ui.global.strip_len.saturating_sub(1);
-                let next = ui.tutorial.panel as i32 + if wheel == crate::control::Wheel::Cw { 1 } else { -1 };
+                let next = ui.tutorial.panel as i32 + super::selection_step(wheel);
                 ui.tutorial.panel = next.clamp(0, last as i32) as u8;
                 ui.tutorial.needs_shift = false;
                 ui.tutorial.switches += 1;
@@ -382,10 +382,11 @@ mod tests {
         control(&mut ui, Control::Wheel(Wheel::Cw), 500);
         assert_eq!((ui.tutorial.switches, caption_of(&ui).as_str()), (0, "Hold SHIFT while you turn"));
         press(&mut ui, Button::Shift, 510);
-        control(&mut ui, Control::Wheel(Wheel::Cw), 520);
+        control(&mut ui, Control::Wheel(Wheel::Ccw), 520);
         assert_eq!((ui.tutorial.panel, ui.tutorial.switches), (1, 1));
         assert_eq!(ui.global.current, 0, "the real strip never slides");
         control(&mut ui, Control::Wheel(Wheel::Cw), 540);
+        assert_eq!(ui.tutorial.panel, 0, "SHIFT+CW selects the previous panel");
         release(&mut ui, Button::Shift, 560);
         assert_eq!(ui.tutorial.step, Step::Latest);
         tap(&mut ui, Button::Enter, 570);

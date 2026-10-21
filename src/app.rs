@@ -126,6 +126,7 @@ pub async fn run(mut display: Option<Co5300>, band: &'static mut Band) -> ! {
         }
         let now = now_ms();
         let desired = power.tick(now);
+        dirty |= state.set_screen_lock(power.lock_progress());
         if POWER_OFF.swap(false, Ordering::AcqRel) {
             #[cfg(feature = "hw-a")]
             power_off(display.take(), state, &mut power, scratch).await;
@@ -422,7 +423,8 @@ fn apply(
 ) -> bool {
     let before = power.screen();
     let deliver = power.input(control, at_ms);
-    let dirty = tick(state, power, scratch) | (before != power.screen());
+    let lock_dirty = state.set_screen_lock(power.lock_progress());
+    let dirty = tick(state, power, scratch) | (before != power.screen()) | lock_dirty;
     if !deliver {
         return dirty;
     }

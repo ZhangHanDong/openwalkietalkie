@@ -58,7 +58,7 @@
 //! same layer whatever is on screen by then. Every latched touch ends with
 //! exactly one of `Activate`, `Swipe` or `Cancel`.
 use crate::battery::BatteryState;
-use crate::control::Control;
+use crate::control::{Control, Wheel};
 use crate::deck::demo;
 use crate::deck::model::{Deck, Effects};
 use crate::deck::msg::{ErrWhy, Event, FaceEntry, HostMsg, KeyId, Template};
@@ -88,6 +88,12 @@ pub use notify::{Toast, ToastKind};
 /// Width of one face on the strip, and the fixed-point scale of `strip_x`.
 pub const FACE_W: i32 = 480;
 pub const STRIP_ONE: i32 = 256;
+
+/// Wheel navigation through pages, menu items and list content.
+/// Keep physical rotation separate from value adjustment and game controls.
+pub(super) fn selection_step(wheel: Wheel) -> i32 {
+    if wheel == Wheel::Ccw { 1 } else { -1 }
+}
 pub const MAX_FACES: usize = 8;
 
 /// Who a held press belongs to; the latched identity its release must repeat.
@@ -265,6 +271,8 @@ pub struct UiState {
     pub now_ms: u32,
     /// Bumped by every dirty update; the fallback signature hash.
     pub revision: u32,
+    /// Read-only mirror of the power policy: completed unlock wheel ticks.
+    pub screen_lock: Option<u8>,
     pub deck: Deck,
     pub global: global::Global,
     pub touch: touch::Recognizer,
@@ -290,6 +298,7 @@ impl UiState {
             bluetooth: super::bluetooth::Status::Disconnected,
             now_ms: 0,
             revision: 0,
+            screen_lock: None,
             deck: Deck::new(),
             global: global::Global::new(),
             touch: touch::Recognizer::new(),
@@ -315,6 +324,7 @@ impl UiState {
         self.bluetooth = super::bluetooth::Status::Disconnected;
         self.now_ms = 0;
         self.revision = self.revision.wrapping_add(1);
+        self.screen_lock = None;
         self.deck.reset();
         self.global = global::Global::new();
         self.touch = touch::Recognizer::new();
@@ -362,6 +372,16 @@ impl UiState {
     pub fn copy_into(&self, dst: &mut UiState) {
         // SAFETY: both are valid, distinct (`&` vs `&mut`) and `Copy`.
         unsafe { core::ptr::copy_nonoverlapping(self, dst, 1) };
+    }
+
+    /// Synchronize the lock overlay even when its input was not dispatched.
+    pub fn set_screen_lock(&mut self, progress: Option<u8>) -> bool {
+        if self.screen_lock == progress {
+            return false;
+        }
+        self.screen_lock = progress;
+        self.invalidate();
+        true
     }
 
     pub fn apply(&mut self, control: Control, at_ms: u32, out: &mut Update) {
@@ -417,7 +437,7 @@ impl UiState {
     }
 
     /// Timers, animation, demo script, idle-home. `idle_ms` is the power
-    /// policy's single idle clock (0 while anything is held).
+    /// policy's single idle clock (0 while an unlocked control is held).
     pub fn tick(&mut self, now_ms: u32, idle_ms: u32, screen_on: bool, out: &mut Update) {
         self.advance(now_ms);
         out.dirty |= self.deck.tick(now_ms);

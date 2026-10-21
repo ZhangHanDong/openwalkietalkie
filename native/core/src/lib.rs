@@ -278,6 +278,7 @@ fn send_deck(event: Event, ui: &UiState) {
 fn apply(core: &mut Core, input: Control) {
     let before = core.power.screen();
     let deliver = core.power.input(input, core.now);
+    core.redraw |= core.ui.set_screen_lock(core.power.lock_progress());
     core.redraw |= before != core.power.screen();
     if before == power::Screen::Off && core.power.screen() != before {
         unsafe {
@@ -503,6 +504,7 @@ pub unsafe extern "C" fn owt_core_poll(now: u32) -> bool {
     let before = core.power.screen();
     if ui::state::arcade::playing(&core.ui) && core.power.screen() != power::Screen::Off { core.power.notify(now); }
     let screen = core.power.tick(now);
+    core.redraw |= core.ui.set_screen_lock(core.power.lock_progress());
     core.redraw |= before != screen;
     let battery_due =
         !core.battery_sampled || now.wrapping_sub(core.battery_at) >= power::BATTERY_INTERVAL_MS;
@@ -585,8 +587,8 @@ pub unsafe extern "C" fn owt_core_brightness() -> u8 {
     power::brightness(core.power.screen(), core.ui.user_brightness())
 }
 
-/// The wake frame is on the glass: controls act again and the toast's time
-/// starts now.
+/// The wake frame is on the glass: end the hidden-frame gate. The screen
+/// lock remains until four counterclockwise detents; toast time starts now.
 #[no_mangle]
 pub unsafe extern "C" fn owt_core_frame_ready() {
     let core = &mut *core::ptr::addr_of_mut!(CORE);
@@ -595,11 +597,12 @@ pub unsafe extern "C" fn owt_core_frame_ready() {
 }
 
 /// The panel went to sleep: its wake waits for a whole frame
-/// (`owt_core_frame_ready`), and input until then only wakes.
+/// (`owt_core_frame_ready`); local input stays locked until the wheel unlocks.
 #[no_mangle]
 pub unsafe extern "C" fn owt_core_panel_slept() {
     let core = &mut *core::ptr::addr_of_mut!(CORE);
     core.power.slept();
+    core.redraw |= core.ui.set_screen_lock(core.power.lock_progress());
 }
 
 #[no_mangle]

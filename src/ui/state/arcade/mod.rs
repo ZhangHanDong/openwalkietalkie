@@ -210,7 +210,14 @@ pub(super) fn on_control(ui: &mut UiState, control: Control, now: u32, out: &mut
                 out.dirty = true;
             }
         }
-        Control::Wheel(wheel) => turn(ui, wheel == Wheel::Cw, out),
+        Control::Wheel(wheel) => {
+            let right = if ui.arcade.phase == Phase::Menu {
+                super::selection_step(wheel) > 0
+            } else {
+                wheel == Wheel::Cw
+            };
+            turn(ui, right, out);
+        }
         Control::Button(Button::Left, Edge::Press) => turn(ui, false, out),
         Control::Button(Button::Right, Edge::Press) => turn(ui, true, out),
         _ => {}
@@ -420,6 +427,17 @@ mod tests {
                     value: mode.into()
                 }));
         }
+    }
+    #[test]
+    fn menu_selection_runs_counterclockwise_forward_and_clockwise_back() {
+        let mut ui = ui(Game::Flappy);
+        let first = ui.arcade.selection;
+        ui.apply(Control::Wheel(Wheel::Ccw), 10, &mut Update::new());
+        assert_eq!(ui.arcade.selection, (first + 1) % 4);
+        ui.apply(Control::Wheel(Wheel::Cw), 20, &mut Update::new());
+        assert_eq!(ui.arcade.selection, first);
+        press(&mut ui, Button::Right, 30);
+        assert_eq!(ui.arcade.selection, (first + 1) % 4);
     }
     #[test]
     fn snake_wheel_and_backup_buttons_match() {

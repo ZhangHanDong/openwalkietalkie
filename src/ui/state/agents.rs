@@ -20,7 +20,7 @@
 //! steps are answers; ENTER with none acknowledges it into the channel.
 //! Without a host (and not the demo) cards are inert: nothing is emitted.
 use super::{global, notify, Target, TouchAct, UiState, Update};
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::model::{Effects, MAX_AGENTS};
 use crate::deck::msg::{CardKind, DocKind, Event, HostMsg, PttCtx, Template};
 use crate::deck::text::Text;
@@ -582,7 +582,7 @@ pub(super) fn on_control(
         }
         return true;
     }
-    let step = |wheel: Wheel| if wheel == Wheel::Cw { 1 } else { -1 };
+    let step = super::selection_step;
     match (ui.agents.view, control) {
         (AgentsView::Roster, Control::Wheel(wheel)) => {
             if let Some(next) = page_neighbour(ui, ui.agents.highlight, step(wheel)) {
@@ -1084,6 +1084,7 @@ pub(super) fn animating(_ui: &UiState) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::control::Wheel;
     use crate::control::{Touch, TouchPhase};
     use crate::deck::msg::AgentState;
     use crate::deck::text::Text;
@@ -1213,10 +1214,10 @@ mod tests {
         let [cohdl, openmicro] = crate::deck::demo::PROJECTS;
         assert_eq!((ui.agents.highlight, ui.agents.project.as_str()), (1, cohdl));
         // The wheel walks the page's three rows, hard ends.
-        wheel(&mut ui, Wheel::Cw, 10);
-        wheel(&mut ui, Wheel::Cw, 20);
+        wheel(&mut ui, Wheel::Ccw, 10);
+        wheel(&mut ui, Wheel::Ccw, 20);
         assert_eq!((ui.agents.highlight, ui.agents.highlight_row), (3, 2));
-        assert!(!wheel(&mut ui, Wheel::Cw, 30).dirty, "the page ends at its last row");
+        assert!(!wheel(&mut ui, Wheel::Ccw, 30).dirty, "the page ends at its last row");
         assert_eq!(ui.agents.highlight, 3);
         // RIGHT turns to the next project: its first row, and nothing is
         // said to the host — turning pages is looking, not talking.
@@ -1225,7 +1226,7 @@ mod tests {
         assert_eq!((ui.agents.top_row, ui.agents.highlight_row, ui.agents.project_row), (0, 0, 1));
         assert!(out.dirty && events(&out).is_empty());
         assert_eq!(ui.global.active_channel, 1);
-        wheel(&mut ui, Wheel::Cw, 50);
+        wheel(&mut ui, Wheel::Ccw, 50);
         assert_eq!(ui.agents.highlight, 5);
         // Hard ends on both sides.
         press(&mut ui, Button::Right, 60);
@@ -1257,7 +1258,7 @@ mod tests {
     fn a_project_push_moves_an_agent_to_another_page_and_the_page_follows_the_highlight() {
         let mut ui = hosted();
         let [cohdl, openmicro] = crate::deck::demo::PROJECTS;
-        wheel(&mut ui, Wheel::Cw, 0);
+        wheel(&mut ui, Wheel::Ccw, 0);
         assert_eq!((ui.agents.highlight, ui.agents.project.as_str()), (2, cohdl));
         // The highlighted agent moves house: the roster shows its new page
         // at once, re-sorted later.
@@ -1286,7 +1287,7 @@ mod tests {
     #[test]
     fn enter_opens_the_channel_and_cancel_climbs_back() {
         let mut ui = hosted();
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
         let out = press(&mut ui, Button::Enter, 20);
         assert_eq!((ui.agents.view, ui.agents.agent), (AgentsView::Channel, 2));
         assert_eq!(events(&out), [Event::Channel { agent: 2, seq: 1 }]);
@@ -1322,7 +1323,7 @@ mod tests {
         press(&mut ui, Button::Enter, 10);
         assert_eq!((ui.agents.view, ui.agents.agent), (AgentsView::Channel, 1));
         // A one-line reply never scrolls.
-        assert!(!wheel(&mut ui, Wheel::Cw, 20).dirty);
+        assert!(!wheel(&mut ui, Wheel::Ccw, 20).dirty);
         assert_eq!(ui.agents.reply_top, 0);
         // A long one (wide glyphs: 200 bytes of prose fit the lane) scrolls
         // until its last lines fill the lane, then stops.
@@ -1335,11 +1336,11 @@ mod tests {
         let hidden = faces::agents::reply_lines(&ui, agent) - faces::agents::reply_visible(&ui, agent);
         assert!(hidden >= 1, "{}", faces::agents::reply_lines(&ui, agent));
         for step in 1..=hidden + 2 {
-            let dirty = wheel(&mut ui, Wheel::Cw, 40 + step as u32).dirty;
+            let dirty = wheel(&mut ui, Wheel::Ccw, 40 + step as u32).dirty;
             assert_eq!(dirty, step <= hidden);
         }
         assert_eq!(ui.agents.reply_top as usize, hidden);
-        wheel(&mut ui, Wheel::Ccw, 100);
+        wheel(&mut ui, Wheel::Cw, 100);
         assert_eq!(ui.agents.reply_top as usize, hidden - 1);
     }
 
@@ -1354,7 +1355,7 @@ mod tests {
         ui.deck.agents[0].has_card = false;
         let expanded_top = faces::agents::reply_clamp(&ui, ui.deck.agent(1).unwrap(), old_top);
         assert!(expanded_top < old_top);
-        wheel(&mut ui, Wheel::Ccw, 1200);
+        wheel(&mut ui, Wheel::Cw, 1200);
         assert_eq!(ui.agents.reply_top, expanded_top - 1);
     }
 
@@ -1365,20 +1366,20 @@ mod tests {
         // it always has.
         show_card(&mut ui, 1, 1000);
         assert_eq!((ui.agents.choice, ui.agents.question_top), (Some(0), 0));
-        let out = wheel(&mut ui, Wheel::Cw, 1100);
+        let out = wheel(&mut ui, Wheel::Ccw, 1100);
         assert_eq!((ui.agents.choice, ui.agents.question_top), (Some(1), 0));
         assert!(out.dirty && events(&out).is_empty());
-        wheel(&mut ui, Wheel::Ccw, 1200);
+        wheel(&mut ui, Wheel::Cw, 1200);
         assert_eq!(ui.agents.choice, Some(0));
-        assert!(!wheel(&mut ui, Wheel::Ccw, 1300).dirty, "nothing above the first choice");
+        assert!(!wheel(&mut ui, Wheel::Cw, 1300).dirty, "nothing above the first choice");
         // A window whose whole body is on the screen is the same: three Name
         // lines fit, so the wheel never stops on the body.
         host(&mut ui, &window(1, 1, 0, 3, &["one", "two", "three"]), 1400);
         assert_eq!(ui.agents.question_top, 0);
-        wheel(&mut ui, Wheel::Cw, 1500);
+        wheel(&mut ui, Wheel::Ccw, 1500);
         assert_eq!((ui.agents.choice, ui.agents.question_top), (Some(1), 0));
-        assert!(!wheel(&mut ui, Wheel::Ccw, 1600).dirty || ui.agents.choice == Some(0));
-        assert!(!wheel(&mut ui, Wheel::Ccw, 1700).dirty, "still nothing above the first choice");
+        assert!(!wheel(&mut ui, Wheel::Cw, 1600).dirty || ui.agents.choice == Some(0));
+        assert!(!wheel(&mut ui, Wheel::Cw, 1700).dirty, "still nothing above the first choice");
     }
 
     #[test]
@@ -1392,22 +1393,22 @@ mod tests {
         assert_eq!(faces::agents::question_visible(card), 3);
         assert_eq!(faces::agents::question_lines(card) - faces::agents::question_visible(card), 6);
         for step in 1..=6u16 {
-            let out = wheel(&mut ui, Wheel::Cw, 1100 + u32::from(step));
+            let out = wheel(&mut ui, Wheel::Ccw, 1100 + u32::from(step));
             assert!(out.dirty && events(&out).is_empty(), "line {step}");
             assert_eq!((ui.agents.question_top, ui.agents.choice), (step, Some(0)));
         }
         // The last line is on the screen: the wheel goes on into the choices.
-        wheel(&mut ui, Wheel::Cw, 1200);
+        wheel(&mut ui, Wheel::Ccw, 1200);
         assert_eq!((ui.agents.question_top, ui.agents.choice), (6, Some(1)));
-        wheel(&mut ui, Wheel::Cw, 1300);
+        wheel(&mut ui, Wheel::Ccw, 1300);
         assert_eq!((ui.agents.question_top, ui.agents.choice), (6, Some(2)));
-        assert!(!wheel(&mut ui, Wheel::Cw, 1400).dirty, "three choices, hard end");
+        assert!(!wheel(&mut ui, Wheel::Ccw, 1400).dirty, "three choices, hard end");
         // Backwards: the choices first, because the body is above them.
         for choice in [1u8, 0] {
-            wheel(&mut ui, Wheel::Ccw, 1500 + u32::from(choice));
+            wheel(&mut ui, Wheel::Cw, 1500 + u32::from(choice));
             assert_eq!((ui.agents.question_top, ui.agents.choice), (6, Some(choice)));
         }
-        wheel(&mut ui, Wheel::Ccw, 1600);
+        wheel(&mut ui, Wheel::Cw, 1600);
         assert_eq!((ui.agents.question_top, ui.agents.choice), (5, Some(0)));
         // The rest of the grammar is untouched: ENTER answers the choice the
         // body was scrolled past, CANCEL snoozes, LEFT/RIGHT walk the cards.
@@ -1421,7 +1422,7 @@ mod tests {
         show_card(&mut ui, 1, 1000);
         host(&mut ui, &window(1, 1, 0, 9, &["1", "2", "3", "4", "5", "6", "7", "8", "9"]), 1100);
         for at in 1200..1205 {
-            wheel(&mut ui, Wheel::Cw, at);
+            wheel(&mut ui, Wheel::Ccw, at);
         }
         assert_eq!(ui.agents.question_top, 5);
         // Another card, and back: the body opens at the top of what is held.
@@ -1432,7 +1433,7 @@ mod tests {
         // replacing it, so the offset stays where the reader left it: the
         // line it is on is still in the buffer.
         for at in 1500..1505 {
-            wheel(&mut ui, Wheel::Cw, at);
+            wheel(&mut ui, Wheel::Ccw, at);
         }
         assert_eq!(ui.agents.question_top, 5);
         host(&mut ui, &window(1, 1, 6, 9, &["7", "8", "9"]), 1600);
@@ -1460,7 +1461,7 @@ mod tests {
 
         let mut at = 1200;
         for top in 1..first_ask as u16 {
-            let out = wheel(&mut ui, Wheel::Cw, at);
+            let out = wheel(&mut ui, Wheel::Ccw, at);
             assert_eq!(
                 (ui.agents.question_top, events(&out).len()),
                 (top, 0),
@@ -1468,7 +1469,7 @@ mod tests {
             );
             at += 100;
         }
-        let out = wheel(&mut ui, Wheel::Cw, at);
+        let out = wheel(&mut ui, Wheel::Ccw, at);
         assert_eq!(ui.agents.question_top, first_ask as u16);
         // It asks for the lines it is **missing** — the chunk starting where
         // the buffer ends — not for the line it is looking at. A chunk centred
@@ -1484,12 +1485,12 @@ mod tests {
         let mut guard = 0;
         while ui.agents.question_top < edge && guard < 40 {
             at += 100;
-            wheel(&mut ui, Wheel::Cw, at);
+            wheel(&mut ui, Wheel::Ccw, at);
             guard += 1;
         }
         assert_eq!(ui.agents.question_top, edge, "pinned at the end of what is held");
         at += 100;
-        let out = wheel(&mut ui, Wheel::Cw, at);
+        let out = wheel(&mut ui, Wheel::Ccw, at);
         assert_eq!(
             (ui.agents.question_top, ui.agents.choice),
             (edge, Some(0)),
@@ -1501,7 +1502,7 @@ mod tests {
         );
         at += 100;
         assert!(
-            events(&wheel(&mut ui, Wheel::Cw, at)).is_empty(),
+            events(&wheel(&mut ui, Wheel::Ccw, at)).is_empty(),
             "asked once, not once a detent"
         );
 
@@ -1509,13 +1510,13 @@ mod tests {
         host(&mut ui, &long_window(1, 1, 6, 40), at + 100);
         assert_eq!(ui.agents.question_top, edge);
         at += 200;
-        wheel(&mut ui, Wheel::Cw, at);
+        wheel(&mut ui, Wheel::Ccw, at);
         assert_eq!(ui.agents.question_top, edge + 1);
 
         // Without a host nothing is asked for, and what is held still scrolls.
         ui.deck.link_lost();
         at += 100;
-        let out = wheel(&mut ui, Wheel::Cw, at);
+        let out = wheel(&mut ui, Wheel::Ccw, at);
         assert_eq!((ui.agents.question_top, events(&out).len()), (edge + 2, 0));
         assert!(out.dirty);
     }
@@ -1523,7 +1524,7 @@ mod tests {
     #[test]
     fn focus_during_scroll_moves_marker_not_highlight() {
         let mut ui = hosted();
-        wheel(&mut ui, Wheel::Cw, 1000);
+        wheel(&mut ui, Wheel::Ccw, 1000);
         host(&mut ui, &HostMsg::Focus { agent: 4, ack: None }, 1500);
         assert_eq!((ui.global.active_channel, ui.agents.highlight), (4, 2));
         // Quiet for 2 s: the highlight follows, and the page turns with it.
@@ -1554,14 +1555,14 @@ mod tests {
     fn resort_deferred_while_wheel_repeating() {
         let mut ui = hosted();
         assert_eq!(&ui.deck.order[..5], &[1, 2, 3, 4, 5]);
-        wheel(&mut ui, Wheel::Cw, 1000);
-        wheel(&mut ui, Wheel::Cw, 1090);
+        wheel(&mut ui, Wheel::Ccw, 1000);
+        wheel(&mut ui, Wheel::Ccw, 1090);
         assert_eq!(ui.agents.highlight, 3);
         host(&mut ui, &agent(3, AgentState::Question), 1100);
         assert_eq!(&ui.deck.order[..5], &[1, 2, 3, 4, 5], "in place while the wheel turns");
         assert!(ui.deck.sort_pending());
         ui.tick(2000, 0, true, &mut Update::new());
-        wheel(&mut ui, Wheel::Ccw, 2100);
+        wheel(&mut ui, Wheel::Cw, 2100);
         ui.tick(2100 + RESORT_QUIET_MS - 1, 0, true, &mut Update::new());
         assert_eq!(&ui.deck.order[..5], &[1, 2, 3, 4, 5], "1.5 s after the last detent");
         let mut out = Update::new();
@@ -1591,7 +1592,7 @@ mod tests {
         host(&mut ui, &in_project(6, AgentState::Question, cohdl), 0);
         host(&mut ui, &in_project(7, AgentState::Question, cohdl), 0);
         for at in [0, 100] {
-            wheel(&mut ui, Wheel::Cw, at);
+            wheel(&mut ui, Wheel::Ccw, at);
         }
         assert_eq!((ui.agents.highlight, ui.agents.top_row), (3, 0));
         let mut out = Update::new();
@@ -1628,7 +1629,7 @@ mod tests {
     fn gone_of_open_channel_falls_back_to_roster_and_a_gone_highlight_keeps_its_row() {
         let mut ui = hosted();
         let [cohdl, openmicro] = crate::deck::demo::PROJECTS;
-        wheel(&mut ui, Wheel::Cw, 0);
+        wheel(&mut ui, Wheel::Ccw, 0);
         press(&mut ui, Button::Enter, 10);
         assert_eq!((ui.agents.view, ui.agents.agent), (AgentsView::Channel, 2));
         host(&mut ui, &gone(2), 100);
@@ -1713,7 +1714,7 @@ mod tests {
     fn card_replaced_under_cursor_falls_back_to_the_channel_under_guard() {
         let mut ui = hosted();
         show_card(&mut ui, 1, 1000);
-        wheel(&mut ui, Wheel::Cw, 1100);
+        wheel(&mut ui, Wheel::Ccw, 1100);
         assert_eq!(ui.agents.choice, Some(1));
         host(&mut ui, &card(1, 9, CardKind::Question, 3), 1200);
         assert_eq!((ui.agents.view, ui.agents.agent), (AgentsView::Channel, 1));
@@ -1722,8 +1723,8 @@ mod tests {
         assert_eq!(ui.agents.view, AgentsView::Card, "ENTER in the channel is not guarded");
         assert_eq!(ui.agents.choice, Some(0), "the new card starts at its recommendation");
         // A re-push with fewer choices keeps the choice in range.
-        wheel(&mut ui, Wheel::Cw, 1400);
-        wheel(&mut ui, Wheel::Cw, 1500);
+        wheel(&mut ui, Wheel::Ccw, 1400);
+        wheel(&mut ui, Wheel::Ccw, 1500);
         assert_eq!(ui.agents.choice, Some(2));
         host(&mut ui, &card(1, 9, CardKind::Question, 2), 1600);
         assert_eq!((ui.agents.view, ui.agents.choice), (AgentsView::Card, Some(0)));
@@ -1967,14 +1968,14 @@ mod tests {
         ui.deck.notices[0] = crate::deck::Notice::new(2, 2, CardKind::Ready, 0).filed();
         show_card(&mut ui, 2, 1000);
         assert_eq!(ui.agents.choice, None);
-        wheel(&mut ui, Wheel::Cw, 1100);
-        wheel(&mut ui, Wheel::Cw, 1200);
-        wheel(&mut ui, Wheel::Cw, 1300);
+        wheel(&mut ui, Wheel::Ccw, 1100);
+        wheel(&mut ui, Wheel::Ccw, 1200);
+        wheel(&mut ui, Wheel::Ccw, 1300);
         assert_eq!(ui.agents.choice, Some(1), "two steps, hard end");
-        wheel(&mut ui, Wheel::Ccw, 1400);
-        wheel(&mut ui, Wheel::Ccw, 1500);
+        wheel(&mut ui, Wheel::Cw, 1400);
+        wheel(&mut ui, Wheel::Cw, 1500);
         assert_eq!(ui.agents.choice, None);
-        wheel(&mut ui, Wheel::Ccw, 1600);
+        wheel(&mut ui, Wheel::Cw, 1600);
         assert_eq!(ui.agents.choice, None);
         let out = press(&mut ui, Button::Enter, 1700);
         assert_eq!(out.deck_events().count(), 0);
@@ -1997,7 +1998,7 @@ mod tests {
         // A step is an answer.
         ui.deck.agent_mut(2).unwrap().card.acknowledged = false;
         press(&mut ui, Button::Enter, 1900);
-        wheel(&mut ui, Wheel::Cw, 2000);
+        wheel(&mut ui, Wheel::Ccw, 2000);
         let out = press(&mut ui, Button::Enter, 2500);
         assert_eq!(events(&out), [Event::Answer { agent: 2, card: 2, choice: 0 }]);
     }
@@ -2043,7 +2044,7 @@ mod tests {
         let out = press(&mut ui, Button::Enter, 1100);
         assert_eq!(out.deck_events().count(), 0);
         assert_eq!(ui.deck.card(1).unwrap().pending_answer, None);
-        let out = wheel(&mut ui, Wheel::Cw, 1200);
+        let out = wheel(&mut ui, Wheel::Ccw, 1200);
         assert_eq!(ui.agents.choice, Some(0), "SHIFT+SCROLL slid, it did not choose");
         assert_ne!(ui.global.current, 0);
         let _ = out;
@@ -2139,7 +2140,7 @@ mod tests {
         show_channel(&mut ui, 1, 1100);
         let mut asked = None;
         for at in 1200..1220 {
-            let out = wheel(&mut ui, Wheel::Cw, at);
+            let out = wheel(&mut ui, Wheel::Ccw, at);
             if let Some(Event::DocLines { first, .. }) = events(&out).first() {
                 asked = Some(*first);
                 break;
@@ -2150,7 +2151,7 @@ mod tests {
         show_channel(&mut ui, 2, 1300);
         let mut sibling = None;
         for at in 1400..1420 {
-            let out = wheel(&mut ui, Wheel::Cw, at);
+            let out = wheel(&mut ui, Wheel::Ccw, at);
             if let Some(Event::DocLines { agent, first, .. }) = events(&out).first() {
                 sibling = Some((*agent, *first));
                 break;
@@ -2180,7 +2181,7 @@ mod tests {
         // Scroll to the edge of the held window and note what it asks for.
         let mut asked = None;
         for at in 1200..1240 {
-            if let Some(Event::DocLines { first, .. }) = events(&wheel(&mut ui, Wheel::Cw, at)).first()
+            if let Some(Event::DocLines { first, .. }) = events(&wheel(&mut ui, Wheel::Ccw, at)).first()
             {
                 asked = Some(*first);
             }
@@ -2192,14 +2193,14 @@ mod tests {
         // in flight and asking again would only spend the link.
         for at in 1300..1310 {
             assert!(
-                events(&wheel(&mut ui, Wheel::Cw, at)).is_empty(),
+                events(&wheel(&mut ui, Wheel::Ccw, at)).is_empty(),
                 "asked once while it is in flight, not once a detent"
             );
         }
         assert_eq!(ui.agents.reply_top, pinned, "and the offset holds at the edge");
 
         // Past the retry window it asks again rather than staying dead.
-        let out = wheel(&mut ui, Wheel::Cw, 1240 + ASK_RETRY_MS + 1);
+        let out = wheel(&mut ui, Wheel::Ccw, 1240 + ASK_RETRY_MS + 1);
         assert_eq!(
             events(&out),
             [Event::DocLines {
@@ -2243,7 +2244,7 @@ mod tests {
                 }
             }
             let before = ui.agents.reply_top;
-            let out = wheel(&mut ui, Wheel::Cw, at);
+            let out = wheel(&mut ui, Wheel::Ccw, at);
             if ui.agents.reply_top == before {
                 dead += 1;
                 run += 1;
@@ -2282,7 +2283,7 @@ mod tests {
         host(&mut ui, &window(0, 17), 102);
         let before = faces::agents::reply_clamp(&ui, ui.deck.agent(3).unwrap(), ui.agents.reply_top);
         assert!(before > 0);
-        wheel(&mut ui, Wheel::Ccw, 500);
+        wheel(&mut ui, Wheel::Cw, 500);
         assert!(!ui.agents.reply_follow);
         let pinned = ui.agents.reply_top;
         host(&mut ui, &window(0, 25), 510);
@@ -2295,9 +2296,9 @@ mod tests {
         assert_eq!(ui.deck.agent(3).unwrap().reply.total, 25);
         assert!(faces::agents::reply_clamp(&ui, ui.deck.agent(3).unwrap(), ui.agents.reply_top) > before);
         ui.apply(Control::Button(Button::Shift, Edge::Release), 630, &mut Update::new());
-        wheel(&mut ui, Wheel::Ccw, 3000);
+        wheel(&mut ui, Wheel::Cw, 3000);
         assert!(!ui.agents.reply_follow);
-        let out = wheel(&mut ui, Wheel::Cw, 3100);
+        let out = wheel(&mut ui, Wheel::Ccw, 3100);
         assert!(ui.agents.reply_follow, "scrolling back to the end resumes following");
         assert!(events(&out).iter().any(|e| matches!(e, Event::DocLines { first: u16::MAX, .. })));
         host(&mut ui, &window(16, 33), 3200);

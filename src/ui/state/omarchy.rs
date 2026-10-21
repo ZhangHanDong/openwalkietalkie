@@ -13,7 +13,7 @@
 //! - A tap on workspace chip n -> `WsGo(n + 1)`; a tap on a window row ->
 //!   `WsWin(row)`. Rows scroll by drag (`ListRow`).
 use super::{global, Owner, Source, Target, TouchAct, UiState, Update};
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::model::Effects;
 use crate::deck::msg::{Event, HostMsg, KeyId};
 use crate::ui::kit::list::Viewport;
@@ -92,10 +92,10 @@ pub(super) fn on_control(
 ) -> bool {
     match control {
         Control::Wheel(wheel) => {
-            let (key, by) = match wheel {
-                Wheel::Cw => (KeyId::Cw, 1),
-                Wheel::Ccw => (KeyId::Ccw, -1),
-            };
+            let by = super::selection_step(wheel);
+            // The remote protocol's cw/ccw mean next/previous window. Send
+            // the selection action so the host agrees with our highlight.
+            let key = if by > 0 { KeyId::Cw } else { KeyId::Ccw };
             out.push_deck(Event::Key {
                 key,
                 act: 2,

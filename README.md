@@ -119,8 +119,10 @@ remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage**, **Arcade** an
 - **Idle-home:** after 120 seconds without local input the deck returns to the
   Agents roster (Settings → Display; off, 30, 60 or 120 seconds). It waits for
   a PTT session to end.
-- **While the screen is dark, only PTT wakes and acts.** Every other key, wheel
-  detent or touch only wakes the screen; its release is consumed too.
+- **Sleep locks every local control, including PTT.** Any button, wheel detent
+  or touch lights the lock screen. Turn the wheel counterclockwise four ticks
+  to unlock; clockwise rotation resets progress. The unlocking ticks and any
+  press or touch begun while locked never trigger the underlying screen.
 
 [The Agent Command Deck](docs/agent-command-deck.md) is the full grammar: views,
 cards, the manager, notifications, settings and the PTT session rules.
@@ -337,11 +339,14 @@ keystroke, `perm.status` says `accessibility: "denied"`, and `perm.request
 {which:"accessibility"}` asks again.
 
 **Battery saving.** After 30 seconds without local input the screen dims; after
-2 minutes it enters panel sleep. The first touch wakes it without sending a
-command. PTT wakes and acts (the radio must work blind); every other button and
-wheel detent pressed while dark, or before the wake frame is on the glass, only
-wakes, and its release is consumed. A new deck card lights the screen for 15
-seconds without counting as input. Held controls keep it awake. The lit level
+2 minutes it enters panel sleep and locks all local controls, including PTT.
+Any button, wheel detent or touch lights a lock screen. Four consecutive
+counterclockwise wheel ticks unlock it; clockwise rotation or another sleep
+resets progress. All four ticks are consumed, and a button or touch begun
+while locked must be released before a fresh action can be sent. A new deck
+card lights the screen for 15 seconds without unlocking or counting as input.
+Held controls keep an unlocked screen awake; a button trapped down while
+locked does not prevent the display from dimming and sleeping again. The lit level
 follows Settings → Display brightness 1–5 (panel 40/80/130/190/255); dim is 32,
 or the lit level if lower. Bluetooth audio, host status, deck messages and
 charger servicing continue while dark.

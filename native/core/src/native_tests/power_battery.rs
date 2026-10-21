@@ -1,7 +1,7 @@
 //! Power policy, wake paths and battery service through the C entry points.
 //!
-//! A non-PTT button or wheel detent pressed while the screen is
-//! Off (or before the wake frame is shown) only wakes; PTT wakes and acts.
+//! Every local input wakes the locked screen without acting. Only four
+//! counterclockwise wheel detents unlock it; the fourth detent is consumed.
 //! Tests that watch what reaches the deck host run on `hosted` (idle-home
 //! off) and send a `heartbeat` across each clock jump, so the host is still
 //! present when the wake press acts.
@@ -196,7 +196,7 @@ fn unmapped_matrix_key_and_debug_wake_emit_nothing() {
 }
 
 #[test]
-fn dark_keypad_irq_preserves_short_ptt_press_release_and_swallows_the_wheel() {
+fn dark_keypad_irq_blocks_ptt_until_four_counterclockwise_ticks() {
     let _guard = lock(&CORE_LOCK);
     unsafe {
         let at = u32::MAX - 10;
@@ -205,44 +205,30 @@ fn dark_keypad_irq_preserves_short_ptt_press_release_and_swallows_the_wheel() {
         core.power.tick(at);
         heartbeat(core, at);
         core.keypad_poll_at = at;
-        // A complete short PTT press/release arrived while asleep.
         lock(&KEY_EVENTS).extend([44 | 0x80, 44]);
         KEYPAD_IRQ.store(true, Ordering::Relaxed);
         owt_core_poll(2); // IRQ still wins across clock wrap.
         assert_eq!(owt_core_screen(), power::Screen::Active as u8);
-        assert_eq!(deck_lines(), [PTT_DOWN, PTT_UP]);
-        host_line(br#"{"m":"transcript","agent":1,"text":"done","final":1,"p":1}"#);
-        let core = &mut *core::ptr::addr_of_mut!(CORE);
-        core.power.tick(power::OFF_AFTER_MS + 2);
-        owt_core_panel_slept();
-        heartbeat(core, power::OFF_AFTER_MS + 2);
-        core.keypad_poll_at = power::OFF_AFTER_MS + 2;
-        // A dark detent only wakes; the first one after the wake frame acts.
-        lock(&KEY_EVENTS).extend([41 | 0x80, 41]);
-        KEYPAD_IRQ.store(true, Ordering::Relaxed);
-        owt_core_poll(power::OFF_AFTER_MS + 3);
-        assert!((*core::ptr::addr_of!(CORE)).repeat.is_none());
         assert_eq!(drained(), nothing());
-        assert_eq!(owt_core_screen(), power::Screen::Active as u8);
-        lock(&KEY_EVENTS).extend([41 | 0x80, 41]);
-        KEYPAD_IRQ.store(true, Ordering::Relaxed);
-        owt_core_poll(power::OFF_AFTER_MS + 200);
-        assert_eq!(drained(), nothing());
+        assert_eq!(core.ui.screen_lock, Some(0));
+        assert!(core.ui.global.ptt.is_none());
         owt_core_frame_ready();
+        for tick in 1..=4 {
+            lock(&KEY_EVENTS).extend([41 | 0x80, 41]);
+            KEYPAD_IRQ.store(true, Ordering::Relaxed);
+            assert!(owt_core_poll(2 + tick * 20)); // Progress must redraw.
+            assert_eq!(drained(), nothing());
+            assert_eq!(core.ui.screen_lock, (tick < 4).then_some(tick as u8));
+            assert!(core.repeat.is_none());
+        }
         lock(&KEY_EVENTS).extend([41 | 0x80, 41]);
         KEYPAD_IRQ.store(true, Ordering::Relaxed);
-        owt_core_poll(power::OFF_AFTER_MS + 400);
-        assert_eq!(deck_lines(), [r#"{"m":"key","k":"ccw","act":2,"shift":0,"f":2}"#]);
-        // ENTER pressed while dark is consumed with its release; PTT is not.
-        core.power.tick(2 * power::OFF_AFTER_MS + 400);
-        owt_core_panel_slept();
-        heartbeat(core, 2 * power::OFF_AFTER_MS + 400);
-        core.keypad_poll_at = 2 * power::OFF_AFTER_MS + 400;
-        lock(&KEY_EVENTS).extend([31 | 0x80, 44 | 0x80, 44, 31]);
+        owt_core_poll(120);
+        assert_eq!(deck_lines(), [r#"{"m":"key","k":"cw","act":2,"shift":0,"f":2}"#]);
+        lock(&KEY_EVENTS).extend([44 | 0x80, 44]);
         KEYPAD_IRQ.store(true, Ordering::Relaxed);
-        owt_core_poll(2 * power::OFF_AFTER_MS + 401);
-        assert_eq!(deck_lines(), [PTT_DOWN.replace("\"p\":1", "\"p\":2"), PTT_UP.replace("\"p\":1", "\"p\":2")]);
-        assert!(!(*core::ptr::addr_of!(CORE)).power.held());
+        owt_core_poll(140);
+        assert_eq!(deck_lines(), [PTT_DOWN, PTT_UP]);
     }
 }
 
@@ -264,7 +250,8 @@ fn keypad_event_during_acknowledgement_gets_another_immediate_wake() {
         owt_core_poll(at + 2); // Scheduled wake, before the recovery deadline.
         assert!(!KEYPAD_IRQ.load(Ordering::Relaxed));
         assert_eq!(owt_core_screen(), power::Screen::Active as u8);
-        assert_eq!(deck_lines(), [PTT_DOWN, PTT_UP]);
+        assert_eq!(drained(), nothing());
+        assert_eq!((*core::ptr::addr_of!(CORE)).ui.screen_lock, Some(0));
         assert!(!(*core::ptr::addr_of!(CORE)).power.held());
     }
 }
@@ -335,6 +322,116 @@ fn sleeping_host_status_stays_live_and_wake_touch_emits_nothing() {
         for edge in [Edge::Press, Edge::Release] {
             apply(core, Control::Button(Button::PushToTalk, edge));
         }
+        assert_eq!(drained(), nothing());
+        for _ in 0..power::UNLOCK_TICKS {
+            apply(core, Control::Wheel(Wheel::Ccw));
+        }
+        assert_eq!(drained(), nothing());
+        for edge in [Edge::Press, Edge::Release] {
+            apply(core, Control::Button(Button::PushToTalk, edge));
+        }
         assert_eq!(deck_lines(), [PTT_DOWN, PTT_UP]);
+    }
+}
+
+#[test]
+fn gpio_wheel_unlocks_but_a_ptt_held_in_the_bag_needs_a_fresh_press() {
+    let _guard = lock(&CORE_LOCK);
+    unsafe {
+        let core = hosted(Template::Omarchy);
+        core.inputs = Some(direct::Decoder::new(0xff, 0));
+        let mut now = power::OFF_AFTER_MS;
+        heartbeat(core, now);
+        owt_core_poll(now);
+        owt_core_panel_slept();
+        let mut sample = |raw: u8, elapsed: u32| {
+            now += elapsed;
+            DIRECT_RAW.store(raw as usize, Ordering::Relaxed);
+            DIRECT_IRQ.store(true, Ordering::Relaxed);
+            owt_core_poll(now);
+        };
+        let held = 0xff & !direct::PTT;
+        sample(held, 1);
+        sample(held, direct::DEBOUNCE_MS);
+        assert_eq!(core.power.screen(), power::Screen::Active);
+        assert_eq!(core.ui.screen_lock, Some(0));
+        assert!(core.ui.global.ptt.is_none());
+        assert_eq!(drained(), nothing());
+        owt_core_frame_ready();
+        // The assembled wheel is B-leading clockwise. Four CW detents must
+        // not unlock, and CW must also reset a partial CCW sequence.
+        let clockwise = [held & !direct::ENC_B, held & !direct::ENC_A & !direct::ENC_B,
+                         held & !direct::ENC_A, held];
+        let counterclockwise = [held & !direct::ENC_A, held & !direct::ENC_A & !direct::ENC_B,
+                                held & !direct::ENC_B, held];
+        for _ in 0..4 {
+            for raw in clockwise {
+                sample(raw, 2);
+            }
+            assert_eq!(core.ui.screen_lock, Some(0));
+            assert_eq!(drained(), nothing());
+            assert!(core.ui.global.ptt.is_none());
+        }
+        for tick in 1..=3 {
+            for raw in counterclockwise {
+                sample(raw, 2);
+            }
+            assert_eq!(core.ui.screen_lock, Some(tick));
+            assert_eq!(drained(), nothing());
+        }
+        for raw in clockwise {
+            sample(raw, 2);
+        }
+        assert_eq!(core.ui.screen_lock, Some(0));
+        assert_eq!(drained(), nothing());
+        for tick in 1..=4 {
+            // One complete CCW quadrature cycle is exactly one wheel tick.
+            for raw in counterclockwise {
+                sample(raw, 2);
+            }
+            assert_eq!(core.ui.screen_lock, (tick < 4).then_some(tick));
+            assert_eq!(drained(), nothing());
+            assert!(core.ui.global.ptt.is_none());
+        }
+        assert_eq!(core.ui.current_face().template, Template::Omarchy);
+        sample(0xff, 1);
+        sample(0xff, direct::DEBOUNCE_MS);
+        assert_eq!(drained(), nothing());
+        // Once unlocked, physical CCW selects the next window (wire key cw).
+        for raw in counterclockwise {
+            sample(raw | direct::PTT, 2);
+        }
+        assert_eq!(deck_lines(), [r#"{"m":"key","k":"cw","act":2,"shift":0,"f":2}"#]);
+        sample(held, 1);
+        sample(held, direct::DEBOUNCE_MS);
+        assert_eq!(deck_lines(), [PTT_DOWN]);
+        sample(0xff, 1);
+        sample(0xff, direct::DEBOUNCE_MS);
+        assert_eq!(deck_lines(), [PTT_UP]);
+    }
+}
+
+#[test]
+fn locked_cancel_hold_cannot_power_off_and_a_host_notice_cannot_unlock() {
+    let _guard = lock(&CORE_LOCK);
+    unsafe {
+        let core = hosted(Template::Omarchy);
+        heartbeat(core, power::OFF_AFTER_MS);
+        owt_core_poll(power::OFF_AFTER_MS);
+        owt_core_panel_slept();
+        core.now += 1;
+        apply(core, Control::Button(Button::Cancel, Edge::Press));
+        owt_core_frame_ready();
+        heartbeat(core, power::OFF_AFTER_MS + 4000);
+        owt_core_poll(power::OFF_AFTER_MS + 4000);
+        assert!(core.ui.power_hold().is_none());
+        assert_eq!(core.ui.screen_lock, Some(0));
+        host_line(br#"{"m":"card","agent":1,"id":1,"type":"q","text":"Ready?","choices":["Yes","No"]}"#);
+        assert_eq!(core.ui.screen_lock, Some(0));
+        assert_eq!(core.power.lock_progress(), Some(0));
+        assert_eq!(core.ui.deck.card(1).unwrap().id, 1);
+        assert_eq!(core.power.screen(), power::Screen::Active);
+        apply(core, Control::Button(Button::Cancel, Edge::Release));
+        assert!(core.ui.global.ptt.is_none());
     }
 }

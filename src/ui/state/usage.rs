@@ -2,7 +2,7 @@
 //! `Event::Refresh` and shows "updating…" for `UPDATING_MS`, CANCEL goes home.
 //! `bar_tone` is the one bar-colour rule the renderer draws with.
 use super::{global, Target, TouchAct, UiState, Update};
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::model::Effects;
 use crate::deck::msg::{Event, HostMsg, Tone};
 use crate::ui::kit::list::Viewport;
@@ -65,7 +65,7 @@ pub(super) fn on_control(
         return true; // No chords on this face; never fall through.
     }
     match control {
-        Control::Wheel(wheel) => scroll(ui, if wheel == Wheel::Cw { 1 } else { -1 }, out),
+        Control::Wheel(wheel) => scroll(ui, super::selection_step(wheel), out),
         Control::Button(Button::Cancel, Edge::Press) => global::go_home(ui, at_ms, out),
         Control::Button(Button::Enter, Edge::Press) => {
             out.push_deck(Event::Refresh);

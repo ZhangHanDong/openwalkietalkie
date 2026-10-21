@@ -35,11 +35,15 @@ PTT = envelope (44), LEFT = `1` (32), RIGHT = `2` (33).
   flag on Omarchy keys. An unassigned SHIFT chord on a locally handled face is
   swallowed, never passed through as the plain key.
 
+Wheel navigation uses **CCW for next/down** and **CW for previous/up** across
+pages, menus and lists. Numeric settings still increase clockwise; game turns
+and assigned Macropad bindings use physical wheel direction.
+
 ## Global layer
 
 | Input | Effect |
 |---|---|
-| SHIFT+SCROLL | Next (CW) or previous (CCW) face. One face per detent, at most one detent per 150 ms, hard ends with one small bounce, no wrap. The strip eases in about 220 ms and the new face takes input immediately. On the dev keypad a plain SCROLL within 300 ms of the last SHIFT+SCROLL is swallowed (its key-repeat tail); the Rev A wheel has no repeat and every detent counts. Closes the drawer; ignored in the manager. Sends `face`. |
+| SHIFT+SCROLL | Next (CCW) or previous (CW) face. One face per detent, at most one detent per 150 ms, hard ends with one small bounce, no wrap. The strip eases in about 220 ms and the new face takes input immediately. On the dev keypad a plain SCROLL within 300 ms of the last SHIFT+SCROLL is swallowed (its key-repeat tail); the Rev A wheel has no repeat and every detent counts. Closes the drawer; ignored in the manager. Sends `face`. |
 | Double-SHIFT | Two SHIFT taps, each shorter than 300 ms, the second starting within 400 ms, with no other control in between. Opens or closes the face manager. Ignored during a LISTENING session. |
 | CANCEL at a face's top level | Home: the Agents roster. On Omarchy SHIFT+CANCEL is forwarded to the host. |
 | Swipe down from the top edge | A touch starting in the top 48 px never reaches the face. 40 px down, more down than sideways, opens the notification drawer. |
@@ -129,7 +133,8 @@ walkie-talkie channel; one is active at a time.
 A remote for the Omarchy (Hyprland) desktop: workspace chips and the window
 list, as the host pushes them (`ws`). LEFT, RIGHT, ENTER and SHIFT+CANCEL are
 sent as `key` press/release with the SHIFT state latched at the press;
-SCROLL is `key cw/ccw act:2` and moves a local highlight until the next `ws`.
+SCROLL sends `key cw/ccw act:2` for next/previous window (physical CCW/CW)
+and moves a matching local highlight until the next `ws`.
 Tapping a chip sends `ws go`, tapping a window row `ws win`. Plain CANCEL goes
 home. Header tag `remote`.
 
@@ -293,14 +298,19 @@ A notice is created by a new card (Question or Ready), keyed by agent and card.
 
 - Dim after 30 s without local input, panel off after 2 min. Host messages,
   system RPC requests and battery updates do not count as input.
-- PTT wakes and acts. Every other button and wheel detent pressed while the
-  screen is off, or before the wake frame is on the glass, only wakes; its
-  release is consumed too. The first touch only wakes; its whole gesture is
-  consumed.
-- A new card lights the screen for 15 s without counting as input: the
+- Panel sleep locks every local control, including PTT. Any button, wheel
+  detent or touch lights the lock screen without acting. Four counterclockwise
+  wheel ticks unlock it, with visible progress; clockwise rotation or another
+  sleep resets progress. All four ticks are consumed, including the unlocking
+  tick. A button or touch begun while locked stays suppressed until release,
+  even if the wheel unlocks meanwhile. Controls queued before the wake frame
+  reached the glass are also suppressed through release.
+- A button trapped down while locked does not prevent dimming or another
+  sleep. Cold power-on starts unlocked; ordinary dimming does not lock.
+- A new card lights the screen for 15 s without unlocking or counting as input: the
   inactivity clock that idle-home reads keeps running. Demo notices never wake
   the screen.
-- Idle-home runs on the same inactivity clock (0 while anything is held), after
+- Idle-home runs on the same inactivity clock (0 while an unlocked control is held), after
   the Idle home setting (2 min by default, the same moment the panel sleeps): it
   closes overlays and the manager silently (no `faces`, no `snooze`), releases
   what is held, cuts to the Agents roster and arms the confirm guard. It is
@@ -330,7 +340,7 @@ A notice is created by a new card (Question or Ready), keyed by agent and card.
   through the bootloader: splash, then the Agents roster (or the tutorial, on
   a deck that never finished it), with the strip and settings back at their
   defaults until the host restores them on `boot:1`. The press that woke it
-  does nothing else: this is the one exception to "PTT wakes and acts".
+  does nothing else; release it before starting a fresh PTT session.
 - Rev A only. The dev board has no power path to switch, and the native
   image shows the dialog but stays on.
 

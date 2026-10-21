@@ -9,15 +9,15 @@ sequence.
 
 Use the approved defaults: dim after 30 seconds without local input and switch
 the screen off after 2 minutes. Touch or a physical control restores brightness.
-The first contact on a dark touchscreen only wakes it; its complete gesture is
-consumed, so waking cannot accept a request or start recording accidentally.
-Physical PTT wakes and acts, so the radio works blind. Every other button and
-wheel detent pressed while the screen is dark, or before the wake frame is on
-the glass, only wakes; its release is consumed too, so a blind press cannot
-answer a card or move a list. Held controls keep the screen awake. System
+Sleep locks every local control, including PTT. Any input lights the lock
+screen without acting; four counterclockwise wheel ticks unlock it. Clockwise
+rotation or another sleep resets progress. Unlocking ticks are consumed, and
+buttons or touches that began locked remain suppressed through release.
+Held controls keep an unlocked screen awake, but a button trapped down while
+locked does not prevent dimming and sleep. System
 RPC requests, deck messages and battery updates do not reset the
 inactivity timer. A new Agent Command Deck card lights the screen for 15 seconds
-without counting as input (`Policy::notify`): it neither resets the inactivity
+without unlocking or counting as input (`Policy::notify`): it neither resets the inactivity
 timer nor delays idle-home, and the built-in demo's notices never wake the
 screen. The lit level follows Settings brightness 1–5 (40/80/130/190/255);
 dim is 32, or the lit level if lower. Audio and Bluetooth connections remain

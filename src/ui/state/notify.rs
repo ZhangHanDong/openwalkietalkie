@@ -28,7 +28,7 @@
 //! "demo notices never wake" rule is NOT implemented here: `UiState` clears
 //! `wake` while `deck.demo_active()` at the end of every entry point.
 use super::{global, Target, TouchAct, UiState, Update};
-use crate::control::{Button, Control, Edge, Wheel};
+use crate::control::{Button, Control, Edge};
 use crate::deck::model::{Effects, Notice, MAX_NOTICES};
 use crate::deck::msg::{CardKind, HostMsg, Template};
 use crate::ui::kit::list::Viewport;
@@ -211,7 +211,7 @@ pub(super) fn on_control(ui: &mut UiState, control: Control, at_ms: u32, out: &m
     }
     match control {
         Control::Wheel(wheel) => {
-            let step = if wheel == Wheel::Cw { 1 } else { -1 };
+            let step = super::selection_step(wheel);
             let index = selected_index(ui).map_or(0, |index| index as i32 + step);
             let count = filed_count(ui) as i32;
             if (0..count).contains(&index) {
@@ -604,6 +604,7 @@ pub(super) fn close_drawer(ui: &mut UiState, at_ms: u32, out: &mut Update) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::control::Wheel;
     use crate::control::{Touch, TouchPhase};
     use crate::deck::text::Text;
     use crate::ui::state::{agents::AgentsView, Overlay, PttSession};
@@ -871,7 +872,7 @@ mod tests {
         ui.tick(6000, 0, true, &mut Update::new());
         ui.on_face(Template::Usage);
         open_drawer(&mut ui, 6100, &mut Update::new());
-        wheel(&mut ui, Wheel::Cw, 6200);
+        wheel(&mut ui, Wheel::Ccw, 6200);
         assert_eq!(ui.notify.drawer_sel, (4, 40));
         let mut out = Update::new();
         ui.host(&card(1, 10, CardKind::Question), 6300, &mut out);
@@ -910,18 +911,18 @@ mod tests {
         let mut out = Update::new();
         open_drawer(&mut ui, 6100, &mut out);
         assert_eq!((ui.global.overlay, ui.notify.drawer_sel), (Overlay::Drawer, (3, 30)));
-        wheel(&mut ui, Wheel::Cw, 6200);
+        wheel(&mut ui, Wheel::Ccw, 6200);
         assert_eq!(ui.notify.drawer_sel, (4, 40));
         // A notice arriving while the drawer is open never moves the selection.
         ui.host(&card(1, 10, CardKind::Ready), 6300, &mut Update::new());
         assert_eq!(drawer_ids(&ui), [(3, 30), (4, 40), (5, 50), (1, 10)]);
         assert_eq!(ui.notify.drawer_sel, (4, 40));
         assert!(ui.notify.toast.is_none(), "no toast while the drawer is open");
-        wheel(&mut ui, Wheel::Cw, 6400);
-        wheel(&mut ui, Wheel::Cw, 6500);
-        wheel(&mut ui, Wheel::Cw, 6600);
+        wheel(&mut ui, Wheel::Ccw, 6400);
+        wheel(&mut ui, Wheel::Ccw, 6500);
+        wheel(&mut ui, Wheel::Ccw, 6600);
         assert_eq!(ui.notify.drawer_sel, (1, 10), "hard end");
-        wheel(&mut ui, Wheel::Ccw, 6700);
+        wheel(&mut ui, Wheel::Cw, 6700);
         let out = press(&mut ui, Button::Right, 6800);
         assert!(out.deck_events().count() == 0 && out.dirty);
         assert_eq!(drawer_ids(&ui), [(3, 30), (4, 40), (1, 10)]);

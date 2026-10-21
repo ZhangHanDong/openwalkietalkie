@@ -20,6 +20,8 @@ static KEY_EVENTS: Mutex<std::collections::VecDeque<u8>> =
     Mutex::new(std::collections::VecDeque::new());
 static TOUCH_IRQ: AtomicBool = AtomicBool::new(false);
 static KEYPAD_IRQ: AtomicBool = AtomicBool::new(false);
+static DIRECT_IRQ: AtomicBool = AtomicBool::new(false);
+static DIRECT_RAW: AtomicUsize = AtomicUsize::new(0xff);
 static INPUT_READS: AtomicUsize = AtomicUsize::new(0);
 static KEY_ON_ACK: AtomicBool = AtomicBool::new(false);
 static KEYPAD_BUS_FAILS: AtomicBool = AtomicBool::new(false);
@@ -52,6 +54,8 @@ fn reset() {
     lock(&KEY_EVENTS).clear();
     TOUCH_IRQ.store(false, Ordering::Relaxed);
     KEYPAD_IRQ.store(false, Ordering::Relaxed);
+    DIRECT_IRQ.store(false, Ordering::Relaxed);
+    DIRECT_RAW.store(0xff, Ordering::Relaxed);
     INPUT_READS.store(0, Ordering::Relaxed);
     KEY_ON_ACK.store(false, Ordering::Relaxed);
     KEYPAD_BUS_FAILS.store(false, Ordering::Relaxed);
@@ -262,11 +266,11 @@ extern "C" fn owt_keypad_asserted() -> bool {
 }
 #[no_mangle]
 extern "C" fn owt_inputs_asserted() -> bool {
-    false
+    DIRECT_IRQ.swap(false, Ordering::Relaxed)
 }
 #[no_mangle]
 extern "C" fn owt_inputs_read() -> u8 {
-    0xff
+    DIRECT_RAW.load(Ordering::Relaxed) as u8
 }
 #[no_mangle]
 extern "C" fn owt_keypad_retry() {

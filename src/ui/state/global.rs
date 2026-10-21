@@ -754,7 +754,7 @@ fn shift_wheel(ui: &mut UiState, wheel: Wheel, at_ms: u32, out: &mut Update) {
         return;
     }
     ui.global.detent_ms = Some(at_ms);
-    let step = if wheel == Wheel::Cw { 1 } else { -1 };
+    let step = super::selection_step(wheel);
     let next = ui.global.current as i32 + step;
     if (0..ui.global.strip_len as i32).contains(&next) {
         slide_to(ui, next as u8, at_ms, out);
@@ -1042,10 +1042,10 @@ mod tests {
     fn three_detents_in_100ms_move_at_most_one_face_and_pos_is_continuous() {
         let mut ui = fresh();
         press(&mut ui, Button::Shift, 0);
-        let out = wheel(&mut ui, Wheel::Cw, 10);
+        let out = wheel(&mut ui, Wheel::Ccw, 10);
         assert_eq!(deck_events(&out), [Event::Face { id: 2 }]);
-        assert_eq!(wheel(&mut ui, Wheel::Cw, 60).deck_events().count(), 0);
-        assert_eq!(wheel(&mut ui, Wheel::Cw, 110).deck_events().count(), 0);
+        assert_eq!(wheel(&mut ui, Wheel::Ccw, 60).deck_events().count(), 0);
+        assert_eq!(wheel(&mut ui, Wheel::Ccw, 110).deck_events().count(), 0);
         assert_eq!(ui.global.current, 1);
         // The position never jumps: every tick moves it toward the target.
         let mut last = ui.global.strip_x;
@@ -1056,12 +1056,12 @@ mod tests {
         }
         assert!(ui.strip_at_rest());
         // 150 ms later the next detent counts, retargeting mid-slide.
-        let out = wheel(&mut ui, Wheel::Cw, 400);
+        let out = wheel(&mut ui, Wheel::Ccw, 400);
         assert_eq!(deck_events(&out), [Event::Face { id: 3 }]);
         tick(&mut ui, 450);
         let mid = ui.global.strip_x;
         assert!(mid > FACE_W * STRIP_ONE && mid < 2 * FACE_W * STRIP_ONE && ui.animating());
-        wheel(&mut ui, Wheel::Ccw, 560);
+        wheel(&mut ui, Wheel::Cw, 560);
         assert_eq!(ui.global.current, 1);
         tick(&mut ui, 570);
         assert!(ui.global.strip_x <= mid, "a retargeted slide turns around from where it is");
@@ -1073,8 +1073,8 @@ mod tests {
     fn held_wheel_at_strip_end_bounces_once() {
         let mut ui = fresh();
         press(&mut ui, Button::Shift, 0);
-        // Ccw at the left end: one overshoot, then nothing until the run ends.
-        wheel(&mut ui, Wheel::Ccw, 10);
+        // Cw at the left end: one overshoot, then nothing until the run ends.
+        wheel(&mut ui, Wheel::Cw, 10);
         assert!(ui.animating());
         tick(&mut ui, 20);
         assert!(!ui.strip_at_rest());
@@ -1086,17 +1086,17 @@ mod tests {
         assert_eq!(low, -BOUNCE_PX * STRIP_ONE);
         assert!(ui.strip_at_rest() && !ui.animating());
         for at in [500, 590, 680] {
-            wheel(&mut ui, Wheel::Ccw, at);
+            wheel(&mut ui, Wheel::Cw, at);
             assert!(ui.strip_at_rest(), "at {at}: a held key bounces once per run");
         }
         // 300 ms without a detent ends the run: the next one bounces again.
-        wheel(&mut ui, Wheel::Ccw, 1000);
+        wheel(&mut ui, Wheel::Cw, 1000);
         tick(&mut ui, 1010);
         assert!(!ui.strip_at_rest());
         settle(&mut ui, 1010);
         // The right end shows canvas on the right.
         ui.on_face(Template::Settings);
-        wheel(&mut ui, Wheel::Cw, 3000);
+        wheel(&mut ui, Wheel::Ccw, 3000);
         tick(&mut ui, 3060);
         let [_, second] = ui.visible_faces();
         assert_eq!(second.unwrap().face, None);
@@ -1108,7 +1108,7 @@ mod tests {
         let mut ui = fresh();
         ui.on_face(Template::Omarchy);
         press(&mut ui, Button::Shift, 0);
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
         release(&mut ui, Button::Shift, 100);
         assert_eq!(ui.current_face().template, Template::Macropad);
         ui.on_face(Template::Omarchy);
@@ -1130,7 +1130,7 @@ mod tests {
         let mut ui = fresh();
         assert_eq!(ui.face_at(1).unwrap().template, Template::Omarchy);
         press(&mut ui, Button::Shift, 0);
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
         release(&mut ui, Button::Shift, 20);
         tick(&mut ui, 60);
         assert!(!ui.strip_at_rest());
@@ -1149,23 +1149,23 @@ mod tests {
             let mut ui = fresh();
             ui.global.overlay = overlay;
             press(&mut ui, Button::Shift, 0);
-            let out = wheel(&mut ui, Wheel::Cw, 10);
+            let out = wheel(&mut ui, Wheel::Ccw, 10);
             assert_eq!((ui.global.current, out.deck_events().count()), (0, 0), "{overlay:?}");
             assert_eq!(ui.global.overlay, overlay);
         }
         let mut ui = fresh();
         ui.global.overlay = Overlay::Drawer;
         press(&mut ui, Button::Shift, 0);
-        wheel(&mut ui, Wheel::Cw, 10);
+        wheel(&mut ui, Wheel::Ccw, 10);
         assert_eq!((ui.global.overlay, ui.global.current), (Overlay::None, 1));
         // At a hard end, and inside the detent limit, it still closes.
         ui.global.overlay = Overlay::Drawer;
-        wheel(&mut ui, Wheel::Ccw, 20);
+        wheel(&mut ui, Wheel::Cw, 20);
         assert_eq!((ui.global.overlay, ui.global.current), (Overlay::None, 1));
         let mut ui = fresh();
         ui.global.overlay = Overlay::Drawer;
         press(&mut ui, Button::Shift, 0);
-        assert!(wheel(&mut ui, Wheel::Ccw, 10).dirty);
+        assert!(wheel(&mut ui, Wheel::Cw, 10).dirty);
         assert_eq!((ui.global.overlay, ui.global.current), (Overlay::None, 0));
     }
 
@@ -1173,10 +1173,10 @@ mod tests {
     fn two_quick_shift_scroll_flicks_do_not_open_manager() {
         let mut ui = fresh();
         press(&mut ui, Button::Shift, 0);
-        wheel(&mut ui, Wheel::Cw, 80);
+        wheel(&mut ui, Wheel::Ccw, 80);
         release(&mut ui, Button::Shift, 200);
         press(&mut ui, Button::Shift, 400);
-        wheel(&mut ui, Wheel::Cw, 480);
+        wheel(&mut ui, Wheel::Ccw, 480);
         release(&mut ui, Button::Shift, 600);
         assert_eq!(ui.global.overlay, Overlay::None);
         assert_eq!(ui.global.current, 2);
@@ -1313,7 +1313,7 @@ mod tests {
         let mut ui = fresh();
         hold_host_key(&mut ui, 0);
         press(&mut ui, Button::Shift, 10);
-        let out = wheel(&mut ui, Wheel::Cw, 20);
+        let out = wheel(&mut ui, Wheel::Ccw, 20);
         let expected = Event::Key {
             key: KeyId::Enter,
             act: 0,
@@ -1523,9 +1523,9 @@ mod tests {
     #[test]
     fn ptt_release_matches_press_after_every_context_change() {
         let table: [(&str, &dyn Fn(&mut UiState)); 8] = [
-            ("shift_cw", &|ui| {
+            ("shift_ccw", &|ui| {
                 press(ui, Button::Shift, 100);
-                wheel(ui, Wheel::Cw, 110);
+                wheel(ui, Wheel::Ccw, 110);
                 release(ui, Button::Shift, 120);
             }),
             ("left", &|ui| {

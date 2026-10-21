@@ -25,8 +25,8 @@
 //!
 //! | Keypad key        | Control                              |
 //! |-------------------|--------------------------------------|
-//! | `v` down (21)     | wheel clockwise ("next", repeats)    |
-//! | `^` up (41)       | wheel counter-clockwise ("previous") |
+//! | `v` down (21)     | wheel clockwise (repeats)            |
+//! | `^` up (41)       | wheel counter-clockwise (repeats)    |
 //! | `.` dot (31)      | Enter                                |
 //! | ESC (42)          | Cancel                               |
 //! | HOME (43)         | Shift                                |

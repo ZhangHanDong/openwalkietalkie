@@ -238,8 +238,9 @@ pub(super) fn on_control(
     if let Some((face, slot)) = ui.macropad.cursor.filter(|(face, _)| *face == instance) {
         // The cursor is up: the controls move it, nothing presses a key.
         let step = match control {
-            Control::Wheel(Wheel::Cw) | Control::Button(Button::Right, Edge::Press) => 1,
-            Control::Wheel(Wheel::Ccw) | Control::Button(Button::Left, Edge::Press) => -1,
+            Control::Wheel(wheel) => super::selection_step(wheel),
+            Control::Button(Button::Right, Edge::Press) => 1,
+            Control::Button(Button::Left, Edge::Press) => -1,
             Control::Button(Button::Enter, Edge::Press) if !shift => {
                 open_editor(ui, face, slot, at_ms, out);
                 return true;
@@ -491,7 +492,7 @@ pub(super) fn on_edit_control(ui: &mut UiState, control: Control, at_ms: u32, ou
     let edit = ui.macropad.edit;
     match control {
         Control::Wheel(wheel) if edit.adjusting => {
-            adjust(ui, if wheel == Wheel::Cw { 1 } else { -1 }, out);
+            adjust(ui, super::selection_step(wheel), out);
         }
         Control::Button(button @ (Button::Left | Button::Right), Edge::Press) if edit.adjusting => {
             if edit.row == ROW_KEY {
@@ -500,7 +501,7 @@ pub(super) fn on_edit_control(ui: &mut UiState, control: Control, at_ms: u32, ou
         }
         Control::Wheel(wheel) => {
             let last = edit_rows(&edit) - 1;
-            let next = if wheel == Wheel::Cw { (edit.row + 1).min(last) } else { edit.row.saturating_sub(1) };
+            let next = if super::selection_step(wheel) > 0 { (edit.row + 1).min(last) } else { edit.row.saturating_sub(1) };
             if next != edit.row {
                 ui.macropad.edit.row = next;
                 out.dirty = true;
@@ -646,9 +647,9 @@ mod tests {
         assert_eq!((ui.macropad.edit.face, ui.macropad.edit.index, ui.macropad.edit.present), (MACRO_FACE, 8, false));
         assert_eq!(edit_rows(&ui.macropad.edit), 4, "no Remove for an empty slot");
         // Save without a label only complains.
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 20);
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 30);
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 31);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 20);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 30);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 31);
         assert_eq!(ui.macropad.edit.row, ROW_SAVE);
         let out = tap(&mut ui, Button::Enter, 40);
         assert!(ui.macropad.edit.needs_label && out.deck_events().count() == 0);
@@ -663,19 +664,19 @@ mod tests {
         assert!(!ui.macropad.edit.needs_label);
         // Modifiers: ENTER adjusts, SCROLL steps the combos with hard ends,
         // ENTER ends. Key: the same through `KEYS`, LEFT/RIGHT by ten.
-        apply(&mut ui, Control::Wheel(Wheel::Ccw), 80);
-        apply(&mut ui, Control::Wheel(Wheel::Ccw), 81);
+        apply(&mut ui, Control::Wheel(Wheel::Cw), 80);
+        apply(&mut ui, Control::Wheel(Wheel::Cw), 81);
         assert_eq!(ui.macropad.edit.row, ROW_MODS);
         tap(&mut ui, Button::Enter, 90);
         assert!(ui.macropad.edit.adjusting);
-        apply(&mut ui, Control::Wheel(Wheel::Ccw), 100);
+        apply(&mut ui, Control::Wheel(Wheel::Cw), 100);
         assert_eq!(ui.macropad.edit.keys.mods, 0, "hard end");
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 110);
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 111);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 110);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 111);
         assert_eq!(ui.macropad.edit.keys.mods, MOD_CMD | MOD_SHIFT);
         tap(&mut ui, Button::Enter, 120);
         assert!(!ui.macropad.edit.adjusting);
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 130);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 130);
         assert_eq!(ui.macropad.edit.row, ROW_KEY);
         tap(&mut ui, Button::Enter, 131);
         for _ in 0..3 {
@@ -683,7 +684,7 @@ mod tests {
         }
         assert_eq!(ui.macropad.edit.keys.key, 30, "three jumps of ten");
         for _ in 0..3 {
-            apply(&mut ui, Control::Wheel(Wheel::Ccw), 133);
+            apply(&mut ui, Control::Wheel(Wheel::Cw), 133);
         }
         assert_eq!(ui.macropad.edit.keys.name(), "0", "a..z then 0: index 27");
         tap(&mut ui, Button::Left, 134);
@@ -691,11 +692,11 @@ mod tests {
         tap(&mut ui, Button::Left, 134);
         assert_eq!(ui.macropad.edit.keys.key, 0, "hard end at none");
         for _ in 0..31 {
-            apply(&mut ui, Control::Wheel(Wheel::Cw), 135);
+            apply(&mut ui, Control::Wheel(Wheel::Ccw), 135);
         }
         assert_eq!(ui.macropad.edit.keys.name(), "4");
         tap(&mut ui, Button::Enter, 136);
-        apply(&mut ui, Control::Wheel(Wheel::Cw), 137);
+        apply(&mut ui, Control::Wheel(Wheel::Ccw), 137);
         assert_eq!(ui.macropad.edit.row, ROW_SAVE);
         let out = tap(&mut ui, Button::Enter, 140);
         assert_eq!(ui.global.overlay, Overlay::None);
@@ -763,8 +764,8 @@ mod tests {
         apply(&mut ui, Control::Button(Button::Shift, Edge::Release), 30);
         assert_eq!(ui.macropad.cursor, Some((MACRO_FACE, 4)));
         assert_eq!(ui.current_face().template, Template::Macropad, "SHIFT+CANCEL is not home");
-        // The wheel moves the cursor instead of stepping a CW-bound key.
-        let out = apply(&mut ui, Control::Wheel(Wheel::Cw), 40);
+        // The wheel moves the cursor without triggering a bound key.
+        let out = apply(&mut ui, Control::Wheel(Wheel::Ccw), 40);
         assert_eq!((ui.macropad.cursor, out.deck_events().count()), (Some((MACRO_FACE, 5)), 0));
         for _ in 0..6 {
             tap(&mut ui, Button::Right, 50);

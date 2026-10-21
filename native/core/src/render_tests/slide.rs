@@ -125,7 +125,7 @@ fn a_retargeted_slide_refreshes_like_a_complete_redraw_in_every_frame() {
     // 168 ms apart: slower than the 150 ms detent limit (every detent counts),
     // faster than the 220 ms slide (every one but the first retargets it).
     // The walk never reaches an end of the strip, so no bounce is involved.
-    for wheel in [Wheel::Cw, Wheel::Cw, Wheel::Ccw, Wheel::Cw, Wheel::Cw] {
+    for wheel in [Wheel::Ccw, Wheel::Ccw, Wheel::Cw, Wheel::Ccw, Wheel::Ccw] {
         step(&mut previous, Some(Control::Wheel(wheel)), 3);
         for _ in 0..5 {
             step(&mut previous, None, 33);

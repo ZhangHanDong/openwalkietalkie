@@ -446,6 +446,26 @@ pub fn handle_request(
     let mut out = Out::new(tx);
 
     let what = match method {
+        #[cfg(feature = "audio-usb-rate-test")]
+        b"audio.test.status" => {
+            use crate::audio::usb_test as stats;
+            use core::sync::atomic::Ordering;
+            open_reply(&mut out, id);
+            out.push(b"\"result\":{");
+            for (index, (key, value)) in [
+                ("starts", &stats::STARTS), ("ended", &stats::ENDED),
+                ("rate_hz", &stats::RATE), ("frames", &stats::FRAMES),
+                ("samples", &stats::SAMPLES), ("gaps", &stats::GAPS),
+                ("underruns", &stats::UNDERRUNS), ("queue_drops", &stats::QUEUE_DROPS),
+                ("seq_errors", &stats::SEQ_ERRORS), ("playing", &stats::PLAYING),
+            ].iter().enumerate() {
+                if index != 0 { out.push(b","); }
+                out.push(b"\""); out.push(key.as_bytes()); out.push(b"\":");
+                out.push_u32(value.load(Ordering::Relaxed));
+            }
+            out.push(b"}}");
+            Handled::SysVersion
+        }
         b"sys.version" => {
             open_reply(&mut out, id);
             out.push(b"\"result\":{\"version\":\"");
@@ -457,6 +477,8 @@ pub fn handle_request(
                 out.push(b",\"recovery_protocol\":");
                 out.push_u32(u32::from(protocol));
             }
+            #[cfg(feature = "audio-usb-rate-test")]
+            out.push(b",\"usb_speaker_rates\":[16000,48000],\"audio_test\":true");
             if status.maintenance {
                 out.push(b",\"maintenance\":true");
             }
@@ -543,7 +565,11 @@ mod request_tests {
         assert_eq!(handled, Handled::SysVersion);
         assert_eq!(
             reply,
-            r#"{"id":1,"result":{"version":"test","board":"Rev T"}}"#
+            if cfg!(feature = "audio-usb-rate-test") {
+                r#"{"id":1,"result":{"version":"test","board":"Rev T","usb_speaker_rates":[16000,48000],"audio_test":true}}"#
+            } else {
+                r#"{"id":1,"result":{"version":"test","board":"Rev T"}}"#
+            }
         );
         let (handled, reply) = request(br#"{"method":"device.status","id":"a"}"#);
         assert_eq!(handled, Handled::DeviceStatus);

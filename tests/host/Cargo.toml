@@ -15,6 +15,7 @@ profont = "0.7"
 hw-a = []
 # Rev B hardware: Rev A plus the charger's CHG pin; see the root manifest.
 hw-b = ["hw-a"]
+audio-usb-rate-test = []
 
 [lib]
 path = "lib.rs"

@@ -33,6 +33,7 @@ pub struct Caps {
     pub usage_name: usize,
     pub usage_account: usize,
     pub usage_reset: usize,
+    pub usage_tip: usize,
     pub usage_items: usize,
     pub face_name: usize,
     pub faces: usize,
@@ -63,6 +64,7 @@ const CAPS: Caps = Caps {
     usage_name: 20,
     usage_account: 48,
     usage_reset: 24,
+    usage_tip: 32,
     usage_items: 6,
     face_name: 16,
     faces: 8,
@@ -405,6 +407,9 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
                 w.key("p");
                 w.number(u64::from(item.percent));
                 w.field_str(&mut first, "r", &cut(&item.reset, CAPS.usage_reset));
+                if let Some(tip) = &item.reset_tip {
+                    w.field_str(&mut first, "tip", &cut(tip, CAPS.usage_tip));
+                }
                 if let Some(tone) = item.tone {
                     w.field_str(&mut first, "c", name_of(TONES, tone));
                 }
@@ -660,8 +665,8 @@ mod tests {
             text(&HostLine::Usage {
                 period: "SEP 2026".into(),
                 items: vec![
-                    UsageItem { name: "Claude Pro".into(), account: None, percent: 62, reset: "resets in 4 days".into(), tone: None },
-                    UsageItem { name: "Codex".into(), account: None, percent: 100, reset: "tomorrow".into(), tone: Some(Tone::Red) },
+                    UsageItem { reset_tip: None, name: "Claude Pro".into(), account: None, percent: 62, reset: "resets in 4 days".into(), tone: None },
+                    UsageItem { reset_tip: None, name: "Codex".into(), account: None, percent: 100, reset: "tomorrow".into(), tone: Some(Tone::Red) },
                 ],
             }),
             "{\"m\":\"usage\",\"period\":\"SEP 2026\",\"items\":[{\"n\":\"Claude Pro\",\"p\":62,\"r\":\"resets in 4 days\"},{\"n\":\"Codex\",\"p\":100,\"r\":\"tomorrow\",\"c\":\"red\"}]}\n"
@@ -923,6 +928,7 @@ mod tests {
             encode(&HostLine::Usage {
                 period: "x".into(),
                 items: vec![UsageItem {
+                    reset_tip: None,
                     name: "n".into(),
                     account: None,
                     percent: 101,

@@ -780,6 +780,7 @@ Type: string.
 | `name` | string | yes |  |  |
 | `percent` | uint8 | yes |  | 0..=100. |
 | `reset` | string | yes |  |  |
+| `reset_tip` | string? | no |  | An expiring redeemable reset reminder; absent when none is due. |
 | `tone` | [`Tone`](#tone)? | no |  | `None` derives the bar tone from `percent`. |
 
 ### `VoiceInput`

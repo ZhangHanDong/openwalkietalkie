@@ -99,6 +99,54 @@ pub struct Window {
     pub resets_at: Option<u64>,
 }
 
+/// An unused, redeemable reset grant, separate from a meter's scheduled reset.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ResetGrant {
+    pub count: u64,
+    pub starts_at: Option<u64>,
+    pub expires_at: u64,
+}
+
+/// Claude Code's optional `cedar_ember` block from `?cedar_ember=1`.
+/// Keep unused grants even when a limit must be reached before redemption.
+#[must_use]
+pub fn claude_reset_grants(v: &Value) -> Vec<ResetGrant> {
+    let block = &v["cedar_ember"];
+    if block["eligible"] != true { return Vec::new(); }
+    block["grants"].as_array().into_iter().flatten().filter_map(|g| {
+        let count = g["resets_left"].as_u64().filter(|n| *n > 0)?;
+        if g["paused"] == true { return None; }
+        Some(ResetGrant { count, starts_at: parse_ts(&g["starts_at"]), expires_at: parse_ts(&g["ends_at"])? })
+    }).collect()
+}
+
+/// Only credit details from `account/rateLimits/read` give expiry dates.
+/// A count without details, or an older server, cannot supply a reminder.
+#[must_use]
+pub fn codex_reset_grants(v: &Value) -> Vec<ResetGrant> {
+    let block = &v["rateLimitResetCredits"];
+    if block["availableCount"].as_u64().unwrap_or(0) == 0 { return Vec::new(); }
+    block["credits"].as_array().into_iter().flatten().filter_map(|g| {
+        if g["status"] != "available" || g["resetType"] != "codexRateLimits" { return None; }
+        Some(ResetGrant { count: 1, starts_at: parse_ts(&g["grantedAt"]), expires_at: parse_ts(&g["expiresAt"])? })
+    }).collect()
+}
+
+fn reset_tip(grants: &[ResetGrant], now: u64) -> Option<String> {
+    // Group only grants with the nearest expiry: later grants must not be
+    // advertised as expiring at the first deadline.
+    let expiry = grants.iter().filter(|g| g.count > 0 && g.starts_at.is_none_or(|at| at <= now)
+        && g.expires_at > now && g.expires_at - now <= 3 * 86400).map(|g| g.expires_at).min()?;
+    let count = grants.iter().filter(|g| g.expires_at == expiry && g.starts_at.is_none_or(|at| at <= now))
+        .fold(0u64, |count, g| count.saturating_add(g.count));
+    let left = expiry - now;
+    let time = if left >= 86400 { format!("{}d {}h", left / 86400, left % 86400 / 3600) }
+        else if left >= 3600 { format!("{}h {}m", left / 3600, left % 3600 / 60) }
+        else if left >= 60 { format!("{}m", left / 60) } else { "<1m".into() };
+    let count_text = if count > 99 { "99+".into() } else { count.to_string() };
+    Some(format!("{count_text} {} in {time}", if count == 1 { "reset expires" } else { "resets expire" }))
+}
+
 /// `GET /api/oauth/usage`: `{five_hour, seven_day, seven_day_opus?,
 /// seven_day_sonnet?, extra_usage?}`, each `{utilization: <percent>,
 /// resets_at: <ISO-8601>}` — or, in newer answers, the flat keys null and
@@ -389,6 +437,7 @@ pub fn codex_account(value: &Value) -> Option<String> {
 pub struct Feeder {
     windows: BTreeMap<Provider, Vec<Window>>,
     accounts: BTreeMap<Provider, Option<String>>,
+    resets: BTreeMap<Provider, Vec<ResetGrant>>,
     /// The provider whose report came last: the principal of the next push.
     latest: Option<Provider>,
     /// What the deck has, so a tick re-pushes only when the text moved.
@@ -402,11 +451,18 @@ impl Feeder {
     pub fn set(&mut self, provider: Provider, windows: Vec<Window>, account: Option<String>) -> bool {
         self.latest = Some(provider);
         let account = account_label(account.as_deref());
+        if account.is_none() || self.accounts.get(&provider) != Some(&account) || windows.is_empty() {
+            self.resets.remove(&provider);
+        }
         let changed = self.windows.get(&provider) != Some(&windows)
             || self.accounts.get(&provider) != Some(&account);
         self.windows.insert(provider, windows);
         self.accounts.insert(provider, account);
         changed
+    }
+
+    pub fn set_resets(&mut self, provider: Provider, resets: Vec<ResetGrant>) {
+        self.resets.insert(provider, resets);
     }
 
     /// Status-line reports contain only a subset of the account's meters.
@@ -459,6 +515,8 @@ impl Feeder {
                         .unwrap_or("Account unavailable").to_string()),
                     percent: w.percent.min(100),
                     reset: clip(&reset_text(w.resets_at, now), RESET_MAX),
+                    reset_tip: (w.label == "week").then(|| reset_tip(
+                        self.resets.get(&provider).map_or(&[], Vec::as_slice), now)).flatten(),
                     tone: None,
                 });
             }
@@ -506,6 +564,75 @@ impl Feeder {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn manual_reset_sources_ignore_spent_paused_and_unknown_credits() {
+        let grant = json!({"resets_left": 2, "starts_at": 100, "ends_at": 200, "paused": false, "usable_now": false});
+        let mut response = json!({"cedar_ember": {"eligible": true, "grants": [grant.clone(),
+            {"resets_left": 0, "ends_at": 200}, {"resets_left": 1, "ends_at": 200, "paused": true},
+            {"resets_left": 1, "ends_at": null}]}});
+        assert_eq!(claude_reset_grants(&response), vec![ResetGrant { count: 2, starts_at: Some(100), expires_at: 200 }]);
+        response["cedar_ember"]["eligible"] = false.into();
+        assert!(claude_reset_grants(&response).is_empty());
+        let credit = json!({"status": "available", "resetType": "codexRateLimits", "grantedAt": 100, "expiresAt": 200});
+        let mut response = json!({"rateLimitResetCredits": {"availableCount": 1, "credits": [credit]}});
+        assert_eq!(codex_reset_grants(&response), vec![ResetGrant { count: 1, starts_at: Some(100), expires_at: 200 }]);
+        for status in ["redeemed", "redeeming", "unknown"] {
+            response["rateLimitResetCredits"]["credits"][0]["status"] = status.into();
+            assert!(codex_reset_grants(&response).is_empty());
+        }
+        assert!(codex_reset_grants(&json!({"rateLimitResetCredits": {"availableCount": 3, "credits": null}})).is_empty());
+        assert!(claude_reset_grants(&Value::Null).is_empty());
+        assert!(codex_reset_grants(&Value::Null).is_empty());
+    }
+
+    #[test]
+    fn manual_reset_tips_use_the_nearest_expiry_with_a_72_hour_boundary() {
+        let now = 1_800_000_000;
+        let mut grant = ResetGrant { count: 1, starts_at: None, expires_at: now + 3 * 86400 + 1 };
+        assert_eq!(reset_tip(&[grant.clone()], now), None);
+        grant.expires_at -= 1;
+        assert_eq!(reset_tip(&[grant.clone()], now), Some("1 reset expires in 3d 0h".into()));
+        grant.expires_at = now + 60;
+        let later = ResetGrant { count: 2, starts_at: None, expires_at: now + 86400 };
+        assert_eq!(reset_tip(&[grant.clone(), later.clone()], now), Some("1 reset expires in 1m".into()));
+        assert_eq!(reset_tip(&[grant.clone(), grant.clone()], now), Some("2 resets expire in 1m".into()));
+        assert_eq!(reset_tip(&[grant.clone()], now + 1), Some("1 reset expires in <1m".into()));
+        assert_eq!(reset_tip(&[grant.clone()], now + 60), None);
+        assert_eq!(reset_tip(&[grant.clone()], now + 61), None);
+        grant.starts_at = Some(now + 1);
+        assert_eq!(reset_tip(&[grant], now), None);
+        let many = ResetGrant { count: u64::MAX, ..later };
+        let tip = reset_tip(&[many.clone(), many], now).unwrap();
+        assert_eq!(tip, "99+ resets expire in 1d 0h");
+        assert!(tip.len() <= deck_proto::caps().usage_tip);
+    }
+
+    #[test]
+    fn manual_reset_tips_belong_only_to_the_weekly_bar_and_current_account() {
+        let now = 1_800_000_000;
+        let mut f = Feeder::default();
+        let windows = vec![Window { label: "session".into(), percent: 10, resets_at: Some(now + 60) },
+            Window { label: "week".into(), percent: 100, resets_at: Some(now + 7 * 86400) }];
+        let account = Some("one@example.com".into());
+        let grants = vec![ResetGrant { count: 1, starts_at: None, expires_at: now + 86400 }];
+        f.set(Provider::Claude, windows.clone(), account.clone());
+        assert!(f.render(&UsageCfg::default(), "", now).unwrap().1.iter().all(|i| i.reset_tip.is_none()));
+        f.set_resets(Provider::Claude, grants.clone());
+        let items = f.render(&UsageCfg::default(), "", now).unwrap().1;
+        assert_eq!(items[0].reset_tip, None);
+        assert_eq!(items[1].reset_tip.as_deref(), Some("1 reset expires in 1d 0h"));
+        f.set_partial(Provider::Claude, windows.clone(), account.clone(), now);
+        assert!(f.render(&UsageCfg::default(), "", now).unwrap().1[1].reset_tip.is_some());
+        f.set_resets(Provider::Claude, Vec::new());
+        assert!(f.render(&UsageCfg::default(), "", now).unwrap().1[1].reset_tip.is_none());
+        for identity in [Some("two@example.com".into()), None] {
+            f.set(Provider::Claude, windows.clone(), account.clone());
+            f.set_resets(Provider::Claude, grants.clone());
+            f.set_partial(Provider::Claude, windows.clone(), identity, now);
+            assert!(f.render(&UsageCfg::default(), "", now).unwrap().1.iter().all(|i| i.reset_tip.is_none()));
+        }
+    }
 
     #[test]
     fn accounts_change_with_the_reading_and_logout_clears_the_face() {

@@ -135,10 +135,27 @@ pub enum Verdict {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct SpeakerGate {
     refused: Option<u8>,
+    /// A high-rate stream needs an explicit USB START; orphan frames stay 16 kHz.
+    high_rate_stream: Option<u8>,
 }
 
 impl SpeakerGate {
+    #[cfg(test)]
     pub fn admit(&mut self, frame: &codec::Frame) -> Verdict {
+        self.admit_on(frame, false)
+    }
+
+    pub fn rate_khz(&self) -> u8 {
+        if self.high_rate_stream.is_some() { 48 } else { codec::RATE_KHZ }
+    }
+
+    pub fn finish(&mut self) {
+        self.high_rate_stream = None;
+    }
+
+    pub fn admit_on(&mut self, frame: &codec::Frame, usb: bool) -> Verdict {
+        // BLE traffic cannot change an active USB stream's rate.
+        if self.high_rate_stream.is_some() && !usb { return Verdict::Drop; }
         match *frame {
             codec::Frame::Start {
                 stream,
@@ -147,9 +164,11 @@ impl SpeakerGate {
                 frame_ms,
             } => {
                 if codec == codec::CODEC_IMA_ADPCM
-                    && rate_khz == codec::RATE_KHZ
+                    && (rate_khz == codec::RATE_KHZ
+                        || (usb && rate_khz == 48))
                     && frame_ms == codec::FRAME_MS
                 {
+                    self.high_rate_stream = (rate_khz == 48).then_some(stream);
                     if self.refused == Some(stream) {
                         self.refused = None;
                     }
@@ -162,13 +181,15 @@ impl SpeakerGate {
                 }
             }
             codec::Frame::Audio { stream, .. } => {
-                if self.refused == Some(stream) {
+                if self.refused == Some(stream) || self.high_rate_stream.is_some_and(|id| id != stream) {
                     Verdict::Drop
                 } else {
                     Verdict::Play
                 }
             }
             codec::Frame::End { stream, .. } => {
+                if self.high_rate_stream.is_some_and(|id| id != stream) { return Verdict::Drop; }
+                self.high_rate_stream = None;
                 if self.refused == Some(stream) {
                     self.refused = None;
                     Verdict::Drop
@@ -322,5 +343,34 @@ mod tests {
         assert_eq!(gate.admit(&codec::parse(&start(4, codec::CODEC_IMA_ADPCM))), Verdict::Play);
         assert_eq!(gate.admit(&codec::parse(&audio)), Verdict::Play);
         assert_eq!(gate.admit(&codec::parse(&end)), Verdict::Play);
+    }
+
+    #[test]
+    fn high_rate_audio_requires_an_explicit_usb_start() {
+        let start = codec::parse(&[codec::KIND_START, 7, codec::CODEC_IMA_ADPCM, 48, 20]);
+        let audio = codec::parse(&[codec::KIND_AUDIO, 7, 0, 0, 0, 0, 0x11]);
+        let mut gate = SpeakerGate::default();
+        assert_eq!(gate.admit_on(&start, false), Verdict::Refuse);
+        assert_eq!(gate.rate_khz(), 16);
+        assert_eq!(gate.admit_on(&audio, false), Verdict::Drop);
+        {
+            assert_eq!(gate.admit_on(&start, true), Verdict::Play);
+            assert_eq!(gate.rate_khz(), 48);
+            assert_eq!(gate.admit_on(&audio, false), Verdict::Drop);
+            assert_eq!(gate.admit_on(&audio, true), Verdict::Play);
+            assert_eq!(gate.admit_on(&codec::parse(&[codec::KIND_AUDIO, 8, 0, 0, 0, 0, 0x11]), true), Verdict::Drop);
+            assert_eq!(gate.admit_on(&codec::parse(&[codec::KIND_END, 8, 0, 0]), true), Verdict::Drop);
+            assert_eq!(gate.rate_khz(), 48);
+            assert_eq!(gate.admit_on(&codec::parse(&[codec::KIND_END, 7, 0, 0]), true), Verdict::Play);
+            assert_eq!(gate.rate_khz(), 16);
+            assert_eq!(gate.admit_on(&audio, false), Verdict::Play);
+            gate.admit_on(&start, true);
+            gate.finish();
+            assert_eq!(gate.rate_khz(), 16);
+        }
+        for rate in [24, 32, 44, 96] {
+            let mut gate = SpeakerGate::default();
+            assert_eq!(gate.admit_on(&codec::parse(&[codec::KIND_START, 7, 1, rate, 20]), true), Verdict::Refuse);
+        }
     }
 }

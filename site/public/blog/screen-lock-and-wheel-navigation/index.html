@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenWalkieTalkie v0.8.0: Screen lock and consistent wheel navigation · OpenWalkieTalkie</title>
+<meta name="description" content="An automatic screen lock protects PTT in your bag, with four counterclockwise ticks to unlock and a consistent direction for page and item selection." />
+<link rel="canonical" href="https://openwalkietalkie.org/blog/screen-lock-and-wheel-navigation/" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="OpenWalkieTalkie" />
+<meta property="og:title" content="OpenWalkieTalkie v0.8.0: Screen lock and consistent wheel navigation · OpenWalkieTalkie" />
+<meta property="og:description" content="An automatic screen lock protects PTT in your bag, with four counterclockwise ticks to unlock and a consistent direction for page and item selection." />
+<meta property="og:url" content="https://openwalkietalkie.org/blog/screen-lock-and-wheel-navigation/" />
+<meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2e2bd" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131a3a" />
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<link rel="alternate" type="application/atom+xml" title="OpenWalkieTalkie Blog" href="/blog/feed.xml" />
+
+<link rel="preload" href="/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/vt323-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/blog.css" />
+<script src="/js/theme-init.js"></script>
+<!-- No optional analytics or advertising scripts. -->
+</head>
+<body>
+
+<a class="skip-link" href="#content">Skip to content</a>
+
+<div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="nav" id="nav">
+  <div class="nav__inner">
+    <a class="brand" href="/" aria-label="OpenWalkieTalkie — home">
+      <img class="logo-mark pixelated" src="/assets/logo-64.png" alt="" width="26" height="26" />
+      <span class="brand__text">OPEN WALKIE TALKIE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Sections">
+      <a href="/#pile">The Pile</a>
+      <a href="/#features">Features</a>
+      <a href="/#demo">Try It</a>
+      <a href="/#faces">Faces</a>
+      <a href="/#blueprint">Blueprint</a>
+      <a href="/blog/" aria-current="true">Blog</a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle day and night theme" aria-pressed="false">
+      <span class="theme-toggle__track" aria-hidden="true">
+        <span class="theme-toggle__icon theme-toggle__icon--sun"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--moon"></span>
+        <span class="theme-toggle__knob"></span>
+      </span>
+      <span class="theme-toggle__label" id="themeLabel">DAY</span>
+    </button>
+
+    <button class="nav__burger" id="navBurger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main class="blog-main" id="content">
+<header class="post-head">
+  <p class="section-kicker">THE BLOG · RELEASE NOTES</p>
+  <h1>OpenWalkieTalkie v0.8.0: Screen lock and consistent wheel navigation</h1>
+  <p class="post-meta"><span>October 21, 2026</span><span>App and firmware update</span></p>
+</header>
+<article class="post-body">
+  <p>A handheld should be ready when you pick it up, without sending an accidental voice message from inside your bag. Version 0.8.0 adds an automatic screen lock and makes the wheel behave consistently when moving between pages and through lists.</p>
+  <h2>Two minutes to lock, four ticks to unlock</h2>
+  <p>After two minutes without local input, the display sleeps and every local control locks, including push-to-talk. Pressing a button, touching the screen, or turning the wheel lights the lock screen without activating the control underneath.</p>
+  <p>To unlock, turn the wheel <strong>counterclockwise four consecutive ticks</strong>. If the first tick wakes the display, it counts toward the four. Turning clockwise or letting the display sleep again resets your progress.</p>
+  <p>The final unlocking tick only unlocks the deck; it does not also move the selection. A button held while locked must be released and pressed again before it can act, so a trapped PTT cannot start transmitting as the deck unlocks. Notifications can light the display, but cannot unlock it, and a held button cannot keep the locked display awake indefinitely.</p>
+  <h2>One direction for pages and lists</h2>
+  <p>The physical encoder direction is corrected. <strong>Counterclockwise selects next or down; clockwise selects previous or up.</strong> That applies both to Shift + wheel page selection and to menu items, agent and session lists, card choices, and list scrolling. The tutorial follows the same page direction.</p>
+  <p>Numeric settings, including volume, still increase clockwise. Assigned Macropad bindings and in-game turns keep their physical direction.</p>
+  <h2>Keep the audio improvements</h2>
+  <p>This release retains the <a href="/blog/speaker-eq-and-less-hiss/">speaker EQ and Rev A RAM execution introduced in 0.7.0</a>. Rev B continues to run from NOR flash. Flash partitions and the recovery protocol are unchanged.</p>
+  <h2>Update the app and the deck</h2>
+  <p>Install the signed, notarized Mac app for Apple Silicon or Intel, or choose <strong>Check for Updates</strong> in the app. macOS 13 or later is required. Connect the deck over USB-C, then use <strong>Service → Updates → Check firmware</strong>. The app, service, and firmware should all report 0.8.0.</p>
+  <p>Devices already using recovery protocol 2 receive a normal application update that preserves settings and Bluetooth pairing. Older recovery versions use the app's existing guided migration. Use the app updater for an existing device: the separate Rev A and Rev B factory ZIPs contain full-chip images that overwrite settings and pairing.</p>
+  <h2>What we checked</h2>
+  <p>Development firmware was flashed and verified on a Rev A deck over USB, and the operator confirmed the physical wheel-direction correction. Automated checks cover lock timing, held and queued inputs, PTT suppression, wheel selection and boundaries, rendering, and board-specific execution layouts. Rev B hardware was not field-tested in that session.</p>
+  <p><a href="https://github.com/conol-ai/openwalkietalkie/releases/tag/v0.8.0" rel="noopener">Get OpenWalkieTalkie v0.8.0, firmware, factory images, and checksums on GitHub →</a></p>
+  <p class="post-back"><a href="/blog/">← Back to the blog</a></p>
+</article>
+</main>
+
+<footer class="footer--mini">
+  <div class="inner">
+    <span>OpenWalkieTalkie · A COHDL project · MIT software · CERN-OHL-P hardware</span>
+    <nav aria-label="Footer">
+      <a href="/#waitlist">Join the waitlist</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/cookies/">Cookie information</a>
+      <a href="/cookies/" data-privacy-open>Privacy notice</a>
+      <a href="/">Home</a>
+      <a href="/#demo">Try It</a>
+      <a href="https://github.com/conol-ai/openwalkietalkie" rel="noopener">GitHub</a>
+      <a href="https://cohdl.org/" rel="noopener">CoHDL</a>
+      <a href="https://discord.gg/x7DXPvK66" rel="noopener" aria-label="Join the CoHDL and OpenWalkieTalkie community on Discord">Discord</a>
+      <a href="/blog/feed.xml">Feed</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/privacy.js"></script>
+</body>
+</html>

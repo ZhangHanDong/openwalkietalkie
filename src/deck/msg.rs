@@ -401,6 +401,7 @@ pub struct UsageItem {
     pub account: Text<48>,
     pub percent: u8,
     pub reset: Text<24>,
+    pub reset_tip: Text<32>,
     /// `None` derives the bar tone from `percent`.
     pub tone: Option<Tone>,
 }
@@ -410,6 +411,7 @@ impl UsageItem {
         account: Text::new(),
         percent: 0,
         reset: Text::new(),
+        reset_tip: Text::new(),
         tone: None,
     };
 }

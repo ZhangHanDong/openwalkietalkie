@@ -202,6 +202,9 @@ fn the_signature_is_one_lane_per_block() {
     let mut switched = Box::new(*ui);
     switched.deck.usage.items[1].account.set("work@example.com");
     assert_eq!(differing(&base, &face_signature(&switched)), [2]);
+    let mut expiring = Box::new(*ui);
+    expiring.deck.usage.items[1].reset_tip.set("2 resets expire in 1d 6h");
+    assert_eq!(differing(&base, &face_signature(&expiring)), [2]);
     let mut scrolled = Box::new(*ui);
     let mut out = Update::new();
     scrolled.host(&items(6, "SEP 2026"), 0, &mut out);
@@ -222,6 +225,15 @@ fn partial_refresh_matches_full_through_a_scripted_session() {
             }
             ui.invalidate();
         });
+    }
+    for account in ["work@example.com", ""] {
+        for tip in ["1 reset expires in <1m", "99+ resets expire in 2d 23h", ""] {
+            session.step(|ui| {
+                ui.deck.usage.items[1].account.set(account);
+                ui.deck.usage.items[1].reset_tip.set(tip);
+                ui.invalidate();
+            });
+        }
     }
     let tag = session.step(|ui| {
         ui.usage.updating = true;

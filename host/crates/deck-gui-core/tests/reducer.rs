@@ -1211,6 +1211,7 @@ fn usage_updated_replaces_the_usage_block() {
     let usage = Usage {
         period: "5h / 7d".into(),
         items: vec![UsageItem {
+            reset_tip: None,
             name: "Claude 5h".into(),
             account: None,
             percent: 42,

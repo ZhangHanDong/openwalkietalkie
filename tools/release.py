@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import struct
 import subprocess
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_BASE = 0x12020000
@@ -26,6 +27,36 @@ def versions():
         if not re.fullmatch(r"\d+\.\d+\.\d+", version):
             raise ValueError("release versions must be MAJOR.MINOR.PATCH")
     return host, firmware
+
+
+def validate_site(tag, public=None):
+    """Require the release's static website content before publishing assets."""
+    public = public if public is not None else ROOT / "site/public"
+    atom = {"a": "http://www.w3.org/2005/Atom"}
+    feed = ET.parse(public / "blog/feed.xml")
+    entries = [entry for entry in feed.findall("a:entry", atom)
+               if (entry.findtext("a:title", "", atom)).startswith(f"OpenWalkieTalkie {tag}:")]
+    if len(entries) != 1:
+        raise ValueError(f"website needs one blog/feed.xml entry for {tag}")
+    link = entries[0].find("a:link", atom)
+    url = link.get("href", "") if link is not None else ""
+    match = re.fullmatch(r"https://openwalkietalkie\.org(/blog/[a-z0-9-]+/)", url)
+    if not match:
+        raise ValueError(f"website blog URL is invalid for {tag}")
+    path = match[1]
+    post = public / path.lstrip("/") / "index.html"
+    if not post.is_file() or f"https://github.com/{REPOSITORY}/releases/tag/{tag}" not in post.read_text():
+        raise ValueError(f"website needs a blog post linking to {tag}: {path}")
+    if f'href="{path}"' not in (public / "blog/index.html").read_text():
+        raise ValueError(f"website blog index must link to {path}")
+    sitemap = ET.parse(public / "sitemap.xml")
+    if url not in [loc.text for loc in sitemap.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]:
+        raise ValueError(f"website sitemap must include {path}")
+    home = (public / "index.html").read_text()
+    for arch in ("aarch64", "x86_64"):
+        download = f"https://github.com/{REPOSITORY}/releases/download/{tag}/OpenWalkieTalkie-{tag[1:]}-macos-{arch}.dmg"
+        if f'href="{download}"' not in home:
+            raise ValueError(f"website {arch} download must point to {tag}")
 
 
 def image_from_elf(data, board, bootstrap=False):
@@ -166,6 +197,7 @@ def main():
     if args.command == "validate":
         if args.tag != f"v{app}":
             raise ValueError("release tag must match host/Cargo.toml workspace version")
+        validate_site(args.tag)
         subprocess.run(["git", "merge-base", "--is-ancestor", "HEAD", "origin/main"], cwd=ROOT, check=True)
         lines = f"tag={args.tag}\napp_version={app}\nfirmware_version={firmware}\n"
         if os.environ.get("GITHUB_OUTPUT"):

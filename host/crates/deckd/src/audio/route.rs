@@ -129,8 +129,8 @@ impl RouteMachine {
     }
 
     /// The transport the machine runs for: a Classic deck settles at
-    /// [`A2DP_RATE`] as `A2dp`, the BLE audio service at its only rate
-    /// (16000) as `Ble`. Set before the first event; the machine does not
+    /// [`A2DP_RATE`] as `A2dp`, the custom audio service at its negotiated
+    /// USB/BLE rate (initially 16000) as `Ble`. Set before the first event; the machine does not
     /// re-evaluate an output that is already open.
     pub fn set_transport(&mut self, transport: VoiceTransport) {
         (self.settled, self.settled_route, self.ours_route) = match transport {
@@ -282,6 +282,12 @@ impl RouteMachine {
     fn on_nominal(&mut self, rate: u32, now: Instant, actions: &mut Vec<RouteAction>) {
         let moved = self.nominal != rate;
         self.nominal = rate;
+        // The custom audio link reports its negotiated USB/BLE speaker rate.
+        // Unlike Classic Bluetooth, 16 ↔ 48 kHz is a route change, not SCO.
+        if self.settled_route == Route::Ble && matches!(rate, 16_000 | 48_000) {
+            self.settled = rate;
+            if moved && self.open_at.is_some() { self.close(actions); }
+        }
         if !moved {
             return;
         }
@@ -556,6 +562,27 @@ mod tests {
         sm.set_fallback_output("system_default");
         drive(&mut sm, present(DeviceSide::Output, false), t0);
         assert_eq!(sm.route(), Route::SystemDefault);
+    }
+
+    #[test]
+    fn usb_rate_changes_settle_and_survive_a_microphone_press() {
+        let now = Instant::now();
+        let mut sm = RouteMachine::new("none");
+        sm.set_transport(VoiceTransport::Ble);
+        drive(&mut sm, RouteEvent::NominalRate { rate: 16_000 }, now);
+        drive(&mut sm, present(DeviceSide::Output, true), now);
+        let changed = drive(&mut sm, RouteEvent::NominalRate { rate: 48_000 }, now);
+        assert!(changed.contains(&RouteAction::CloseOutput));
+        assert_eq!(opens(&changed), vec![48_000]);
+        assert_eq!(sm.route(), Route::Ble);
+        assert_eq!(sm.settled_rate(), 48_000);
+        drive(&mut sm, RouteEvent::OurCapture { open: true, rate: 16_000 }, now);
+        let released = drive(&mut sm, RouteEvent::OurCapture { open: false, rate: 0 }, now);
+        assert_eq!(opens(&released), vec![48_000]);
+        let fallback = drive(&mut sm, RouteEvent::NominalRate { rate: 16_000 }, now);
+        assert_eq!(opens(&fallback), vec![16_000]);
+        assert_eq!(sm.route(), Route::Ble);
+        assert!(!sm.stuck());
     }
 
     /// The default is untouched: the Classic machine settles at 44.1 kHz

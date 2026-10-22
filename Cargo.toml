@@ -1,6 +1,6 @@
 [package]
 name = "openwalkietalkie-fw"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 license = "MIT"
 description = "OpenWalkieTalkie firmware (SiFli SF32LB52x, embassy)"
@@ -98,6 +98,8 @@ audio-open = []
 # reading and writing the audio blocks' registers while a stream plays
 # (src/link/debug.rs). Never ship it.
 audio-debug = []
+# Bench: expose read-only USB audio integrity counters (48 kHz is standard).
+audio-usb-rate-test = []
 # Temporary migration app, Rev A/B: USB-only `boot.*` replaces recovery.
 # Only distribute as the separately identified bootstrap image, never as
 # normal firmware. The desktop requires explicit bootloader risk acceptance.

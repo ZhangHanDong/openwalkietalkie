@@ -26,6 +26,8 @@ use crate::link::Link;
 pub struct Frame {
     pub len: u8,
     pub bytes: [u8; codec::MAX_FRAME],
+    /// Preserve the transport through the queue; only USB may use 48 kHz.
+    pub usb: bool,
 }
 
 impl Frame {
@@ -37,6 +39,7 @@ impl Frame {
         let mut frame = Self {
             len: len as u8,
             bytes: [0; codec::MAX_FRAME],
+            usb: false,
         };
         frame.bytes[..len].copy_from_slice(bytes);
         Some(frame)
@@ -54,8 +57,9 @@ type FrameQueue = Channel<CriticalSectionRawMutex, Frame, 32>;
 /// link's switch to its fast parameters at the start of a stream
 /// (`ACTIVITY`); 220 ms of the cable's shorter frames.
 pub static MIC_FRAMES: [FrameQueue; Link::COUNT] = [Channel::new(), Channel::new()];
-/// The host's speaker frames, in arrival order: 640 ms, the jitter buffer.
-pub static SPEAKER_FRAMES: Channel<CriticalSectionRawMutex, Frame, 32> = Channel::new();
+/// Speaker jitter/startup buffer: 293 ms at 48 kHz with 110-sample USB
+/// frames. Covers the 113 ms amplifier startup plus host lead and bursts.
+pub static SPEAKER_FRAMES: Channel<CriticalSectionRawMutex, Frame, 128> = Channel::new();
 
 pub use super::policy::MicRequest;
 
@@ -146,7 +150,13 @@ pub fn host_frame(link: Link, bytes: &[u8]) -> bool {
                 ACTIVITY.signal(());
             }
             match Frame::new(bytes) {
-                Some(frame) => SPEAKER_FRAMES.try_send(frame).is_ok(),
+                Some(mut frame) => {
+                    frame.usb = link == Link::Usb;
+                    let sent = SPEAKER_FRAMES.try_send(frame).is_ok();
+                    #[cfg(feature = "audio-usb-rate-test")]
+                    if !sent && link == Link::Usb { super::usb_test::queue_drop(); }
+                    sent
+                }
                 None => false,
             }
         }

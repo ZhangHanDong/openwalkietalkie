@@ -1574,6 +1574,10 @@ async fn session(
                     }
                 },
                 _ = roster.tick() => {
+                    // Credit redemption is not included in rate-limit notifications.
+                    if usage_read.is_none_or(|at| at.elapsed() >= Duration::from_secs(u64::from(api.config.load().usage.poll_s.max(60)))) {
+                        read_rate_limits(api, &rpc, &mut usage_read, &mut model).await;
+                    }
                     if catalog_read.elapsed() >= Duration::from_secs(60) {
                         if let Ok(catalog) = read_models(&rpc).await { model.catalog = catalog; }
                         catalog_read = std::time::Instant::now();
@@ -1826,28 +1830,29 @@ async fn read_rate_limits(api: &Arc<Api>, rpc: &Arc<Rpc>, last: &mut Option<std:
         Err(_) => None,
     };
     if model.usage_account != account {
-        feed_usage(api, Vec::new(), None).await;
+        feed_usage(api, Vec::new(), None, Some(Vec::new())).await;
     }
     model.usage_account = account;
     match rpc.request("account/rateLimits/read", json!({})).await {
         Ok(result) => {
             let windows = crate::usage::codex_windows(&result);
-            // Percentages and reset times only: nothing of anyone's in it.
-            tracing::debug!(windows = windows.len(), result = %result, "codexd: account/rateLimits/read");
-            feed_usage(api, windows, model.usage_account.clone()).await;
+            let resets = crate::usage::codex_reset_grants(&result);
+            tracing::debug!(windows = windows.len(), resets = resets.len(), "codexd: account/rateLimits/read");
+            feed_usage(api, windows, model.usage_account.clone(), Some(resets)).await;
         }
         Err(why) => {
             tracing::debug!(why, "codexd: account/rateLimits/read refused");
-            feed_usage(api, Vec::new(), None).await;
+            feed_usage(api, Vec::new(), None, Some(Vec::new())).await;
         }
     }
 }
 
-async fn feed_usage(api: &Arc<Api>, windows: Vec<crate::usage::Window>, account: Option<String>) {
+async fn feed_usage(api: &Arc<Api>, windows: Vec<crate::usage::Window>, account: Option<String>, resets: Option<Vec<crate::usage::ResetGrant>>) {
     if let Err(e) = api
         .core
         .send(crate::core::handle::CoreMsg::Usage {
             partial: false,
+            resets,
             provider: crate::usage::Provider::Codex,
             windows,
             account,
@@ -2166,13 +2171,13 @@ async fn apply(
             }
             Effect::Usage(windows) => {
                 if crate::usage::Provider::Codex.enabled(&api.config.load().usage) {
-                    feed_usage(api, windows, model.usage_account.clone()).await;
+                    feed_usage(api, windows, model.usage_account.clone(), None).await;
                 }
             }
             Effect::RefreshUsage => {
                 model.catalog = read_models(rpc).await.unwrap_or_default();
                 if crate::usage::Provider::Codex.enabled(&api.config.load().usage) {
-                    feed_usage(api, Vec::new(), None).await;
+                    feed_usage(api, Vec::new(), None, Some(Vec::new())).await;
                     read_rate_limits(api, rpc, &mut None, model).await;
                 }
             }

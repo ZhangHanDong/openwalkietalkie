@@ -30,6 +30,55 @@ def elf(payload, vaddr=0x60000000):
     return data + payload
 
 
+class ReleaseSiteTests(unittest.TestCase):
+    def test_release_requires_a_discoverable_post_and_current_downloads(self):
+        url = "https://openwalkietalkie.org/blog/new-release/"
+        release_url = f"https://github.com/{release.REPOSITORY}/releases"
+        files = {
+            "blog/feed.xml": f'''<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+                <title>OpenWalkieTalkie v1.2.3: New release</title>
+                <link href="{url}" /></entry></feed>''',
+            "blog/new-release/index.html": f'<a href="{release_url}/tag/v1.2.3">Release</a>',
+            "blog/index.html": '<a href="/blog/new-release/">Read the release</a>',
+            "sitemap.xml": f'''<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                <url><loc>{url}</loc></url></urlset>''',
+            "index.html": '\n'.join(
+                f'<a href="{release_url}/download/v1.2.3/OpenWalkieTalkie-1.2.3-macos-{arch}.dmg">Mac</a>'
+                for arch in ("aarch64", "x86_64")),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            public = Path(directory)
+            for name, content in files.items():
+                path = public / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+            release.validate_site("v1.2.3", public)
+
+            # Reproduce each way a release can ship while its website stays stale.
+            cases = [
+                ("blog/feed.xml", files["blog/feed.xml"].replace("v1.2.3:", "v1.2.2:"), "feed"),
+                ("blog/feed.xml", files["blog/feed.xml"].replace(url, "https://example.com/post/"), "URL"),
+                ("blog/new-release/index.html", None, "blog post"),
+                ("blog/new-release/index.html", files["blog/new-release/index.html"].replace("v1.2.3", "v1.2.2"), "blog post"),
+                ("blog/index.html", "<p>No posts yet</p>", "index"),
+                ("sitemap.xml", files["sitemap.xml"].replace(url, "https://openwalkietalkie.org/"), "sitemap"),
+            ]
+            for arch in ("aarch64", "x86_64"):
+                cases.append(("index.html", files["index.html"].replace(f"1.2.3-macos-{arch}", f"1.2.2-macos-{arch}"), arch))
+            for name, content, message in cases:
+                with self.subTest(file=name, message=message):
+                    path = public / name
+                    if content is None:
+                        path.unlink()
+                    else:
+                        path.write_text(content)
+                    try:
+                        with self.assertRaisesRegex(ValueError, message):
+                            release.validate_site("v1.2.3", public)
+                    finally:
+                        path.write_text(files[name])
+
+
 class ReleaseTests(unittest.TestCase):
     def test_real_application_extraction_preserves_bytes(self):
         for board in ("a", "b"):

@@ -818,7 +818,11 @@ fn voice_report(link: Link, frame: &[u8]) {
             );
             if on {
                 let mut bytes = [0u8; 1 + codec::INFO_LEN];
-                let n = codec::info_frame(&AUDIO_INFO, &mut bytes);
+                let mut info = AUDIO_INFO;
+                if link == Link::Usb && info[4] & 0b10 != 0 {
+                    info[4] |= codec::FEATURE_USB_SPEAKER_48K;
+                }
+                let n = codec::info_frame(&info, &mut bytes);
                 if let Some(info) = voice::Frame::new(&bytes[..n]) {
                     let _ = voice::MIC_FRAMES[link.index()].try_send(info);
                 }

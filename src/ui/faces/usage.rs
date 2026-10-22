@@ -72,7 +72,7 @@ fn percent_label(percent: u8, out: &mut Text<8>) {
     out.push_char('%');
 }
 
-fn block(band: &mut Band, rect: Rect, item: &UsageItem, marker: Option<(u8, bool)>) {
+fn block(band: &mut Band, rect: Rect, item: &UsageItem, marker: Option<(u8, bool)>, connected: bool) {
     let mut text = Text::<12>::new();
     let baseline = rect.top() + layout::USAGE_NAME_BASELINE;
     let mut percent = Text::<8>::new();
@@ -81,20 +81,28 @@ fn block(band: &mut Band, rect: Rect, item: &UsageItem, marker: Option<(u8, bool
     font::draw(band, Font::Name, theme::TEXT_X, baseline, item.name.as_str(), theme::TEXT_PRIMARY, Some(theme::CANVAS),
         theme::TEXT_RIGHT - percent_w - 12 - theme::TEXT_X, Align::Left);
     font::draw(band, Font::Name, theme::TEXT_RIGHT, baseline, percent.as_str(), theme::TEXT_PRIMARY, Some(theme::CANVAS), 100, Align::Right);
+    let tip = connected && !item.reset_tip.is_empty();
     let account_offset = if item.account.is_empty() { 0 } else { 12 };
     if !item.account.is_empty() {
-        font::draw(band, Font::Small, theme::TEXT_X, rect.top() + 40, item.account.as_str(), theme::TEXT_LABEL,
+        font::draw(band, if tip { Font::Hint } else { Font::Small }, theme::TEXT_X, rect.top() + if tip { 38 } else { 40 }, item.account.as_str(), theme::TEXT_LABEL,
             Some(theme::CANVAS), theme::TEXT_RIGHT - theme::TEXT_X, Align::Left);
     }
     let color = item.tone.map_or(theme::usage_tone(item.percent), theme::tone);
-    kit::bar(band, layout::USAGE_BAR.offset(rect.left(), rect.top() + account_offset), item.percent, color);
-    let reset_baseline = rect.top() + layout::USAGE_RESET_BASELINE + account_offset;
+    let bar = if tip {
+        Rect::new(layout::USAGE_BAR.left(), if account_offset == 0 { 35 } else { 45 }, layout::USAGE_BAR.width(), 5)
+    } else { layout::USAGE_BAR.offset(0, account_offset) };
+    kit::bar(band, bar.offset(rect.left(), rect.top()), item.percent, color);
+    let reset_baseline = rect.top() + if tip { 64 } else { layout::USAGE_RESET_BASELINE + account_offset };
     let mut reset_w = theme::TEXT_RIGHT - theme::TEXT_X;
     if let Some((count, below)) = marker {
         more(count, below, &mut text);
         reset_w -= font::draw(band, Font::Small, theme::TEXT_RIGHT, reset_baseline, text.as_str(), theme::TEXT_FAINT, Some(theme::CANVAS), 120, Align::Right) + 12;
     }
-    font::draw(band, Font::Body, theme::TEXT_X, reset_baseline, item.reset.as_str(), theme::TEXT_LABEL, Some(theme::CANVAS), reset_w, Align::Left);
+    font::draw(band, if tip { Font::Hint } else { Font::Body }, theme::TEXT_X, reset_baseline, item.reset.as_str(), theme::TEXT_LABEL, Some(theme::CANVAS), reset_w, Align::Left);
+    if tip {
+        font::draw(band, Font::Hint, theme::TEXT_X, rect.top() + 79, item.reset_tip.as_str(), theme::AMBER,
+            Some(theme::CANVAS), theme::TEXT_RIGHT - theme::TEXT_X, Align::Left);
+    }
 }
 
 /// Draw the face in logical coordinates; `instance` is the strip entry's id.
@@ -116,7 +124,7 @@ pub fn draw(band: &mut Band, ui: &UiState, instance: u8) {
             continue;
         };
         if kit::visible(band, rect) {
-            block(band, rect, item, hidden(&viewport, slot));
+            block(band, rect, item, hidden(&viewport, slot), ui.deck.host_present);
         }
     }
     kit::hint_bar(band, HINTS);
@@ -146,6 +154,7 @@ pub fn signature(ui: &UiState, instance: u8, sig: &mut SigBuilder) {
                 .text(&item.account)
                 .u8(item.percent)
                 .text(&item.reset)
+                .str(if ui.deck.host_present { item.reset_tip.as_str() } else { "" })
                 .u8(item.tone.map_or(255, |tone| tone as u8));
             let (count, below) = hidden(&viewport, slot).unwrap_or((0, false));
             h.u8(count).bool(below);

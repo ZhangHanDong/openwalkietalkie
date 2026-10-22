@@ -6,3 +6,6 @@ pub mod codec;
 pub mod policy;
 #[path = "../../src/audio/upsample.rs"]
 pub mod upsample;
+#[cfg(feature = "audio-usb-rate-test")]
+#[path = "../../src/audio/usb_test.rs"]
+pub mod usb_test;

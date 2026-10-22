@@ -53,15 +53,15 @@ use super::traits::{
 };
 use super::FromAudio;
 use crate::ble::codec::{self, END_ABORT, END_ERROR, END_RELEASE, FRAME_SAMPLES, MAX_FRAME};
-use crate::ble::{BleAudio, Info, LinkState, MicEvent, SendError};
+use crate::ble::{BleAudio, Info, LinkState, MicEvent, SendError, Transport};
 use crossbeam_channel::{select, Receiver, RecvTimeoutError, Sender};
 use deck_model::{Permission, VoiceIn, VoiceInput};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant};
 
-/// The deck's audio rate. The capture delivers at it and the speaker is
-/// opened at it, so the mixer does the 44.1 kHz → 16 kHz conversion.
+/// The microphone and baseline BLE speaker rate. USB speaker output uses
+/// the negotiated rate from `output_rate`; capture always delivers at RATE.
 pub const RATE: u32 = codec::RATE_HZ;
 /// One 20 ms block: what the speaker renders at a time, and what one full
 /// AUDIO frame carries.
@@ -137,11 +137,21 @@ pub fn sides(state: &LinkState) -> (bool, bool) {
 /// speaker's rate first (so the machine never sees a present device with no
 /// rate), then the two sides; otherwise both sides gone.
 #[must_use]
-pub fn route_events(state: &LinkState) -> Vec<RouteEvent> {
+pub fn output_rate(state: &LinkState, transport: Option<Transport>) -> u32 {
+    if let (Some(Transport::Usb), LinkState::Ready { info: Some(bytes), .. }) = (transport, state) {
+        let info = Info::from_bytes(*bytes);
+        if info.compatible() && info.speaker() && info.features & codec::FEATURE_USB_SPEAKER_48K != 0 {
+            return codec::USB_SPEAKER_RATE_HZ;
+        }
+    }
+    RATE
+}
+
+pub fn route_events(state: &LinkState, transport: Option<Transport>) -> Vec<RouteEvent> {
     let (mic, speaker) = sides(state);
     let mut events = Vec::with_capacity(3);
     if matches!(state, LinkState::Ready { .. }) {
-        events.push(RouteEvent::NominalRate { rate: RATE });
+        events.push(RouteEvent::NominalRate { rate: output_rate(state, transport) });
     }
     events.push(RouteEvent::DevicePresent {
         side: DeviceSide::Input,
@@ -171,7 +181,7 @@ pub fn watch(
             // The channel carries changes; start from the state now.
             while events.try_recv().is_ok() {}
             let mut last = ble.state();
-            for event in route_events(&last) {
+            for event in route_events(&last, ble.transport()) {
                 if routes.send(event).is_err() {
                     return;
                 }
@@ -201,7 +211,7 @@ pub fn watch(
                             );
                         }
                         tracing::debug!(?state, mic, speaker, "deck audio link changed");
-                        for event in route_events(&state) {
+                        for event in route_events(&state, ble.transport()) {
                             if routes.send(event).is_err() {
                                 return;
                             }
@@ -759,9 +769,10 @@ struct Spurt {
     quiet: Duration,
 }
 
-/// The speaker's framer, as a fold: one 20 ms block of 16 kHz mono in,
+/// The speaker's framer: one 20 ms block at its negotiated mono rate in,
 /// frames to the link out (see the module docs for the rules).
 pub struct Spurts {
+    rate: u32,
     next_stream: u8,
     live: Option<Spurt>,
     /// The last silent block, sent ahead of a spurt's first block so a slow
@@ -791,6 +802,7 @@ impl Spurts {
     #[must_use]
     pub fn new(first_stream: u8) -> Spurts {
         Spurts {
+            rate: RATE,
             next_stream: first_stream,
             live: None,
             preroll: Vec::with_capacity(BLOCK),
@@ -811,6 +823,10 @@ impl Spurts {
 
     /// One block, framed onto `link`.
     pub fn block(&mut self, block: &[i16], link: &BleAudio) -> Step {
+        if output_rate(&link.state(), link.transport()) != self.rate {
+            self.preroll.clear();
+            return self.cut();
+        }
         let loud = !is_quiet(block);
         let mut started = false;
         if self.live.is_none() {
@@ -867,6 +883,7 @@ impl Spurts {
         let stream = self.next_stream;
         let mut buf = [0u8; MAX_FRAME];
         let n = codec::start_frame(stream, &mut buf);
+        buf[3] = (self.rate / 1000) as u8;
         match link.send(&buf[..n]) {
             Ok(()) => {}
             Err(SendError::Full) => {
@@ -901,7 +918,8 @@ impl Spurts {
         let mut result = Ok(());
         while spurt.pending.len() - at >= spurt.per_frame {
             let chunk = &spurt.pending[at..at + spurt.per_frame];
-            let n = codec::audio_frame(spurt.stream, spurt.seq, &mut spurt.state, chunk, &mut buf);
+            let encode = if self.rate == RATE { super::adpcm::audio_frame } else { codec::audio_frame };
+            let n = encode(spurt.stream, spurt.seq, &mut spurt.state, chunk, &mut buf);
             spurt.seq = spurt.seq.wrapping_add(1);
             at += spurt.per_frame;
             match link.send(&buf[..n]) {
@@ -924,7 +942,8 @@ impl Spurts {
         };
         let mut buf = [0u8; MAX_FRAME];
         if reason == END_RELEASE && !spurt.pending.is_empty() {
-            let n = codec::audio_frame(
+            let encode = if self.rate == RATE { super::adpcm::audio_frame } else { codec::audio_frame };
+            let n = encode(
                 spurt.stream,
                 spurt.seq,
                 &mut spurt.state,
@@ -1007,11 +1026,12 @@ fn speak(
     stop: &Receiver<()>,
     mut spurts: Spurts,
 ) -> Spurts {
-    let mut stereo = vec![0.0f32; 2 * BLOCK];
-    let mut mono = vec![0i16; BLOCK];
+    let block = spurts.rate as usize / 50;
+    let mut stereo = vec![0.0f32; 2 * block];
+    let mut mono = vec![0i16; block];
     // Both USB and BLE use this output. Filter the final mono signal before
     // quantization, quiet detection, and ADPCM so speech and chimes match.
-    let mut eq = SpeakerEq::new();
+    let mut eq = SpeakerEq::at_rate(spurts.rate);
     let mut pacer = Pacer::new(Instant::now());
     loop {
         if pacer.catch_up(Instant::now()) {
@@ -1096,15 +1116,18 @@ impl OutputSink for BleOutput {
         faults: Arc<StreamFaults>,
     ) -> Result<(), AudioError> {
         self.close();
-        if rate != RATE {
+        let expected = output_rate(&self.ble.state(), self.ble.transport());
+        if rate != expected {
             return Err(AudioError::Refused(format!(
-                "the deck's speaker over Bluetooth LE runs at {RATE} Hz, not {rate}"
+                "the active deck speaker link runs at {expected} Hz, not {rate}"
             )));
         }
-        let spurts = self
+        let mut spurts = self
             .parked
             .take()
             .unwrap_or_else(|| Spurts::new((crate::core::new_sid() & 0xFF) as u8));
+        spurts.rate = rate;
+        tracing::info!(rate_hz = rate, transport = ?self.ble.transport(), "opening deck speaker");
         let (stop, stopped) = crossbeam_channel::bounded::<()>(1);
         let ble = self.ble.clone();
         let join = std::thread::Builder::new()
@@ -1148,6 +1171,63 @@ mod tests {
     use crate::audio::fakes::{FakeCapture, FakeStt, FakeTts};
     use crate::audio::lanes::{perceptual_gain, Lane, Lanes};
     use crate::audio::tts::{chime_pcm, Chime};
+
+    #[test]
+    fn high_rate_is_negotiated_only_for_a_capable_usb_speaker() {
+        let capable = LinkState::Ready { max_write: 61, info: Some([1, 1, 16, 20, 7]) };
+        assert_eq!(output_rate(&capable, Some(Transport::Usb)), 48_000);
+        assert_eq!(output_rate(&capable, Some(Transport::Ble)), 16_000);
+        assert_eq!(output_rate(&capable, None), 16_000);
+        for info in [None, Some([1, 1, 16, 20, 3]), Some([2, 1, 16, 20, 7]), Some([1, 1, 16, 20, 5])] {
+            assert_eq!(output_rate(&LinkState::Ready { max_write: 61, info }, Some(Transport::Usb)), 16_000);
+        }
+        assert_eq!(route_events(&capable, Some(Transport::Usb))[0], RouteEvent::NominalRate { rate: 48_000 });
+    }
+
+    #[test]
+    fn usb_output_renders_and_frames_at_48k_and_falls_back_after_detach() {
+        let (ble, deck) = BleAudio::with_fake();
+        deck.attach(244, Some(INFO));
+        let mut usb = ble.usb_port();
+        usb.attach(Some("test"));
+        usb.next_report(Instant::now()); // LISTEN
+        let mut report = [0; 64];
+        codec::report(&[codec::KIND_INFO, 1, 1, 16, 20, 7], &mut report).unwrap();
+        assert!(usb.on_report(&report));
+        let lanes = Lanes::new();
+        let mut producer = lanes.take_producer(Lane::Chime).unwrap();
+        for sample in chime_pcm(Chime::Ready, LANE_RATE) { producer.push(sample).unwrap(); }
+        let faults = Arc::new(StreamFaults::new());
+        let mut output = BleOutput::new(ble.clone());
+        output.open(48_000, lanes.take_mixer_at(48_000).unwrap(), faults).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut frames = Vec::new();
+        loop {
+            assert!(Instant::now() < deadline, "USB spurt did not end");
+            if let Some(report) = usb.next_report(Instant::now()) {
+                let frame = codec::report_frame(&report).unwrap().to_vec();
+                let ended = frame[0] == codec::KIND_END;
+                frames.push(frame);
+                if ended { break; }
+            } else { std::thread::sleep(Duration::from_millis(1)); }
+        }
+        output.close();
+        assert_eq!(&frames[0][..5], &[codec::KIND_START, frames[0][1], 1, 48, 20]);
+        let mut samples = 0;
+        for (i, frame) in frames[1..frames.len()-1].iter().enumerate() {
+            let codec::Frame::Audio { seq, mut state, data, .. } = codec::parse(frame) else { panic!("not audio") };
+            assert_eq!(seq, i as u8);
+            assert!(frame.len() <= 61);
+            let mut pcm = [0;320];
+            samples += codec::decode(&mut state, data, &mut pcm);
+        }
+        assert!((16_000..24_000).contains(&samples), "about 0.42 seconds at 48 kHz, got {samples}");
+        assert_eq!(output.stats().dropped, 0);
+        usb.detach(None);
+        assert_eq!(output_rate(&ble.state(), ble.transport()), 16_000);
+        let mixer = lanes.take_mixer_at(48_000).unwrap();
+        assert!(output.open(48_000, mixer, Arc::new(StreamFaults::new())).is_err());
+    }
     use crate::audio::{FromAudio, LANE_RATE};
     use crate::ble::codec::{
         audio_frame, parse, start_frame, Frame, State, END_LIMIT, KIND_AUDIO, KIND_END, KIND_START,
@@ -1191,19 +1271,19 @@ mod tests {
         let present = |side, present| RouteEvent::DevicePresent { side, present };
         let ready = |max_write, info| LinkState::Ready { max_write, info };
         assert_eq!(
-            route_events(&LinkState::Detached),
+            route_events(&LinkState::Detached, Some(Transport::Ble)),
             [
                 present(DeviceSide::Input, false),
                 present(DeviceSide::Output, false)
             ]
         );
         assert_eq!(
-            route_events(&LinkState::Attaching),
-            route_events(&LinkState::Detached),
+            route_events(&LinkState::Attaching, Some(Transport::Ble)),
+            route_events(&LinkState::Detached, Some(Transport::Ble)),
             "attaching is not ready: the outbox is not there yet"
         );
         assert_eq!(
-            route_events(&ready(244, Some(INFO))),
+            route_events(&ready(244, Some(INFO)), Some(Transport::Ble)),
             [
                 RouteEvent::NominalRate { rate: 16_000 },
                 present(DeviceSide::Input, true),
@@ -1951,16 +2031,12 @@ mod tests {
 
         let mut reference = State::default();
         for (i, value) in frames[1..22].iter().enumerate() {
-            let Frame::Audio { state, .. } = parse(value) else {
+            let Frame::Audio { state, data, .. } = parse(value) else {
                 panic!("frame {i} is AUDIO");
             };
             assert_eq!(state, reference, "frame {i} carries the running state");
-            let mut scratch = [0u8; BLOCK / 2];
-            codec::encode(
-                &mut reference,
-                &fed[i * BLOCK..(i + 1) * BLOCK],
-                &mut scratch,
-            );
+            let mut decoded = [0i16; BLOCK];
+            assert_eq!(codec::decode(&mut reference, data, &mut decoded), BLOCK);
         }
         let events = decode(&frames);
         assert_eq!(events.len(), 23);
@@ -2397,7 +2473,7 @@ mod tests {
         engine.set_tts(crate::audio::tts::spawn(Arc::new(tts), lanes, reports));
         let t0 = Instant::now();
         deck.attach(244, Some(INFO));
-        for event in route_events(&ble.state()) {
+        for event in route_events(&ble.state(), ble.transport()) {
             engine.on_route(event, t0);
         }
         assert!(engine.output_mut().is_open());

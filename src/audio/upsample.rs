@@ -1,120 +1,184 @@
-//! The speaker's sample path from the wire to the DAC: 16 kHz to 48 kHz by
-//! linear interpolation (speech through a small speaker needs no better, and
-//! the DAC's own filter follows), packed the way the audio block's 16-bit
-//! mono TX channel takes it: two samples a 32-bit word, the first in the low
-//! half. (The pinned HAL documents one sample a word in the low half; played
-//! that way everything comes out at half speed.) Pure, so the host tests
-//! mount it.
+//! Band-limited 16 → 48 kHz reconstruction, and native 48 kHz packing.
+//! A 127-tap Kaiser FIR suppresses the interpolation images left by linear
+//! interpolation. 7.3 kHz cutoff, beta 8.6; three Q15 polyphase branches,
+//! each normalized to unity DC gain. Group delay: 63 / 48000 = 1.3125 ms.
+//! Generate with scipy.signal.firwin(127, 7300, fs=48000,
+//! window=('kaiser', 8.6)) * 3; quantize each phase to Q15, correct its sum.
 use super::codec;
 
-/// DAC words per 20 ms frame: 960 samples at 48 kHz, two a word.
 pub const FRAME_WORDS: usize = 3 * codec::FRAME_SAMPLES / 2;
-/// How long a gap's silence takes to fade out from the last sample, in
-/// 16 kHz samples (5 ms).
-const FADE: usize = 80;
+const TAPS: usize = 43;
+const FADE: usize = 240; // 5 ms at the DAC's 48 kHz rate.
+const COEFFICIENTS: [[i32; TAPS]; 3] = [
+    [
+        0, 2, -5, 12, -23, 38, -53, 63, -60, 32, 34, -151, 330, -574, 881, -1238, 1622, -2004,
+        2350, -2627, 2805, 29900, 2805, -2627, 2350, -2004, 1622, -1238, 881, -574, 330, -151, 34,
+        32, -60, 63, -53, 38, -23, 12, -5, 2, 0,
+    ],
+    [
+        0, -1, -1, 6, -17, 37, -69, 111, -160, 207, -238, 233, -167, 10, 267, -698, 1325, -2224,
+        3584, -6088, 14688, 25528, -4843, 1678, -369, -290, 610, -723, 705, -611, 482, -347, 227,
+        -131, 63, -21, -1, 10, -10, 8, -4, 2, 0,
+    ],
+    [
+        2, -4, 8, -10, 10, -1, -21, 63, -131, 227, -347, 482, -611, 705, -723, 610, -290, -369,
+        1678, -4843, 25528, 14688, -6088, 3584, -2224, 1325, -698, 267, 10, -167, 233, -238, 207,
+        -160, 111, -69, 37, -17, 6, -1, -1, 0, 0,
+    ],
+];
 
-#[derive(Default)]
 pub struct Upsampler {
+    history: [i16; TAPS],
+    head: usize,
     prev: i16,
 }
 
+impl Default for Upsampler {
+    fn default() -> Self {
+        Self {
+            history: [0; TAPS],
+            head: 0,
+            prev: 0,
+        }
+    }
+}
+
 impl Upsampler {
-    /// `input` (an even number of 16 kHz samples, at most a frame) as packed
-    /// DAC words in `out`. Returns the words written.
-    pub fn run(&mut self, input: &[i16], out: &mut [u32]) -> usize {
-        let mut samples = [0i16; 3 * codec::FRAME_SAMPLES];
-        let mut n = 0;
-        for (&x, slot) in input.iter().zip(samples.chunks_exact_mut(3)) {
-            let a = i32::from(self.prev);
-            let d = i32::from(x) - a;
-            slot[0] = clamp(a + d / 3);
-            slot[1] = clamp(a + 2 * d / 3);
-            slot[2] = x;
-            self.prev = x;
-            n += 3;
+    pub fn run_at(&mut self, rate_khz: u8, input: &[i16], out: &mut [u32]) -> usize {
+        if rate_khz == 16 {
+            return self.run(input, out);
         }
-        let mut words = 0;
-        for (pair, word) in samples[..n].chunks_exact(2).zip(out.iter_mut()) {
+        if rate_khz != 48 {
+            return 0;
+        }
+        let n = (input.len() / 2).min(out.len());
+        for (pair, word) in input.chunks_exact(2).zip(out.iter_mut()).take(n) {
             *word = pack(pair[0], pair[1]);
-            words += 1;
+            self.prev = pair[1];
         }
+        n
+    }
+
+    /// Even-sized input; state persists across packet boundaries.
+    pub fn run(&mut self, input: &[i16], out: &mut [u32]) -> usize {
+        let count = input.len().min(out.len() * 2 / 3).min(codec::FRAME_SAMPLES) & !1;
+        let mut at = 0;
+        let mut first = 0;
+        for &sample in &input[..count] {
+            self.head = (self.head + TAPS - 1) % TAPS;
+            self.history[self.head] = sample;
+            for coefficients in &COEFFICIENTS {
+                let mut sum = 0i64;
+                let mut pos = self.head;
+                for &coefficient in coefficients {
+                    sum += i64::from(self.history[pos]) * i64::from(coefficient);
+                    pos += 1;
+                    if pos == TAPS {
+                        pos = 0;
+                    }
+                }
+                let value =
+                    ((sum + 16384) >> 15).clamp(i64::from(i16::MIN), i64::from(i16::MAX)) as i16;
+                if at % 2 == 0 {
+                    first = value;
+                } else {
+                    out[at / 2] = pack(first, value);
+                }
+                self.prev = value;
+                at += 1;
+            }
+        }
+        at / 2
+    }
+
+    /// Fade from the last actual DAC sample, then clear filter history so
+    /// stale audio cannot emerge after a gap or a native-rate stream.
+    pub fn silence(&mut self, out: &mut [u32]) -> usize {
+        let words = out.len().min(FRAME_WORDS);
+        let from = i32::from(self.prev);
+        let sample = |i: usize| -> i16 {
+            if i >= FADE {
+                0
+            } else {
+                (from * (FADE - 1 - i) as i32 / FADE as i32) as i16
+            }
+        };
+        for (i, word) in out[..words].iter_mut().enumerate() {
+            *word = pack(sample(2 * i), sample(2 * i + 1));
+        }
+        *self = Self::default();
         words
     }
-
-    /// 20 ms of silence, faded out from the last sample over 5 ms so a gap
-    /// does not click.
-    pub fn silence(&mut self, out: &mut [u32]) -> usize {
-        let mut pcm = [0i16; codec::FRAME_SAMPLES];
-        let from = i32::from(self.prev);
-        for (i, sample) in pcm.iter_mut().take(FADE).enumerate() {
-            *sample = (from * (FADE - 1 - i) as i32 / FADE as i32) as i16;
-        }
-        self.run(&pcm, out)
-    }
 }
 
-/// One DAC word: `first` plays before `second`.
 pub fn pack(first: i16, second: i16) -> u32 {
     u32::from(first as u16) | (u32::from(second as u16) << 16)
-}
-
-fn clamp(sample: i32) -> i16 {
-    sample.clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn unpack(words: &[u32]) -> std::vec::Vec<i16> {
+    use std::vec::Vec;
+    fn unpack(words: &[u32]) -> Vec<i16> {
         words
             .iter()
             .flat_map(|w| [*w as u16 as i16, (*w >> 16) as u16 as i16])
             .collect()
     }
-
-    #[test]
-    fn a_frame_fills_480_words_first_sample_in_the_low_half() {
+    fn render(pcm: &[i16], chunk: usize) -> Vec<i16> {
         let mut up = Upsampler::default();
-        let input: std::vec::Vec<i16> = (0..codec::FRAME_SAMPLES as i16).map(|i| i * 3).collect();
-        let mut out = [0u32; FRAME_WORDS];
-        assert_eq!(up.run(&input, &mut out), FRAME_WORDS);
-        let samples = unpack(&out);
-        assert_eq!(samples.len(), 960);
-        // From 0 to 0, then 0 -> 3 in thirds, then 3 -> 6, ...: the ramp
-        // goes up by one a 48 kHz sample, in order.
-        for (i, s) in samples.iter().enumerate() {
-            assert_eq!(*s as i32, (i as i32 - 2).max(0), "sample {i}");
+        let mut result = Vec::new();
+        for block in pcm.chunks(chunk) {
+            let mut out = [0; FRAME_WORDS];
+            let n = up.run(block, &mut out);
+            result.extend(unpack(&out[..n]));
         }
-        assert_eq!(out[2], pack(2, 3));
+        result
     }
-
     #[test]
-    fn interpolation_runs_from_the_previous_frame_and_clamps() {
-        let mut up = Upsampler::default();
-        let mut out = [0u32; FRAME_WORDS];
-        up.run(&[i16::MAX, i16::MAX], &mut out);
-        let n = up.run(&[i16::MIN, i16::MIN], &mut out);
-        assert_eq!(n, 3);
-        let samples = unpack(&out[..n]);
-        // From MAX towards MIN in thirds, then MIN held.
-        assert_eq!(&samples[..], &[10922, -10923, -32768, -32768, -32768, -32768]);
+    fn packet_boundaries_do_not_change_samples_or_gain() {
+        let input: Vec<i16> = (0..1600)
+            .map(|i| ((i * 2137 % 60000) - 30000) as i16)
+            .collect();
+        assert_eq!(render(&input, 320), render(&input, 110));
+        assert_eq!(render(&input, 320), render(&input, 2));
+        let dc = render(&[8000; 640], 320);
+        assert_eq!(dc.len(), 1920);
+        assert!(dc[200..].iter().all(|&x| x == 8000));
     }
-
     #[test]
-    fn silence_fades_out_and_ends_at_zero() {
+    fn speech_band_is_preserved_and_ultrasonic_images_are_suppressed() {
+        let input: Vec<i16> = (0..3200)
+            .map(|i| (12000.0 * (std::f64::consts::TAU * 3000.0 * i as f64 / 16000.0).sin()) as i16)
+            .collect();
+        let out = render(&input, 110);
+        let signal = &out[480..];
+        let amplitude = |hz: f64| {
+            let (mut re, mut im) = (0.0, 0.0);
+            for (i, &x) in signal.iter().enumerate() {
+                let phase = std::f64::consts::TAU * hz * i as f64 / 48000.0;
+                re += f64::from(x) * phase.cos();
+                im += f64::from(x) * phase.sin();
+            }
+            2.0 * (re * re + im * im).sqrt() / signal.len() as f64
+        };
+        assert!((amplitude(3000.0) - 12000.0).abs() < 50.0);
+        assert!(amplitude(13000.0) < 3.0);
+        assert!(amplitude(19000.0) < 3.0);
+    }
+    #[test]
+    fn native_48k_is_exact_and_a_gap_fades_without_stale_history() {
         let mut up = Upsampler::default();
-        let mut out = [0u32; FRAME_WORDS];
-        up.run(&[8000, 8000], &mut out);
-        assert_eq!(up.silence(&mut out), FRAME_WORDS);
-        let samples = unpack(&out);
-        // No step bigger than the fade's slope (8000 / 80 a 16 kHz sample,
-        // a third of that per 48 kHz sample, plus rounding).
-        let mut last = 8000i32;
-        for s in &samples {
-            assert!((last - *s as i32).abs() <= 8000 / 80 / 3 + 2, "step {last} -> {s}");
-            last = *s as i32;
-        }
-        assert!(samples[3 * FADE..].iter().all(|s| *s == 0));
+        let mut out = [0; FRAME_WORDS];
+        let input = [-32768, -12, 0, 37, 32767, 15000];
+        let n = up.run_at(48, &input, &mut out);
+        assert_eq!(unpack(&out[..n]), input);
+        let n = up.silence(&mut out);
+        let faded = unpack(&out[..n]);
+        assert!(faded[0] > 14000);
+        assert!(faded[240..].iter().all(|&x| x == 0));
+        let n = up.run(&[0; 320], &mut out);
+        assert!(out[..n].iter().all(|&x| x == 0));
+        assert_eq!(up.run_at(32, &input, &mut out), 0);
     }
 }

@@ -217,6 +217,7 @@ pub async fn ingest(
             let _ = core
                 .send(CoreMsg::Usage {
                     partial: true,
+                    resets: None,
                     provider: crate::usage::Provider::Claude,
                     windows,
                     account: crate::usage::account_label(
@@ -925,6 +926,7 @@ mod tests {
         match msg {
             CoreMsg::Usage {
                 partial: true,
+                resets: None,
                 provider,
                 windows,
                 account,

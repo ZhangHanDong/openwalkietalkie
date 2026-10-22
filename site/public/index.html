@@ -15,6 +15,7 @@
 <meta property="og:image" content="https://openwalkietalkie.org/assets/og.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="An OpenWalkieTalkie prototype standing on a desk with its screen lit, next to the words Open Walkie Talkie, the open-source handheld radio for your AI agents." />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="OpenWalkieTalkie — The open-source handheld radio for your AI agents." />
 <meta name="twitter:description" content="A deck that shows which agent needs you. Hold PTT and talk to it. Open hardware, firmware and host." />
@@ -143,24 +144,14 @@
       </ul>
     </div>
 
-    <!-- The hero art is a CSS device frame around a real firmware render of the
-         Agents roster (target/preview/roster.png). PLACEHOLDER: swap in a
-         pixel-art illustration or a product photo (day + night) when there is one. -->
+    <!-- The hero art is a photo of a prototype, framed like the stack cards so it
+         sits on both skies. tools/photos.sh crops it from ../ref/photos. -->
     <div class="hero__art" id="heroArt">
       <div class="hero__art-frame">
-        <div class="device" aria-label="The OpenWalkieTalkie deck showing the Agents roster" role="img">
-          <span class="device__antenna" aria-hidden="true"></span>
-          <span class="device__wheel" aria-hidden="true"></span>
-          <div class="device__screen">
-            <img src="/assets/screens/roster.png" alt="" width="480" height="480" fetchpriority="high" />
-          </div>
-          <div class="device__keys" aria-hidden="true">
-            <span class="device__key">ESC</span>
-            <span class="device__key device__key--ptt">PTT</span>
-            <span class="device__key">ENTER</span>
-            <span class="device__key">SHIFT</span>
-          </div>
-        </div>
+        <figure class="hero__photo">
+          <img class="hero__photo-img" src="/assets/photos/hero-usage.webp" alt="An OpenWalkieTalkie prototype standing on a desk, its screen showing the Usage face: one bar per rate-limit window for Claude and Codex" width="1045" height="1306" fetchpriority="high" />
+          <figcaption class="hero__photo-cap">PROTOTYPE · THE USAGE FACE</figcaption>
+        </figure>
       </div>
     </div>
   </div>
@@ -595,12 +586,32 @@
     <header class="section-head reveal">
       <p class="section-kicker">CHAPTER VII</p>
       <h2 class="section-title">THE REAL THING</h2>
-      <p class="section-lede">From the board to the enclosure, the editable designs are in the repository. These are renders from the Rev A hardware sources.</p>
+      <p class="section-lede">Prototypes on the bench, photographed in October 2026, then renders from the Rev A hardware sources. From the board to the enclosure, the editable designs are in the repository.</p>
     </header>
 
     <div class="polaroid-wrap reveal">
       <div class="shots-col">
-        <div class="shots" role="group" aria-label="Renders from the open hardware designs">
+        <div class="shots" role="group" aria-label="Photos of the prototype and renders from the open hardware designs">
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/photos/on-the-desk.webp" alt="A prototype lying on dark blue cloth, its screen showing the Agents roster: three Codex sessions and a Claude one, with two more below" width="750" height="1000" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">ON THE DESK</span><span class="shot__cap-body">The Agents roster on a prototype: one project page, four sessions, two more below. The strip along the bottom says what each key does right now.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/photos/in-hand.webp" alt="Two hands holding the prototype, a thumb resting on a front key, the screen following a Codex session" width="750" height="1000" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">IN BOTH HANDS</span><span class="shot__cap-body">Front keys under the thumbs, the wheel and side keys under the fingers. Here it is following a Codex session on the current project.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/photos/session.webp" alt="One hand holding the prototype, the screen showing a Codex workflow that is working and the command it is running" width="750" height="1000" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">A SESSION, OPEN</span><span class="shot__cap-body">Open a row and the deck follows that session. Here a Codex workflow is working: the command it runs, and details one press away.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/photos/hold.webp" alt="A hand holding the prototype up, screen lit, fingers over the side keys" width="750" height="1000" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">HOLD TO TALK</span><span class="shot__cap-body">Hold PTT from any face, say it, release to send. The words go to the session on the screen.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <div class="shot__win"><img class="shot__img" src="/assets/photos/talk.webp" alt="The prototype raised in one hand like a radio, the wheel at its top-left corner" width="750" height="1000" loading="lazy" /></div>
+            <figcaption class="shot__cap"><span class="shot__cap-title">RADIO CHECK</span><span class="shot__cap-body">Held like the radio it is named after. Away from the desk on Bluetooth, docked on USB-C.</span></figcaption>
+          </figure>
           <figure class="shot">
             <div class="shot__win"><img class="shot__img" src="/assets/main-board.png" alt="Rev A main PCB rendered from its KiCad design" loading="lazy" style="object-fit:contain" /></div>
             <figcaption class="shot__cap"><span class="shot__cap-title">MAIN BOARD · REV A</span><span class="shot__cap-body">A KiCad render of the Rev A main board. Its editable layout and fabrication outputs are in the source.</span></figcaption>
@@ -616,7 +627,7 @@
         </div>
         <div class="shots-bar">
           <button class="pxbtn shots__nav shots__prev" type="button" aria-label="Previous photo">◂ PREV</button>
-          <span class="shots__count" role="status">1 / 3</span>
+          <span class="shots__count" role="status">1 / 8</span>
           <button class="pxbtn shots__nav shots__next" type="button" aria-label="Next photo">NEXT ▸</button>
         </div>
       </div>
@@ -631,6 +642,21 @@
         <li><b>BATTERY</b><span>3.7 V, 500 mAh cell, charged over USB-C</span></li>
         <li><b>STATUS</b><span>Rev A prototypes on the bench · Rev B main board designed</span></li>
       </ul>
+    </div>
+
+    <!-- 3D renders of the design, one per colourway (tools/photos.sh converts them from ../ref/photos) -->
+    <div class="colourways reveal" id="colourways">
+      <p class="section-kicker">THE DESIGN · TWO COLOURWAYS · FOUR VIEWS</p>
+      <div class="colourways__grid">
+        <figure class="colourway">
+          <img class="colourway__img" src="/assets/renders/black-green.webp" alt="Four views of the black and green design: front and left side, rear and right side, the top with the scroll wheel and USB-C port, and the bottom" width="1536" height="1024" loading="lazy" />
+          <figcaption class="colourway__cap"><span class="shot__cap-title">BLACK · GREEN</span><span class="shot__cap-body">The colourway in the photos. Wheel and USB-C on top, one long key on the left, three on the right, two below the screen, the speaker and the mic under them.</span></figcaption>
+        </figure>
+        <figure class="colourway">
+          <img class="colourway__img" src="/assets/renders/white-orange.webp" alt="Four views of the white and orange design: front and left side, rear and right side, top and bottom" width="1536" height="1024" loading="lazy" />
+          <figcaption class="colourway__cap"><span class="shot__cap-title">WHITE · ORANGE</span><span class="shot__cap-body">The same body and keys in white and orange. Four views from the 3D design: front and left, rear and right, top and bottom.</span></figcaption>
+        </figure>
+      </div>
     </div>
   </div>
 </section>
@@ -671,13 +697,13 @@
     <header class="section-head reveal">
       <p class="section-kicker">READY TO TALK</p>
       <h2 class="section-title">GET THE APP</h2>
-      <p class="section-lede">v0.6.0 for macOS 13 and later. Signed, notarized, and ready for your deck.</p>
+      <p class="section-lede">v0.9.0 for macOS 13 and later. 48 kHz USB audio and reset reminders. Signed and notarized.</p>
     </header>
     <div class="inv reveal">
       <div class="inv__foot">
         <div class="inv__ctas">
-          <a class="btn btn--primary btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.6.0/OpenWalkieTalkie-0.6.0-macos-aarch64.dmg">↓ Mac · Apple Silicon</a>
-          <a class="btn btn--ghost btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.6.0/OpenWalkieTalkie-0.6.0-macos-x86_64.dmg">↓ Mac · Intel</a>
+          <a class="btn btn--primary btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.9.0/OpenWalkieTalkie-0.9.0-macos-aarch64.dmg">↓ Mac · Apple Silicon</a>
+          <a class="btn btn--ghost btn--big" href="https://github.com/conol-ai/openwalkietalkie/releases/download/v0.9.0/OpenWalkieTalkie-0.9.0-macos-x86_64.dmg">↓ Mac · Intel</a>
         </div>
         <p>Open the disk image, drag OpenWalkieTalkie into Applications, then follow the setup in the app. Choose Apple Silicon for an M-series Mac, or Intel for an Intel Mac.</p>
         <p class="inv__note">The app includes automatic updates and board-aware USB firmware updates for Rev A and Rev B. Initial flashing requires a compatible bootloader. <a href="https://github.com/conol-ai/openwalkietalkie/releases/latest">Release notes, firmware &amp; checksums →</a></p>

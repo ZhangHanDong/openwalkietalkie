@@ -405,6 +405,7 @@ fn assert_same(mine: &HostLine, fw: &HostMsg) {
                 assert_eq!(fw_item.account.as_str(), laundered(item.account.as_deref().unwrap_or_default()));
                 assert_eq!(fw_item.percent, item.percent);
                 assert_eq!(fw_item.reset.as_str(), laundered(&item.reset));
+                assert_eq!(fw_item.reset_tip.as_str(), laundered(item.reset_tip.as_deref().unwrap_or_default()));
                 assert_eq!(fw_item.tone, item.tone.map(fw_tone));
             }
         }
@@ -631,6 +632,7 @@ fn corpus() -> Vec<HostLine> {
             period: "SEP 2026".into(),
             items: vec![
                 UsageItem {
+                    reset_tip: Some("2 resets expire in 1d 6h".into()),
                     name: "Claude Pro".into(),
                     account: Some("personal@example.com".into()),
                     percent: 62,
@@ -638,6 +640,7 @@ fn corpus() -> Vec<HostLine> {
                     tone: None,
                 },
                 UsageItem {
+                    reset_tip: None,
                     name: "Codex".into(),
                     account: None,
                     percent: 100,
@@ -650,6 +653,7 @@ fn corpus() -> Vec<HostLine> {
             period: long.clone(),
             items: (0..7)
                 .map(|i| UsageItem {
+                    reset_tip: None,
                     name: format!("{i} {long}"),
                     account: Some(long.clone()),
                     percent: 100,
@@ -981,6 +985,7 @@ fn every_enum_spelling_matches_the_firmware() {
         let usage = HostLine::Usage {
             period: "p".into(),
             items: vec![UsageItem {
+                reset_tip: None,
                 name: "n".into(),
                 account: None,
                 percent: 1,

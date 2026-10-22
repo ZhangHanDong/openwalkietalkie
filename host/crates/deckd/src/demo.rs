@@ -332,6 +332,7 @@ pub fn roster() -> Vec<HostLine> {
 /// The usage line; `nudge` is added to every bar (the `refresh` demo).
 pub fn usage(nudge: u8) -> HostLine {
     let item = |name: &str, percent: u8, reset: &str| UsageItem {
+        reset_tip: None,
         name: name.into(),
         account: None,
         percent: percent.saturating_add(nudge).min(100),

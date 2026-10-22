@@ -106,7 +106,7 @@ pub async fn task(mut speaker: Speaker) {
                 continue;
             }
             let parsed = codec::parse(frame.as_bytes());
-            if admit(&mut gate, &parsed)
+            if admit(&mut gate, &parsed, frame.usb)
                 && matches!(
                     parsed,
                     codec::Frame::Start { .. } | codec::Frame::Audio { .. }
@@ -130,8 +130,8 @@ pub async fn task(mut speaker: Speaker) {
 }
 
 /// Whether to act on a frame; a refused stream is logged once.
-fn admit(gate: &mut SpeakerGate, frame: &codec::Frame) -> bool {
-    match gate.admit(frame) {
+fn admit(gate: &mut SpeakerGate, frame: &codec::Frame, usb: bool) -> bool {
+    match gate.admit_on(frame, usb) {
         Verdict::Play => true,
         Verdict::Drop => false,
         Verdict::Refuse => {
@@ -171,6 +171,10 @@ async fn play(
     synth: &mut crate::ui::state::arcade::sound::Synth,
 ) -> Option<Frame> {
     let local = first.is_none();
+    #[cfg(feature = "audio-usb-rate-test")]
+    let test_usb = first.as_ref().is_some_and(|frame| frame.usb);
+    #[cfg(feature = "audio-usb-rate-test")]
+    if test_usb { super::usb_test::begin(gate.rate_khz()); }
     let mut pending = None;
     voice::PLAYING.store(true, Ordering::Release);
     let started = Instant::now();
@@ -228,6 +232,8 @@ async fn play(
     let mut next = first;
     #[cfg(feature = "audio-debug")]
     let mut bench_phase = 0usize;
+    #[cfg(feature = "audio-usb-rate-test")]
+    let mut next_seq = 0u8;
     let mut quiet_ms = 0u32;
     let (mut frames, mut gaps, mut underruns) = (0u32, 0u32, 0u32);
     let ending = loop {
@@ -252,7 +258,7 @@ async fn play(
         let parsed = frame
             .as_ref()
             .map(|f| codec::parse(f.as_bytes()))
-            .filter(|parsed| admit(gate, parsed));
+            .filter(|parsed| admit(gate, parsed, frame.as_ref().is_some_and(|f| f.usb)));
         if local
             && matches!(
                 parsed,
@@ -269,12 +275,17 @@ async fn play(
         let mut local_end = false;
         let m = match parsed {
             Some(codec::Frame::Audio {
-                mut state, data, ..
+                mut state, data, seq: _seq, ..
             }) => {
                 let n = codec::decode(&mut state, data, &mut pcm);
                 quiet_ms = 0;
                 frames += 1;
-                up.run(&pcm[..n], &mut out)
+                #[cfg(feature = "audio-usb-rate-test")]
+                {
+                    if test_usb { super::usb_test::decoded(n, _seq == next_seq); }
+                    next_seq = _seq.wrapping_add(1);
+                }
+                up.run_at(gate.rate_khz(), &pcm[..n], &mut out)
             }
             Some(codec::Frame::End { .. }) if !local => break Ending::End,
             Some(_) => continue,
@@ -346,6 +357,9 @@ async fn play(
         pac::PMUC.hxt_cr1().modify(|w| w.set_buf_aud_en(true));
     }
     voice::PLAYING.store(false, Ordering::Release);
+    #[cfg(feature = "audio-usb-rate-test")]
+    if test_usb { super::usb_test::finish(gaps, underruns, ending == Ending::End); }
+    gate.finish();
     logln!(
         "voice: speaker stream {} after {} ms: {} frames, {} gaps, {} underruns",
         match ending {

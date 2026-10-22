@@ -62,6 +62,10 @@ pub const REPORT_FRAME: usize = 61;
 pub const INFO_LEN: usize = 5;
 
 pub const CODEC_IMA_ADPCM: u8 = 1;
+/// Optional USB speaker rate; microphone and BLE remain at RATE_HZ.
+pub const USB_SPEAKER_RATE_HZ: u32 = 48_000;
+/// INFO feature bit: USB speaker accepts 48 kHz ADPCM STARTs.
+pub const FEATURE_USB_SPEAKER_48K: u8 = 1 << 2;
 pub const RATE_HZ: u32 = 16_000;
 pub const RATE_KHZ: u8 = 16;
 pub const FRAME_MS: u8 = 20;

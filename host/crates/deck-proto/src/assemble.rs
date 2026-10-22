@@ -599,6 +599,7 @@ pub fn parse_host_line(bytes: &[u8]) -> Result<HostLine, DecodeError> {
                     };
                     let i = Obj(map);
                     Ok(UsageItem {
+                        reset_tip: i.str("tip")?.map(str::to_string),
                         name: i.need_str("n")?.to_string(),
                         account: i.str("a")?.map(str::to_string),
                         percent: i.need_u8("p", 100)?,
@@ -1038,6 +1039,7 @@ mod tests {
             HostLine::Usage {
                 period: "p".into(),
                 items: vec![UsageItem {
+                    reset_tip: None,
                     name: "n".into(),
                     account: None,
                     percent: 0,

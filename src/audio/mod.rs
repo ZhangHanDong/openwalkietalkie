@@ -14,6 +14,8 @@ pub mod policy;
 pub mod upsample;
 #[cfg_attr(not(feature = "hw-a"), allow(dead_code))]
 pub mod voice;
+#[cfg(feature = "audio-usb-rate-test")]
+pub mod usb_test;
 
 #[cfg(feature = "hw-a")]
 pub mod mic;

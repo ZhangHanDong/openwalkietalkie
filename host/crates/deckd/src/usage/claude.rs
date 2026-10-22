@@ -36,7 +36,7 @@ use super::{claude_oauth_windows, unix_now, Provider, Window};
 use crate::api::Api;
 use crate::core::handle::CoreMsg;
 
-pub const URL: &str = "https://api.anthropic.com/api/oauth/usage";
+pub const URL: &str = "https://api.anthropic.com/api/oauth/usage?cedar_ember=1";
 const PROFILE_URL: &str = "https://api.anthropic.com/api/oauth/profile";
 /// The beta header the OAuth endpoints require.
 const BETA: &str = "oauth-2025-04-20";
@@ -143,7 +143,7 @@ pub async fn run(api: Arc<Api>, mut stop: watch::Receiver<bool>) {
         if enabled && pace.next <= now {
             let outcome = probe(&api).await;
             if matches!(outcome, Outcome::NoLogin | Outcome::Expired | Outcome::Denied | Outcome::Refused(_)) {
-                let _ = feed(&api, Vec::new(), None).await;
+                let _ = feed(&api, Vec::new(), None, Vec::new()).await;
             }
             let poll = Duration::from_secs(u64::from(cfg.usage.poll_s));
             let fresh = pace.settle(&outcome, poll, Instant::now());
@@ -237,15 +237,17 @@ async fn probe(api: &Api) -> Outcome {
         Ok((200, body)) => serde_json::from_str(&body).ok().and_then(|v| profile_account(&v)),
         _ => None,
     };
-    feed(api, windows, account).await
+    let resets = super::claude_reset_grants(&value);
+    feed(api, windows, account, resets).await
 }
 
-async fn feed(api: &Api, windows: Vec<Window>, account: Option<String>) -> Outcome {
+async fn feed(api: &Api, windows: Vec<Window>, account: Option<String>, resets: Vec<super::ResetGrant>) -> Outcome {
     let n = windows.len();
     match api
         .core
         .send(CoreMsg::Usage {
             partial: false,
+            resets: Some(resets),
             provider: Provider::Claude,
             windows,
             account,

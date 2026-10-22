@@ -76,7 +76,10 @@ impl Shell {
                             } else {
                                 item.reset.clone()
                             },
-                        )),
+                        ))
+                        .when_some(item.reset_tip.as_ref().filter(|tip| !dim && !tip.is_empty()), |panel, tip| {
+                            panel.child(div().ts(12., 18.).text_color(p.warning_muted).child(tip.clone()))
+                        }),
                 );
             }
         } else {

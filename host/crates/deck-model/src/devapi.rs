@@ -426,6 +426,7 @@ mod tests {
     fn usage_set_updates_persists_and_answers_a_refresh() {
         let mut sim = Sim::new();
         let items = vec![UsageItem {
+            reset_tip: None,
             name: "Claude 5h".into(),
             account: None,
             percent: 42,
@@ -495,6 +496,7 @@ mod tests {
             (
                 "x",
                 vec![UsageItem {
+                    reset_tip: None,
                     name: "n".into(),
                     account: None,
                     percent: 101,

@@ -1477,56 +1477,26 @@ html[data-theme="night"] .footer__banner-fade::after  { opacity: 1; }
 /* ============================================================
    20. OPEN WALKIE TALKIE ADDITIONS
    Everything above is the shared openmicrokbd.org theme. Below:
-   the handheld replica, its on-screen faces, the host log,
-   square render cards, the featured PTT card and placeholders.
+   the hero photo card, the handheld replica, its on-screen faces, the host log,
+   square render cards, the colourway renders, the featured PTT card and placeholders.
    ============================================================ */
 
-/* ---------- 20a. HERO DEVICE (CSS frame around a real firmware render) ---------- */
-.device {
-  position: relative; width: min(100%, 420px); margin: 0 auto;
-  padding: 26px 26px 34px;
-  background: #17171c;
-  box-shadow:
-    0 0 0 var(--px) #e9e3d6,
-    0 0 0 calc(var(--px)*2) #14141a,
-    calc(var(--px)*2) calc(var(--px)*3) 0 0 rgba(0,0,0,.28),
-    inset 0 var(--px) 0 rgba(255,255,255,.08);
+/* ---------- 20a. HERO PHOTO (a prototype, framed like the stack cards) ---------- */
+/* The card is cream by day and indigo by night so the dark photo sits on either
+   sky; .hero__art-frame's drop-shadow draws its ground shadow. */
+.hero__photo {
+  width: min(100%, 440px); margin: 0 auto; padding: 14px 14px 0;
+  background: var(--cream);
+  box-shadow: 0 0 0 var(--px) var(--wood-dark);
+  transition: background-color var(--t-theme) var(--ease);
 }
-html[data-theme="night"] .device { box-shadow:
-    0 0 0 var(--px) #8b98d8,
-    0 0 0 calc(var(--px)*2) #05070f,
-    calc(var(--px)*2) calc(var(--px)*3) 0 0 rgba(0,0,0,.5),
-    inset 0 var(--px) 0 rgba(255,255,255,.06); }
-.device__antenna {
-  position: absolute; top: -34px; left: 36px; width: 12px; height: 40px; background: #14141a;
-  box-shadow: 0 0 0 3px #2a2a33;
+html[data-theme="night"] .hero__photo { background: #2b3568; }
+.hero__photo-img { display: block; width: 100%; height: auto; background: #101014; image-rendering: auto; }
+.hero__photo-cap {
+  display: block; padding: 14px 4px 16px;
+  font-family: "Press Start 2P", monospace; font-size: 9px; letter-spacing: .16em; color: var(--wood-dark);
 }
-.device__antenna::after { content: ""; position: absolute; top: -8px; left: -4px; width: 20px; height: 8px; background: var(--rose); }
-.device__screen {
-  position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: #000;
-  box-shadow: 0 0 0 3px #0a0a0e, 0 0 0 6px #2a2a33;
-}
-.device__screen img { width: 100%; height: 100%; object-fit: cover; image-rendering: auto; display: block; }
-.device__screen::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(180deg, rgba(0,0,0,.16) 0 2px, transparent 2px 4px);
-}
-.device__wheel {
-  position: absolute; right: -14px; top: 54px; width: 14px; height: 96px;
-  background: repeating-linear-gradient(180deg, #3b3b46 0 5px, #24242c 5px 10px);
-  box-shadow: 0 0 0 3px #14141a;
-}
-.device__keys { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 18px; }
-.device__key {
-  height: 34px; display: grid; place-items: center;
-  font-family: "Press Start 2P", monospace; font-size: 6px; letter-spacing: .06em; color: #2a2a30;
-  background: #f2ece0;
-  box-shadow: 0 0 0 3px #14141a, 0 4px 0 0 #b3a894, inset 0 3px 0 rgba(255,255,255,.7);
-}
-.device__key--ptt { background: var(--sun); grid-column: span 2; color: #3a2c06; }
-.device__key--ptt { background: #f5c53d; }
-.device__label { position: absolute; left: 26px; bottom: 10px; font-family: "Press Start 2P", monospace; font-size: 6px; color: #6c6c7d; letter-spacing: .12em; }
-.hero__art-frame .device { animation: none; }
+html[data-theme="night"] .hero__photo-cap { color: var(--sun); }
 
 /* ---------- 20b. THE REPLICA (Try It) ---------- */
 .deck { width: 100%; max-width: 460px; padding: 18px 18px 16px; background: #17171c;
@@ -1838,3 +1808,21 @@ html[data-theme="night"] .waitlist__status[data-state="error"] { color: #ffaaa0;
   .privacy-notice { right: 16px; bottom: 16px; width: calc(100% - 32px); padding: 18px; gap: 18px; flex-direction: column; align-items: stretch; }
   .privacy-notice .btn { align-self: flex-end; }
 }
+
+/* ---------- 20g. COLOURWAYS (3D renders of the design, two-up) ---------- */
+/* The turnarounds are 3:2 on a light ground, so they get their own wide cards
+   under the hardware stack instead of the stack's portrait window. */
+.colourways { margin-top: 54px; }
+.colourways .section-kicker { text-align: center; margin-bottom: 22px; }
+.colourways__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.colourway {
+  margin: 0; padding: 12px 12px 0; background: var(--cream);
+  box-shadow:
+    0 0 0 var(--px) var(--wood-dark),
+    calc(var(--px)*2) calc(var(--px)*3) 0 0 rgba(0,0,0,.22);
+  transition: background-color var(--t-theme) var(--ease);
+}
+html[data-theme="night"] .colourway { background: #2b3568; }
+.colourway__img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; background: #f4f4f4; image-rendering: auto; }
+.colourway__cap { display: block; padding: 14px 4px 16px; }
+@media (max-width: 860px) { .colourways__grid { grid-template-columns: 1fr; } }

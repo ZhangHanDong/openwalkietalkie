@@ -154,7 +154,7 @@ Required fields have no `?`. Text capacities are in bytes of UTF-8.
 | `focus` | `agent`, `ack?` | The PC's focus changed. When the change was caused by a device `channel` event, echo its `seq` as `ack`; the device ignores a `focus` whose `ack` is older than its last `channel.seq`, and applies one without `ack` always. |
 | `ws` | `active` 1-based (0 unknown) `<= count`, `count` `<= 9`, `sel` window row `< windows.length` (0 when empty), `windows?` up to 6 of `{c?, t}` with `c` `blue`/`amber`/`green`/`red`/`gray` (default gray) and `t` (48) | Omarchy face content. |
 | `macro` | `f` face id 1..8, `src?` (16, e.g. the dotfile name), `keys` up to 9 of `{l, b?, k?}`: `l` label (12), `b` `left`/`right`/`enter`/`cw`/`ccw`/`shift+left`/`shift+right`/`shift+enter`, `k` keystroke (32) | Labels of the Macropad instance `f` (there may be up to three). `k` is what the host posts to the desktop when the key is pressed, `ctrl+opt+shift+cmd+<key>` with any subset of the modifiers (`alt` = `opt`) and one key of: `a`–`z`, `0`–`9`, `f1`–`f12`, `up` `down` `left` `right`, `enter` `esc` `tab` `space` `backspace` `delete` `home` `end` `pageup` `pagedown`, `minus` `equal` `lbracket` `rbracket` `backslash` `semicolon` `quote` `comma` `period` `slash` `grave`; the deck shows it as ⌃⌥⇧⌘ glyphs in the key's corner and refuses an unknown one (`err unknown`). `b` is a hardware control of the deck that presses the key. A key with neither is touch-only; missing keys, and keys with an empty `l`, draw as "+ assign" (an empty label is how a cleared slot keeps the later keys in place). Send it when `hello.faces`/`faces`/`face` shows a Macropad instance you have labels for, and again after a `macrokey`. |
-| `usage` | `period` (12), `items` up to 6 of `{n (20), a? (48), p 0..100, r (24), c?}` | Usage face. `a` identifies the account for these percentages, displayed below the provider name; omitted on legacy reports. `c` overrides the bar tone (`<50` blue, `<80` green, `<95` amber, else red). |
+| `usage` | `period` (12), `items` up to 6 of `{n (20), a? (48), p 0..100, r (24), tip? (32), c?}` | Usage face. `a` identifies the account for these percentages, displayed below the provider name; omitted on legacy reports. `tip` is an optional reminder for unused redeemable resets nearing expiry, shown below the reset countdown while connected. `c` overrides the bar tone (`<50` blue, `<80` green, `<95` amber, else red). |
 | `faces` | `list` up to 8 of `{f 1..8 unique, t, n (16)}`, `t` = `agents`/`omarchy`/`macropad`/`usage`/`arcade`/`settings` | Restore the strip (see `boot`). Ignored while the face manager, gallery or naming overlay is open. |
 | `name` | `text` (16) | The spoken name for a new face; applies only while the naming overlay is open (after a `ptt ctx:name`). |
 | `set` | `k` `speaker`/`mic`/`announce`/`chime`/`autojump`/`brightness`/`idlehome`/`demo`/`text`/`arcadesound`, `v` | Host-side override of a setting; not echoed. Ranges: speaker/mic 0..10, announce/chime/autojump/demo 0/1, brightness 1..5, idlehome 0/30/60/120 (seconds; other values round up), text 0/1/2, arcadesound 0 off / 1 SFX / 2 music + SFX. Arcade sound changes originate in the Arcade menu and are persisted like other settings. |
@@ -267,7 +267,7 @@ Every value is one frame; byte 0 is its kind:
 
 | Kind | Name | Bytes after the kind | Direction |
 |---|---|---|---|
-| 0x01 | START | stream, codec (1 = IMA ADPCM), rate kHz (16), frame ms (20) | both |
+| 0x01 | START | stream, codec (1 = IMA ADPCM), rate kHz (16; USB speaker also 48), frame ms (20) | both |
 | 0x02 | AUDIO | stream, seq, predictor (i16 LE), step index, data | both |
 | 0x03 | END | stream, next seq, reason (0 release, 1 abort, 2 limit, 3 error) | both |
 | 0x10 | MIC | mode (0 off, 1 on, 2 loopback), seconds (1 to 60) | host to deck |
@@ -313,11 +313,11 @@ up to about 100 ms is fine) and END when it has nothing more to say. The
 first START or AUDIO frame powers the audio PLL, the DAC and the amplifier
 (about 115 ms, during which frames queue up), then the deck plays through an
 80 ms DMA ring at 48 kHz, so a stream starts about 0.2 s after its first
-frame. Up to 32 frames (640 ms) can wait in the deck; one that arrives to a
+frame. Up to 128 frames (293 ms at USB 48 kHz) can wait in the deck; one that arrives to a
 full queue is dropped (and logged). A late frame is covered with silence
 once the ring is down to 8 ms; END, or 300 ms with nothing, ends the stream
 and the amplifier goes off once the tail has played. A START for a codec,
-rate or frame length other than IMA ADPCM, 16 kHz, 20 ms is refused: that
+rate or frame length other than IMA ADPCM, 16 kHz (or 48 kHz for a USB speaker), 20 ms is refused: that
 stream's AUDIO is dropped until its END. The link is half-duplex
 like a walkie-talkie: while a microphone stream is live the deck discards
 speaker frames, because its own speaker reaches its microphone at about
@@ -337,7 +337,25 @@ a speaker frame arriving) makes the deck ask for 15 ms with no latency, and
 With the fast link the largest gap between mic notifications measured
 43 to 59 ms.
 
-**Voice over USB.** On the cable the frames above travel on report channel
+**Speaker quality.** Host 16 kHz playback uses a small ADPCM trellis search
+with a greedy fallback: each frame's reconstruction error can only improve
+from the same initial state. This does not change the wire codec or microphone
+encoder. The deck reconstructs 16 kHz speaker samples with a 127-tap polyphase
+FIR (7.3 kHz cutoff, 1.3125 ms group delay), suppressing the spectral images
+of the old linear interpolator. Native 48 kHz samples go directly to the DAC.
+Both host output rates apply the speaker EQ.
+
+**Voice over USB.** New firmware adds INFO feature bit 2 (`0x04`) in its
+USB LISTEN response to advertise 48 kHz speaker support. Hosts select 48 kHz
+only on USB with that bit and compatible INFO; missing or old INFO falls back
+to 16 kHz. BLE and the microphone remain 16 kHz. At 48 kHz, the same 110-sample
+USB audio frame covers 2.29 ms, about 436 reports/s and 28 KB/s including HID
+framing. The 128-frame receive queue covers amplifier startup plus host lead.
+The host renders 960 samples every 20 ms, keeps its pacing clock in wall time,
+and includes 48 in START. On a USB/BLE switch the output reopens at the
+new negotiated rate; a microphone press still closes speaker playback.
+
+On the cable the frames above travel on report channel
 7 of the vendor collection, framed like channel 5 (`[6, 7, len, frame]`)
 but one frame per report, never split or joined: a frame is at most 61
 bytes there, so an AUDIO frame carries 110 samples (6.9 ms) instead of 320,

@@ -5,8 +5,32 @@
   <id>https://openwalkietalkie.org/blog/</id>
   <link href="https://openwalkietalkie.org/blog/" />
   <link rel="self" type="application/atom+xml" href="https://openwalkietalkie.org/blog/feed.xml" />
-  <updated>2026-10-19T08:27:59Z</updated>
+  <updated>2026-10-22T08:23:08Z</updated>
   <author><name>Tony Huang</name></author>
+  <entry>
+    <title>OpenWalkieTalkie v0.9.0: Clearer USB speech and reset reminders</title>
+    <id>https://openwalkietalkie.org/blog/usb-audio-and-reset-reminders/</id>
+    <link href="https://openwalkietalkie.org/blog/usb-audio-and-reset-reminders/" />
+    <published>2026-10-22T08:23:08Z</published>
+    <updated>2026-10-22T08:23:08Z</updated>
+    <summary>48 kHz USB speaker playback, improved 16 kHz audio, and reminders before unused manual usage resets expire on your Mac and deck.</summary>
+  </entry>
+  <entry>
+    <title>OpenWalkieTalkie v0.8.0: Screen lock and consistent wheel navigation</title>
+    <id>https://openwalkietalkie.org/blog/screen-lock-and-wheel-navigation/</id>
+    <link href="https://openwalkietalkie.org/blog/screen-lock-and-wheel-navigation/" />
+    <published>2026-10-21T09:02:39Z</published>
+    <updated>2026-10-21T09:02:39Z</updated>
+    <summary>An automatic screen lock protects PTT in your bag, with four counterclockwise ticks to unlock and a consistent direction for page and item selection.</summary>
+  </entry>
+  <entry>
+    <title>OpenWalkieTalkie v0.7.0: Clearer speech, less hiss</title>
+    <id>https://openwalkietalkie.org/blog/speaker-eq-and-less-hiss/</id>
+    <link href="https://openwalkietalkie.org/blog/speaker-eq-and-less-hiss/" />
+    <published>2026-10-20T15:08:13Z</published>
+    <updated>2026-10-20T15:08:13Z</updated>
+    <summary>Speaker EQ for speech and chimes, plus RAM execution on Rev A to reduce flash-coupled hiss while keeping settings and Bluetooth pairing intact.</summary>
+  </entry>
   <entry>
     <title>OpenWalkieTalkie v0.6.0: Arcade on the deck</title>
     <id>https://openwalkietalkie.org/blog/arcade-on-the-deck/</id>

@@ -159,6 +159,9 @@ pub struct UsageItem {
     /// 0..=100.
     pub percent: u8,
     pub reset: String,
+    /// An expiring redeemable reset reminder; absent when none is due.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reset_tip: Option<String>,
     /// `None` derives the bar tone from `percent`.
     pub tone: Option<Tone>,
 }

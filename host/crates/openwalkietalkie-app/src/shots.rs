@@ -35,7 +35,7 @@ impl Shots {
     pub fn synthetic_only(&self) -> bool {
         std::env::var("OPENWALKIETALKIE_SHOTS_ONLY").ok().is_some_and(|list| {
             !list.is_empty() && list.split(',').all(|scene| matches!(scene.trim(),
-                "images" | "image-expanded" | "usage-fable" | "workflow" | "workflow-runs" | "workflow-expanded" | "workflow-complete"))
+                "images" | "image-expanded" | "usage-fable" | "usage-reset-expiring" | "workflow" | "workflow-runs" | "workflow-expanded" | "workflow-complete"))
         })
     }
 
@@ -61,6 +61,7 @@ pub enum Scene {
     Workflow,
     WorkflowRuns,
     UsageFable,
+    UsageResetExpiring,
     WorkflowExpanded,
     WorkflowComplete,
     Confirm,
@@ -79,13 +80,14 @@ pub enum Scene {
 }
 
 /// Every scene, with the name its file gets.
-pub const SCENES: [(Scene, &str); 22] = [
+pub const SCENES: [(Scene, &str); 23] = [
     (Scene::Deck, "deck"),
     (Scene::Images, "images"),
     (Scene::ImageExpanded, "image-expanded"),
     (Scene::Workflow, "workflow"),
     (Scene::WorkflowRuns, "workflow-runs"),
     (Scene::UsageFable, "usage-fable"),
+    (Scene::UsageResetExpiring, "usage-reset-expiring"),
     (Scene::WorkflowExpanded, "workflow-expanded"),
     (Scene::WorkflowComplete, "workflow-complete"),
     (Scene::Confirm, "confirm"),
@@ -196,11 +198,14 @@ impl Shell {
         self.integrations.stage_token(None);
         self.cancel_plan(cx);
         match scene {
-            Scene::UsageFable => {
+            Scene::UsageFable | Scene::UsageResetExpiring => {
                 use deck_gui_core::{ApiEvent, AppEvent};
                 let snapshot = deck_model::Snapshot { usage: Some(deck_model::Usage { period: "5h / 7d".into(), at: Some(crate::present::now()),
                     items: [("Claude session", 40), ("Claude week", 52), ("Claude Fable week", 100), ("Codex session", 17), ("Codex week", 30)]
-                        .into_iter().map(|(name, percent)| deck_model::UsageItem { name: name.into(), percent,
+                        .into_iter().map(|(name, percent)| deck_model::UsageItem { reset_tip: if matches!(scene, Scene::UsageResetExpiring) {
+                            match name { "Claude week" => Some("2 resets expire in 1d 6h".into()),
+                                "Codex week" => Some("1 reset expires in 2h 10m".into()), _ => None }
+                        } else { None }, name: name.into(), percent,
                             account: Some("work@example.com".into()), reset: "resets in 2d 4h".into(), tone: None }).collect() }), ..Default::default() };
                 self.state.handle_event(AppEvent::Api(ApiEvent::Connected { snapshot }));
                 self.go(Screen::Usage, window, cx);

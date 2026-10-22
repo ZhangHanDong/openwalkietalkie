@@ -271,6 +271,8 @@ pub enum CoreMsg {
         partial: bool,
         provider: crate::usage::Provider,
         windows: Vec<crate::usage::Window>,
+        /// None preserves known grants on meter-only notifications.
+        resets: Option<Vec<crate::usage::ResetGrant>>,
         account: Option<String>,
     },
     /// A door flushed a delivery.

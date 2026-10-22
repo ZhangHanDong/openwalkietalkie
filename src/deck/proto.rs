@@ -573,6 +573,9 @@ fn parse_into(line: &[u8], out: &mut HostMsg) -> Result<(), ErrWhy> {
                     return Err(ErrWhy::Range);
                 }
                 item.need("r")?.text_into(&mut slot.reset)?;
+                if let Some(tip) = item.get("tip")? {
+                    tip.text_into(&mut slot.reset_tip)?;
+                }
                 slot.tone = item.get("c")?.map(|v| v.member(TONES)).transpose()?;
                 *count += 1;
             }

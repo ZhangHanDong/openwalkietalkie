@@ -182,7 +182,14 @@ Provider usage bars from the host (`usage`). SCROLL scrolls, ENTER sends
 host's colour, else blue below 50%, green below 80%, amber below 95%, red from
 95%. `deckd` fills it with the Claude and Codex accounts' rate-limit windows
 (one bar each for the session and the week, with the countdown to the reset,
-`docs/host-service.md` §4.10) and re-probes both on ENTER.
+`docs/host-service.md` §4.10) and re-probes both on ENTER. When an unused
+manual reset grant expires within 72 hours, both the Mac Usage page and the
+deck show a small amber tip below the weekly bar (for example, "2 resets
+expire in 1d 6h"). It counts grants at the nearest expiry, hides expired or
+spent grants, and is separate from the automatic weekly reset countdown.
+Claude supplies eligible grants in its optional usage response; Codex supplies
+reset-credit details through the app-server. Missing eligibility or expiry
+data produces no tip. Redemption remains in the provider's app.
 
 ### Settings
 

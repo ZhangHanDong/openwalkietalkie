@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 98] = [
+const DECK_SCENES: [&str; 99] = [
     "screen-locked",
     "screen-unlocking",
     "question-answer",
@@ -96,6 +96,7 @@ const DECK_SCENES: [&str; 98] = [
     "usage",
     "usage-accounts",
     "usage-fable",
+    "usage-reset-expiring",
     "usage-updating",
     "settings-volume",
     "settings-speech",
@@ -572,7 +573,7 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
             }
         }
         "usage" => ui.on_face(Template::Usage),
-        "usage-accounts" | "usage-fable" => {
+        "usage-accounts" | "usage-fable" | "usage-reset-expiring" => {
             ui.on_face(Template::Usage);
             ui.deck.usage.period.set("5h / 7d");
             ui.deck.usage.count = 4;
@@ -588,6 +589,13 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 item.percent = percent;
                 item.reset.set(reset);
                 item.tone = None;
+            }
+            if scene == "usage-reset-expiring" {
+                ui.deck.usage.items[1].reset_tip.set("2 resets expire in 1d 6h");
+                ui.deck.usage.items[3].reset_tip.set("1 reset expires in 2h 10m");
+                ui.deck.usage.items[4] = ui.deck.usage.items[0];
+                ui.deck.usage.items[4].name.set("Claude Fable week");
+                ui.deck.usage.count = 5;
             }
             if scene == "usage-fable" {
                 ui.deck.usage.items[4] = ui.deck.usage.items[3];

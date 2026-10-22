@@ -1,10 +1,10 @@
-//! Rev A speaker correction for the 16 kHz USB/BLE output.
+//! Rev A speaker correction for 16 kHz BLE and 48 kHz USB output.
 //!
 //! Conservative tuning from the supplied 0.1 W / 0.1 m response plot:
 //! cut the broad 1.1 kHz hump by 5 dB and the 6.3 kHz peak by 6 dB.
 //! Do not invert the bass roll-off or the narrow nulls: the plot is not
 //! an in-enclosure calibration.
-//! Everything above 8 kHz is outside this transport's Nyquist limit.
+//! At 16 kHz, everything above 8 kHz is outside the transport bandwidth.
 //!
 //! This runs after the mixer/resampler, before PCM quantization and ADPCM.
 //! Coefficients use the RBJ high-pass and peaking equations:
@@ -25,8 +25,15 @@ pub(super) struct SpeakerEq {
 }
 
 impl SpeakerEq {
+    #[cfg(test)]
     pub(super) fn new() -> Self {
-        let rate = f64::from(crate::ble::codec::RATE_HZ);
+        Self::at_rate(crate::ble::codec::RATE_HZ)
+    }
+
+    /// The USB bench tool uses the same EQ curve on its 48 kHz master.
+    pub(super) fn at_rate(rate: u32) -> Self {
+        assert!(matches!(rate, 16_000 | 48_000));
+        let rate = f64::from(rate);
         Self {
             filters: [
                 Biquad::high_pass(rate, 250.0, FRAC_1_SQRT_2),
@@ -214,5 +221,21 @@ mod tests {
         // A close/open constructs a fresh filter, without the previous tail.
         SpeakerEq::new().render(&[0.0; 2], &mut output[..1]);
         assert_eq!(output[0], 0);
+    }
+
+    #[test]
+    fn usb_48k_retains_the_speaker_correction_curve() {
+        let rate = 48_000;
+        for (hz, expected) in [(250.0, -6.2), (1100.0, -8.0), (3000.0, -3.7), (6300.0, -9.0)] {
+            let input: Vec<f32> = (0..rate).flat_map(|i| {
+                let sample = (0.25 * (TAU * hz * i as f64 / rate as f64).sin()) as f32;
+                [sample, sample]
+            }).collect();
+            let mut pcm = vec![0; rate];
+            SpeakerEq::at_rate(rate as u32).render(&input, &mut pcm);
+            let power = pcm[rate/2..].iter().map(|&s| (f64::from(s)/32768.0).powi(2)).sum::<f64>() / (rate/2) as f64;
+            let gain = 10.0 * (power / (0.25 * 0.25 / 2.0)).log10();
+            assert!((gain - expected).abs() < 0.4, "{hz} Hz: {gain} dB");
+        }
     }
 }

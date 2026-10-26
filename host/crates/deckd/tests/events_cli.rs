@@ -41,12 +41,13 @@ impl Head {
 
     /// The complete lines written so far.
     fn taken(&self) -> Vec<String> {
-        self.out
-            .lock()
-            .unwrap()
-            .lines()
-            .map(str::to_string)
-            .collect()
+        let out = self.out.lock().unwrap();
+        let Some(end) = out.rfind('\n') else {
+            return Vec::new();
+        };
+        // JSON serialization can write a line in several chunks. A partial
+        // snapshot is not a signal that the reader is ready for events.
+        out[..=end].lines().map(str::to_string).collect()
     }
 }
 
@@ -63,6 +64,20 @@ impl Write for Head {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
+}
+
+#[test]
+fn a_snapshot_is_ready_only_after_its_newline() {
+    let mut head = Head::new(2);
+    head.write_all(b"{\"type\":").unwrap();
+    assert!(head.taken().is_empty());
+    head.write_all(b"\"snapshot\"}\n{\"type\":").unwrap();
+    assert_eq!(head.taken(), [r#"{"type":"snapshot"}"#]);
+    head.write_all(b"\"agent.updated\"}\n").unwrap();
+    assert_eq!(
+        head.taken(),
+        [r#"{"type":"snapshot"}"#, r#"{"type":"agent.updated"}"#]
+    );
 }
 
 fn paths_of(daemon: &Daemon) -> Paths {

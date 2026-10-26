@@ -35,14 +35,15 @@ use crate::ui::kit::list::Viewport;
 use crate::ui::layout;
 
 /// Templates the gallery offers, in row order.
-pub const GALLERY: [Template; 4] = [
+pub const GALLERY: [Template; 5] = [
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
     Template::Arcade,
+    Template::System,
 ];
 
-/// Touch target ids: gallery rows are 0..3, confirm buttons `CONFIRM_ID + n`.
+/// Touch target ids: gallery rows are 0..GALLERY.len(), confirm buttons `CONFIRM_ID + n`.
 const CONFIRM_ID: u16 = 16;
 
 #[derive(Clone, Copy)]
@@ -706,8 +707,8 @@ mod tests {
         let mut out = Update::new();
         close(&mut ui, 30, &mut out);
         assert_eq!(ui.global.overlay, Overlay::None);
-        assert_eq!(ui.current_face().template, Template::Arcade);
-        assert_eq!(out.deck_events().collect::<std::vec::Vec<_>>(), [Event::Face { id: 6 }]);
+        assert_eq!(ui.current_face().template, Template::System);
+        assert_eq!(out.deck_events().collect::<std::vec::Vec<_>>(), [Event::Face { id: 7 }]);
         // "+" exits to the origin, even after the origin moved.
         let mut out = Update::new();
         ui.on_face(Template::Usage);
@@ -716,10 +717,10 @@ mod tests {
         grab(&mut ui, &mut out);
         carry(&mut ui, 3, &mut out);
         drop(&mut ui, &mut out);
-        assert_eq!(ids(&ui), [1, 3, 4, 2, 6, 5]);
+        assert_eq!(ids(&ui), [1, 3, 4, 2, 7, 6, 5]);
         assert_eq!((ui.manager.origin, ui.global.current), (2, 2));
         assert_eq!(faces(&out), 1);
-        select(&mut ui, 6);
+        select(&mut ui, 7);
         let mut out = Update::new();
         close(&mut ui, 50, &mut out);
         assert_eq!(ui.current_face().template, Template::Usage);
@@ -743,10 +744,10 @@ mod tests {
         assert_eq!((ui.manager.selected, ids(&ui)[1]), (1, 3));
         let (x, _) = layout::manager_card(3).center();
         on_touch(&mut ui, target, TouchAct::Move { x, y: 240, dx: 111, dy: 0 }, 450, &mut out);
-        assert_eq!(ids(&ui), [1, 2, 4, 3, 6, 5]);
+        assert_eq!(ids(&ui), [1, 2, 4, 3, 7, 6, 5]);
         let mut out = Update::new();
         on_touch(&mut ui, target, TouchAct::Cancel, 500, &mut out);
-        assert_eq!(ids(&ui), [1, 2, 3, 4, 6, 5]);
+        assert_eq!(ids(&ui), [1, 2, 3, 4, 7, 6, 5]);
         assert!(!ui.manager.grabbed && faces(&out) == 0);
         assert_eq!(ui.manager.selected, 2);
         // Dropping where it was picked up is no change either.
@@ -761,7 +762,7 @@ mod tests {
         let (x, _) = layout::manager_card(3).center();
         on_touch(&mut ui, target, TouchAct::Move { x, y: 240, dx: 111, dy: 0 }, 1460, &mut out);
         on_touch(&mut ui, target, TouchAct::Activate, 1500, &mut out);
-        assert_eq!(ids(&ui), [1, 2, 4, 3, 6, 5]);
+        assert_eq!(ids(&ui), [1, 2, 4, 3, 7, 6, 5]);
         assert_eq!(faces(&out), 1);
     }
 
@@ -804,7 +805,7 @@ mod tests {
         assert_eq!(ui.manager.first_visible, 1);
         // It never scrolls past the last card, and its Up is not a tap.
         on_touch(&mut ui, target, TouchAct::Move { x: 0, y: 240, dx: -900, dy: 3 }, 70, &mut out);
-        assert_eq!(ui.manager.first_visible, 3);
+        assert_eq!(ui.manager.first_visible, 4);
         on_touch(&mut ui, target, TouchAct::Activate, 80, &mut out);
         assert_eq!(ui.global.overlay, Overlay::Manager);
         assert!(!ui.manager.grabbed);
@@ -816,13 +817,13 @@ mod tests {
         let mut out = Update::new();
         open(&mut ui, 0, &mut out);
         ui.manager.grabbed = true;
-        for (selected, step) in [(0, Wheel::Ccw), (5, Wheel::Cw), (6, Wheel::Cw)] {
+        for (selected, step) in [(0, Wheel::Ccw), (6, Wheel::Cw), (7, Wheel::Cw)] {
             ui.manager.selected = selected;
             ui.manager.grabbed = true;
             on_control(&mut ui, Control::Wheel(step), 10, &mut out);
-            assert_eq!(ids(&ui), [1, 2, 3, 4, 6, 5], "selected {selected}");
+            assert_eq!(ids(&ui), [1, 2, 3, 4, 7, 6, 5], "selected {selected}");
             revert(&mut ui);
-            assert!(!ui.manager.grabbed && ids(&ui) == [1, 2, 3, 4, 6, 5]);
+            assert!(!ui.manager.grabbed && ids(&ui) == [1, 2, 3, 4, 7, 6, 5]);
         }
         assert_eq!(faces(&out), 0);
     }
@@ -835,9 +836,9 @@ mod tests {
         select(&mut ui, 3);
         grab(&mut ui, &mut out);
         carry(&mut ui, 1, &mut out);
-        assert_eq!(ids(&ui), [1, 4, 2, 3, 6, 5]);
+        assert_eq!(ids(&ui), [1, 4, 2, 3, 7, 6, 5]);
         cancel_all(&mut ui);
-        assert_eq!(ids(&ui), [1, 2, 3, 4, 6, 5]);
+        assert_eq!(ids(&ui), [1, 2, 3, 4, 7, 6, 5]);
         assert!(!ui.manager.grabbed);
         assert_eq!(ui.global.overlay, Overlay::None);
         for overlay in [Overlay::Gallery, Overlay::Naming, Overlay::ConfirmRemove] {

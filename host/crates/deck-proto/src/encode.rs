@@ -387,6 +387,15 @@ pub fn encode(line: &HostLine) -> Result<Vec<u8>, EncodeError> {
             }
             w.raw(b"]");
         }
+        HostLine::System(s) => {
+            if !s.valid() { return Err(EncodeError::Range { field: "system" }); }
+            if let Some(v) = s.cpu { w.num("cpu", u64::from(v)); }
+            if let Some(v) = s.gpu { w.num("gpu", u64::from(v)); }
+            for (key, value) in [("mu", s.memory_used_mib), ("mt", s.memory_total_mib),
+                ("df", s.disk_free_mib), ("dt", s.disk_total_mib), ("seq", s.sample)] {
+                w.num(key, u64::from(value));
+            }
+        }
         HostLine::Usage { period, items } => {
             w.cut("period", period, CAPS.usage_period);
             w.key("items");

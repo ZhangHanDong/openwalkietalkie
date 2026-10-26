@@ -437,9 +437,9 @@ pub const THUMB_LABEL: (i32, i32) = (11, 24);
 pub const THUMB_SKETCH: Rect = Rect::new(11, 34, 75, 96);
 /// "Add a face" and the template rows under it.
 pub const GALLERY_TITLE: Rect = Rect::new(37, 70, 406, 40);
-pub const GALLERY_ROWS: u8 = 4;
+pub const GALLERY_ROWS: u8 = 5;
 pub const fn gallery_row(row_index: u8) -> Rect {
-    row(120 + row_index as i32 * 66, 58)
+    row(120 + row_index as i32 * 58, 52)
 }
 pub fn gallery_row_at(x: i32, y: i32) -> Option<u8> {
     index_at(GALLERY_ROWS, gallery_row, x, y)

@@ -240,12 +240,13 @@ impl Update {
     }
 }
 
-/// Power-on strip; ids are 1..=5 in this order.
-pub const DEFAULT_STRIP: [Template; 6] = [
+/// Power-on strip; template IDs remain stable when new faces are inserted.
+pub const DEFAULT_STRIP: [Template; 7] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
+    Template::System,
     Template::Arcade,
     Template::Settings,
 ];
@@ -448,6 +449,10 @@ impl UiState {
         omarchy::on_tick(self, now_ms, out);
         macropad::on_tick(self, now_ms, out);
         usage::on_tick(self, now_ms, out);
+        if !self.deck.system_stale && self.deck.system_at.is_some_and(|at| now_ms.wrapping_sub(at) >= 10_000) {
+            self.deck.system_stale = true;
+            out.dirty |= self.current_face().template == Template::System;
+        }
         arcade::on_tick(self, now_ms, screen_on, out);
         settings::on_tick(self, now_ms, out);
         manager::on_tick(self, now_ms, out);
@@ -661,6 +666,7 @@ pub(super) fn dispatch(ui: &mut UiState, control: Control, at_ms: u32, out: &mut
                 Template::Agents => agents::on_control(ui, face.id, control, at_ms, out),
                 Template::Omarchy => omarchy::on_control(ui, face.id, control, at_ms, out),
                 Template::Macropad => macropad::on_control(ui, face.id, control, at_ms, out),
+                Template::System => false,
                 Template::Usage => usage::on_control(ui, face.id, control, at_ms, out),
                 Template::Arcade => arcade::on_control(ui, control, at_ms, out),
                 Template::Settings => settings::on_control(ui, face.id, control, at_ms, out),
@@ -701,6 +707,7 @@ pub(super) fn touch_hit(ui: &UiState, x: i32, y: i32) -> Option<(Layer, Target)>
                 Template::Agents => agents::hit(ui, face.id, x, y),
                 Template::Omarchy => omarchy::hit(ui, face.id, x, y),
                 Template::Macropad => macropad::hit(ui, face.id, x, y),
+                Template::System => None,
                 Template::Usage => usage::hit(ui, face.id, x, y),
                 Template::Arcade => arcade::hit(ui, x, y),
                 Template::Settings => settings::hit(ui, face.id, x, y),
@@ -727,6 +734,7 @@ pub(super) fn touch_deliver(
             Template::Agents => agents::on_touch(ui, id, target, act, at_ms, out),
             Template::Omarchy => omarchy::on_touch(ui, id, target, act, at_ms, out),
             Template::Macropad => macropad::on_touch(ui, id, target, act, at_ms, out),
+            Template::System => {},
             Template::Usage => usage::on_touch(ui, id, target, act, at_ms, out),
             Template::Arcade => arcade::on_touch(ui, target, act, at_ms, out),
             Template::Settings => settings::on_touch(ui, id, target, act, at_ms, out),
@@ -862,12 +870,13 @@ mod tests {
             .map(|index| ui.face_at(index).unwrap())
             .map(|face| (face.id, face.template, face.name))
             .collect();
-        assert_eq!(templates.len(), 6);
+        assert_eq!(templates.len(), 7);
         for (index, template) in [
             Template::Agents,
             Template::Omarchy,
             Template::Macropad,
             Template::Usage,
+            Template::System,
             Template::Arcade,
             Template::Settings,
         ]
@@ -880,8 +889,8 @@ mod tests {
         }
         assert_eq!(ui.current_face().template, Template::Agents);
         assert!(ui.strip_at_rest());
-        assert_eq!(ui.face_at(6), None);
-        assert_eq!(ui.index_of_face(5), Some(5));
+        assert_eq!(ui.face_at(7), None);
+        assert_eq!(ui.index_of_face(5), Some(6));
         assert_eq!(ui.user_brightness(), 5);
         assert!(ui.still_default());
         let mut renamed = fresh();

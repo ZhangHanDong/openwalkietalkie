@@ -727,6 +727,7 @@ impl Outbox {
                         .is_none_or(|t| now.duration_since(t) >= WS_UNKNOWN_FACE_EVERY),
                     WsGate::No => false,
                 },
+                Key::System => view.system_allowed(),
                 Key::Macro(face) => view.macro_allowed(*face),
                 Key::Set(key) => view.set_allowed(*key),
                 Key::AgentGone(_) => true,
@@ -1082,6 +1083,31 @@ mod tests {
             t += Duration::from_millis(8);
         }
         lines
+    }
+
+    #[test]
+    fn system_samples_coalesce_and_heartbeats_survive_shadow_deduplication() {
+        let now = Instant::now();
+        let mut o = Outbox::new(PACE_FLOOR, 1);
+        let mut v = DeviceView::new();
+        let sample = |seq| HostLine::System(deck_proto::SystemStatus {
+            cpu: Some(25), sample: seq, ..deck_proto::SystemStatus::EMPTY
+        });
+        put(&mut o, &mut v, Key::System, sample(1), now);
+        assert!(drain(&mut o, &v, now).is_empty(), "legacy deck gets no unknown messages");
+        v.set_faces(vec![FaceEntry { f: 7, t: Template::System, n: "System".into() }]);
+        for seq in 2..=100 {
+            put(&mut o, &mut v, Key::System, sample(seq), now);
+        }
+        assert_eq!(v.len(), 1);
+        assert_eq!(o.entries.len(), 1);
+        let lines = drain(&mut o, &v, now + Duration::from_secs(2));
+        assert_eq!(lines.len(), 1);
+        assert_eq!(deck_proto::parse_host_line(lines[0].as_bytes()).unwrap(), sample(100));
+        put(&mut o, &mut v, Key::System, sample(101), now + Duration::from_secs(4));
+        let lines = drain(&mut o, &v, now + Duration::from_secs(4));
+        assert_eq!(lines.len(), 1, "identical readings still renew the deck's freshness timer");
+        assert_eq!(deck_proto::parse_host_line(lines[0].as_bytes()).unwrap(), sample(101));
     }
 
     #[test]

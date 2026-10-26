@@ -177,6 +177,27 @@ pub enum Template {
     Usage,
     Settings,
     Arcade,
+    System,
+}
+
+/// Live computer metrics; zero capacity and absent percentages mean unavailable.
+#[derive(Clone, Copy, Default, PartialEq, Eq, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct SystemStatus {
+    pub cpu: Option<u8>,
+    pub gpu: Option<u8>,
+    pub memory_used_mib: u32,
+    pub memory_total_mib: u32,
+    pub disk_free_mib: u32,
+    pub disk_total_mib: u32,
+    pub sample: u32,
+}
+impl SystemStatus {
+    pub const EMPTY: Self = Self { cpu: None, gpu: None, memory_used_mib: 0,
+        memory_total_mib: 0, disk_free_mib: 0, disk_total_mib: 0, sample: 0 };
+    pub fn valid(&self) -> bool {
+        self.cpu.is_none_or(|v| v <= 100) && self.gpu.is_none_or(|v| v <= 100)
+            && self.memory_used_mib <= self.memory_total_mib && self.disk_free_mib <= self.disk_total_mib
+    }
 }
 
 /// One strip entry: face id `f` (1..=8), template `t`, spoken name `n`.
@@ -402,6 +423,7 @@ pub enum HostLine {
         src: Option<String>,
         keys: Vec<MacroKey>,
     },
+    System(SystemStatus),
     Usage {
         period: String,
         items: Vec<UsageItem>,
@@ -438,6 +460,7 @@ impl HostLine {
             HostLine::Ws { .. } => "ws",
             HostLine::Macro { .. } => "macro",
             HostLine::Usage { .. } => "usage",
+            HostLine::System(_) => "system",
             HostLine::Faces { .. } => "faces",
             HostLine::Name { .. } => "name",
             HostLine::Set { .. } => "set",
@@ -594,6 +617,7 @@ pub(crate) const TEMPLATES: &[(&str, Template)] = &[
     ("usage", Template::Usage),
     ("settings", Template::Settings),
     ("arcade", Template::Arcade),
+    ("system", Template::System),
 ];
 pub(crate) const BINDINGS: &[(&str, Binding)] = &[
     ("left", Binding::Left),

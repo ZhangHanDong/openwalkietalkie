@@ -390,6 +390,7 @@ impl Store {
     pub fn apply(&mut self, cmd: Command, now: Instant) -> (Vec<Event>, Vec<Effect>) {
         self.now = now;
         match cmd {
+            Command::SystemStatus(status) => { if status.valid() { self.device_op(DeviceOp::Put(Key::System, HostLine::System(status))); } },
             Command::Link(link) => self.on_link(link),
             Command::Device(line) => self.on_device(line),
             Command::SessionControls { agent, session, settled, controls } => self.on_session_controls(agent, session, settled, controls),
@@ -1402,6 +1403,20 @@ mod tests {
 
     fn store() -> Store {
         Store::new(StoreConfig::new(Instant::now(), Ts(1_000_000), 314_159))
+    }
+
+    #[test]
+    fn system_samples_are_ephemeral_device_updates_without_snapshot_churn() {
+        let mut s = store();
+        let rev = s.snapshot().rev;
+        let status = deck_proto::SystemStatus { cpu: Some(20), sample: 1, ..deck_proto::SystemStatus::EMPTY };
+        let (events, effects) = s.apply(Command::SystemStatus(status), Instant::now());
+        assert!(events.is_empty());
+        assert_eq!(s.snapshot().rev, rev);
+        assert!(matches!(&effects[..], [Effect::Device(DeviceOp::Put(Key::System, HostLine::System(got)))] if *got == status));
+        let invalid = deck_proto::SystemStatus { gpu: Some(101), ..status };
+        let (events, effects) = s.apply(Command::SystemStatus(invalid), Instant::now());
+        assert!(events.is_empty() && effects.is_empty());
     }
 
     #[test]

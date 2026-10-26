@@ -137,6 +137,21 @@ impl Band {
         }
     }
 
+    /// Pack the active rectangle at the aligned start of this same buffer.
+    /// The Embassy HAL uses the window width as its DMA pitch, unlike the
+    /// native driver's 480-pixel stride. Call after `orient_for_panel`, and
+    /// redraw before reusing the band. No second framebuffer is needed.
+    pub fn pack_for_dma(&mut self) -> &[u8] {
+        let area = self.clip_abs();
+        let row_bytes = area.size.width as usize * 2;
+        let first = self.offset(area.top_left.x, area.top_left.y);
+        for row in 0..area.size.height as usize {
+            let source = first + row * WIDTH as usize * 2;
+            self.pixels.copy_within(source..source + row_bytes, row * row_bytes);
+        }
+        &self.pixels[..row_bytes * area.size.height as usize]
+    }
+
     /// Flood the band with one colour.
     pub fn fill(&mut self, color: Rgb565) {
         let clip = self.bounding_box();

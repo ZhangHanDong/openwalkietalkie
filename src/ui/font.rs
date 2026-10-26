@@ -272,6 +272,12 @@ pub fn ascent(font: Font) -> i32 {
     data(font).ascent as i32
 }
 
+/// Accents and CJK glyphs may extend above the nominal line box.
+pub fn top_overhang(font: Font) -> i32 {
+    let face = data(font);
+    (i32::from(face.above).max(font_cjk::above(face.px)) - i32::from(face.ascent)).max(0)
+}
+
 /// Complete lines that fit, including the last line's descenders.
 pub fn lines_in_height(font: Font, height: i32) -> usize {
     let face = data(font);

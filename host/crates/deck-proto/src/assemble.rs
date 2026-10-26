@@ -156,6 +156,10 @@ impl Obj<'_> {
         self.u8(key, max)?.ok_or(DecodeError::Parse(key))
     }
 
+    fn need_u32(&self, key: &'static str) -> Result<u32, DecodeError> {
+        Ok(self.need_uint(key, u64::from(u32::MAX))? as u32)
+    }
+
     fn need_u16(&self, key: &'static str) -> Result<u16, DecodeError> {
         Ok(self.need_uint(key, u64::from(u16::MAX))? as u16)
     }
@@ -587,6 +591,15 @@ pub fn parse_host_line(bytes: &[u8]) -> Result<HostLine, DecodeError> {
                 src: o.str("src")?.map(str::to_string),
                 keys,
             }
+        }
+        "system" => {
+            let s = crate::SystemStatus {
+                cpu: o.u8("cpu", 100)?, gpu: o.u8("gpu", 100)?,
+                memory_used_mib: o.need_u32("mu")?, memory_total_mib: o.need_u32("mt")?,
+                disk_free_mib: o.need_u32("df")?, disk_total_mib: o.need_u32("dt")?, sample: o.need_u32("seq")?,
+            };
+            if !s.valid() { return Err(DecodeError::Range("system")); }
+            HostLine::System(s)
         }
         "usage" => {
             let items = o

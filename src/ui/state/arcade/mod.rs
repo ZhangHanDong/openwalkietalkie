@@ -118,6 +118,15 @@ pub fn fullscreen(ui: &UiState) -> bool {
 pub fn playing(ui: &UiState) -> bool {
     active(ui) && ui.arcade.phase == Phase::Playing && ui.strip_at_rest()
 }
+/// Sleep only until the next 50 Hz simulation step. Rendering and early input
+/// wakeups consume this budget; they must not add another 33 ms after a frame.
+pub fn poll_ms(ui: &UiState, now: u32) -> u32 {
+    if !playing(ui) {
+        return 500;
+    }
+    let elapsed = ui.arcade.remainder.saturating_add(now.wrapping_sub(ui.arcade.last_ms));
+    20u32.saturating_sub(elapsed).max(1)
+}
 pub fn sound_label(mode: u8) -> &'static str {
     match mode {
         0 => "Off",
@@ -339,11 +348,28 @@ mod tests {
         press(ui, Button::Enter, now);
     }
     #[test]
+    fn frame_wait_accounts_for_render_time_early_events_and_clock_wrap() {
+        for start in [1000u32, u32::MAX - 10] {
+            let mut ui = ui(Game::Flappy);
+            assert_eq!(poll_ms(&ui, start), 500);
+            begin(&mut ui, start);
+            assert_eq!(poll_ms(&ui, start), 20);
+            assert_eq!(poll_ms(&ui, start.wrapping_add(7)), 13);
+            ui.tick(start.wrapping_add(7), 0, true, &mut Update::new());
+            assert_eq!(poll_ms(&ui, start.wrapping_add(12)), 8);
+            ui.tick(start.wrapping_add(20), 0, true, &mut Update::new());
+            assert_eq!(poll_ms(&ui, start.wrapping_add(34)), 6);
+            assert_eq!(poll_ms(&ui, start.wrapping_add(45)), 1);
+            ui.arcade.phase = Phase::Paused;
+            assert_eq!(poll_ms(&ui, start.wrapping_add(45)), 500);
+        }
+    }
+    #[test]
     fn arcade_is_default_before_settings_with_stable_ids() {
         let ui = ui(Game::Flappy);
-        assert_eq!(ui.face_at(4).unwrap().template, Template::Arcade);
-        assert_eq!(ui.face_at(4).unwrap().id, 6);
-        assert_eq!(ui.face_at(5).unwrap().id, 5);
+        assert_eq!(ui.face_at(5).unwrap().template, Template::Arcade);
+        assert_eq!(ui.face_at(5).unwrap().id, 6);
+        assert_eq!(ui.face_at(6).unwrap().id, 5);
         assert!(ui.still_default());
         assert!(super::super::manager::GALLERY.contains(&Template::Arcade));
     }

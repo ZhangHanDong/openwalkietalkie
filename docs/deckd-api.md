@@ -724,7 +724,7 @@ One of: `pending`, `in_progress`, `completed`.
 
 ### `Template`
 
-One of: `agents`, `omarchy`, `macropad`, `usage`, `settings`, `arcade`.
+One of: `agents`, `omarchy`, `macropad`, `usage`, `settings`, `arcade`, `system`.
 
 
 ### `Terminal`

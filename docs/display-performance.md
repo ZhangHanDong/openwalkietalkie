@@ -40,9 +40,35 @@ The second buffer costs approximately 45KB of SRAM; it remains in `.bss`.
 
 The 30s dim / 120s sleep policy and 80ms active / 200ms dim lighting cadence
 remain in effect. Static states generate no repeated display transfers. The
-Embassy target shares the renderer and the signatures but keeps one band
-buffer: it redraws each whole 48-row band that contains a changed region and
-skips the rest.
+Embassy target shares the renderer and signatures and keeps one band buffer.
+It clips drawing to each damage rectangle, rotates that rectangle, then packs
+its rows in place before DMA: the pinned HAL uses the window width as its
+source pitch, unlike the native driver's 480-pixel stride. Panel window and
+LCDC ROI use the same transformed rectangle. Transfer failures invalidate the
+retained signature and force a complete repair on the next render.
+
+### Flappy Bird refresh
+
+Flappy Bird previously invalidated the whole screen on every simulation
+revision. Embassy also expanded partial damage to whole 48-row bands and
+waited another 33 ms after rendering. Together these increased transfer work
+and made rendering delays accumulate into uneven motion.
+
+Flappy now registers fixed signature slots for the bird, each pipe's upper
+and lower sections, and the score HUD. Both old and new bounds are damaged,
+including caps, highlights and the HUD shadow. Phase transitions still force
+a complete frame. Embassy sleeps only for the remaining time until the next
+20 ms simulation step, accounting for rendering time and early input events.
+
+The regression reproducer went from 230,400 to 23,584 transferred pixels for
+one moving pipe and bird (89.8% less). A 360-frame traversal with multiple
+pipes, recycled pipes and skipped simulation steps averages 111,819 pixels
+(51.5% less). These are exact transfer-area measurements from the shared
+renderer, **not on-device FPS measurements**. Every partial frame is compared
+byte for byte with a full redraw, including both the native strided transfer
+and Embassy's packed transfer, on upright and rotated boards. Tests also cover
+score digit changes, pause, game over and return to the menu. TE synchronization
+remains disabled; visual smoothness and residual tearing require device review.
 
 ### Agent Command Deck faces
 

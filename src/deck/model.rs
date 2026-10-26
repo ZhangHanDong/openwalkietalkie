@@ -464,6 +464,9 @@ pub struct Deck {
     pub workspaces: Workspaces,
     pub macros: [MacroSet; MAX_MACRO_SETS],
     pub usage: Usage,
+    pub system: super::msg::SystemStatus,
+    pub system_at: Option<u32>,
+    pub system_stale: bool,
     pub settings: Settings,
     pub notices: [Notice; MAX_NOTICES],
     pub clock_valid: bool,
@@ -503,6 +506,9 @@ impl Deck {
             workspaces: Workspaces::new(),
             macros: [MacroSet::EMPTY; MAX_MACRO_SETS],
             usage: Usage::new(),
+            system: super::msg::SystemStatus::EMPTY,
+            system_at: None,
+            system_stale: true,
             settings: Settings::new(),
             notices: [Notice::EMPTY; MAX_NOTICES],
             clock_valid: false,
@@ -551,6 +557,9 @@ impl Deck {
             set.face = 0;
             set.source.clear();
         }
+        self.system = super::msg::SystemStatus::EMPTY;
+        self.system_at = None;
+        self.system_stale = true;
         self.usage.count = 0;
         self.usage.period.clear();
         for notice in &mut self.notices {
@@ -1029,6 +1038,12 @@ impl Deck {
                     source,
                     keys: *keys,
                 };
+            }
+            HostMsg::System(status) => {
+                if !status.valid() { fx.reject = Some(ErrWhy::Range); return; }
+                self.system = *status;
+                self.system_at = Some(now_ms);
+                self.system_stale = false;
             }
             HostMsg::Usage {
                 period,

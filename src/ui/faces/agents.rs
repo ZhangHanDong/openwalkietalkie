@@ -74,7 +74,10 @@ fn reply_bar(ui: &UiState, agent: &Agent) -> Rect {
 /// Include the text and scroll bar in the same damage region.
 fn reply_lane(ui: &UiState, agent: &Agent) -> Rect {
     let rect = reply_rect(ui, agent);
-    Rect::new(32, rect.top(), 416, rect.height())
+    // CJK/accents can rise above the nominal line box. Include those pixels
+    // in both culling and damage so changing channels erases them too.
+    let overhang = font::top_overhang(doc_face(reply_face(ui, agent)));
+    Rect::new(32, rect.top() - overhang, 416, rect.height() + overhang)
 }
 /// Ready summary, ending just above the first step row.
 pub const SUMMARY_LANE: Rect = Rect::new(32, 60, 416, 157);

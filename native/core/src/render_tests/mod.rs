@@ -29,6 +29,7 @@ mod macropad;
 mod omarchy;
 mod overlay;
 mod settings;
+mod system;
 mod slide;
 mod usage;
 
@@ -168,6 +169,16 @@ fn update(screen: &mut Screens, previous: &UiState, next: &UiState) -> usize {
             let src = source + y as usize * 480 * 2;
             let dst = ((panel.y0 + y) as usize * 480 + panel.x0 as usize) * 2;
             screen.panel[dst..dst + width].copy_from_slice(&band.data()[src..src + width]);
+        }
+        // Embassy uses a tightly packed DMA source. Check the actual in-place
+        // compaction against the independent strided path for every crop,
+        // including narrow windows, nonzero offsets and both mountings.
+        let packed = band.pack_for_dma();
+        assert_eq!(packed.as_ptr() as usize & 3, 0);
+        assert_eq!(packed.len(), width * (panel.y1 - panel.y0) as usize);
+        for (row, pixels) in packed.chunks_exact(width).enumerate() {
+            let dst = ((panel.y0 as usize + row) * 480 + panel.x0 as usize) * 2;
+            assert_eq!(pixels, &screen.panel[dst..dst + width]);
         }
     }
     let expected = full(next);

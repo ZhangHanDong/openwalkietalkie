@@ -224,6 +224,7 @@ pub struct OpenSession {
 /// Everything the doors send the core.
 #[derive(Debug)]
 pub enum CoreMsg {
+    SystemStatus(deck_proto::SystemStatus),
     /// A built-in adapter reports the session controls it actually observed.
     SessionControls { agent: AgentId, session: SessionId, settled: bool, controls: deck_model::session_controls::SessionControls },
     /// A reducer method (`Request`): `store.call`, effects, the result.

@@ -2,6 +2,16 @@
 //! Pulse lead, triangle bass and noise percussion; no samples or allocation.
 //! The speaker owns the synthesizer. UI publishes one atomic command, so mute
 //! and leaving the face cannot be stuck behind queued audio.
+#[path = "sound/music.rs"]
+mod music;
+
+/// Full arrangement length at the synthesizer's 16 kHz sample rate.
+pub fn music_loop_samples(track: u8) -> u32 {
+    match track {
+        1..=3 => music::STEP_SAMPLES[track as usize - 1] * music::STEPS,
+        _ => 0,
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Effect {
@@ -30,25 +40,6 @@ const HZ: [u16; 24] = [
     262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494, 523, 554, 587, 622, 659, 698, 740,
     784, 831, 880, 932, 988,
 ];
-const LEADS: [[u8; 32]; 3] = [
-    [
-        13, 0, 17, 20, 17, 0, 15, 0, 13, 17, 20, 0, 22, 20, 17, 0, 18, 0, 22, 20, 18, 17, 15, 0,
-        13, 0, 8, 10, 13, 0, 0, 0,
-    ],
-    [
-        1, 0, 8, 0, 11, 8, 6, 0, 1, 0, 6, 8, 11, 0, 8, 0, 4, 0, 11, 0, 13, 11, 8, 0, 6, 8, 6, 4, 1,
-        0, 0, 0,
-    ],
-    [
-        10, 10, 0, 17, 15, 0, 13, 15, 10, 0, 8, 10, 13, 15, 17, 0, 18, 0, 17, 15, 13, 0, 10, 0, 8,
-        10, 13, 8, 10, 0, 0, 0,
-    ],
-];
-const BASS: [[u8; 8]; 3] = [
-    [1, 1, 6, 6, 8, 8, 1, 8],
-    [1, 1, 6, 6, 4, 4, 8, 8],
-    [10, 10, 6, 6, 1, 1, 8, 8],
-];
 #[derive(Default)]
 pub struct Synth {
     track: u8,
@@ -57,6 +48,7 @@ pub struct Synth {
     effect_left: u32,
     effect_len: u32,
     sample: u32,
+    music: music::Step,
     lead_phase: u32,
     bass_phase: u32,
     fx_phase: u32,
@@ -75,7 +67,9 @@ impl Synth {
         let track = (word & 3) as u8;
         let mode = (word >> 2) & 3;
         let serial = (word >> 8) as u16;
-        if track != self.track {
+        // Silence, game-over effects and a retry of the same game preserve
+        // the song position. Otherwise short rounds only ever hear the intro.
+        if track > 0 && track != self.track {
             self.track = track;
             self.sample = 0;
             self.lead_phase = 0;
@@ -108,31 +102,40 @@ impl Synth {
             let mut value = 0;
             self.noise = self.noise.wrapping_mul(1664525).wrapping_add(1013904223);
             if track > 0 && mode == 2 {
-                let beat = [2000, 2400, 1600][track as usize - 1];
-                let step = self.sample / beat;
+                let beat = music::STEP_SAMPLES[track as usize - 1];
                 let at = self.sample % beat;
-                let note = LEADS[track as usize - 1][step as usize % 32];
+                if at == 0 {
+                    self.music = music::step(track as usize - 1, self.sample / beat);
+                }
+                let note = self.music.lead;
                 // Short attack and release soften edges, retaining the 8-bit pulse timbre.
                 let env = at.min(80).min(beat.saturating_sub(at).min(240)) as i32;
                 if note > 0 {
-                    value +=
-                        if phase(&mut self.lead_phase, u32::from(HZ[note as usize - 1])) < 16384 {
-                            1950
-                        } else {
-                            -650
-                        } * env
-                            / 80;
-                }
-                let bass = HZ[BASS[track as usize - 1][(step / 4) as usize % 8] as usize - 1] / 4;
-                let p = phase(&mut self.bass_phase, u32::from(bass)) as i32;
-                value += ((p - 32768).abs() - 16384) * 450 / 16384;
-                if at < 320 {
-                    value += if self.noise & 0x80000000 != 0 {
-                        200
+                    value += if phase(&mut self.lead_phase, u32::from(HZ[note as usize - 1]))
+                        < self.music.pulse_width
+                    {
+                        self.music.pulse_high
                     } else {
-                        -200
-                    } * (320 - at) as i32
-                        / 320;
+                        self.music.pulse_low
+                    } * env
+                        / 80
+                        * self.music.lead_level
+                        / 100;
+                }
+                let bass = HZ[self.music.bass as usize - 1] / 4;
+                let p = phase(&mut self.bass_phase, u32::from(bass)) as i32;
+                value += ((p - 32768).abs() - 16384) * self.music.bass_level / 16384;
+                if at < self.music.drum_len {
+                    value += if self.noise & 0x80000000 != 0 {
+                        self.music.drum_level
+                    } else {
+                        -self.music.drum_level
+                    } * (self.music.drum_len - at) as i32
+                        / self.music.drum_len as i32;
+                }
+                self.sample += 1;
+                if self.sample == music_loop_samples(track) {
+                    self.sample = 0;
                 }
             }
             if self.effect_left > 0 {
@@ -162,7 +165,6 @@ impl Synth {
                 value += if high { amp } else { -amp };
                 self.effect_left -= 1;
             }
-            self.sample = self.sample.wrapping_add(1);
             self.gain = (self.gain + 1).min(160);
             *sample = (value * volume * self.gain / 10 / 160).clamp(-4096, 4096) as i16;
         }
@@ -191,10 +193,11 @@ mod tests {
         for track in 1..=3 {
             let mut s = Synth::default();
             let mut pcm = [0; 320];
-            for _ in 0..200 {
+            // Every section, then cross the loop boundary at maximum volume.
+            for _ in 0..music_loop_samples(track) / 320 + 2 {
                 s.run(command(track, 2, Effect::None, 0, 10), &mut pcm);
                 for n in pcm {
-                    assert!(n.abs() <= 4096);
+                    assert!(n.abs() < 4096, "music must not hit the output limiter");
                     hashes[track as usize - 1] = hashes[track as usize - 1]
                         .wrapping_mul(31)
                         .wrapping_add(n as u64);
@@ -204,6 +207,64 @@ mod tests {
         assert!(hashes.iter().all(|&h| h != 0));
         assert_ne!(hashes[0], hashes[1]);
         assert_ne!(hashes[1], hashes[2]);
+    }
+    #[test]
+    fn arrangements_have_no_shorter_musical_period_and_all_notes_fit() {
+        for track in 0..3 {
+            let events: std::vec::Vec<_> = (0..music::STEPS)
+                .map(|i| {
+                    let s = music::step(track, i);
+                    assert!(s.lead <= 24 && (1..=24).contains(&s.bass));
+                    (s.lead, s.bass, s.pulse_width, s.lead_level, s.drum_len)
+                })
+                .collect();
+            assert!(music_loop_samples(track as u8 + 1) >= 75 * 16000);
+            for period in 1..events.len() {
+                if events.len() % period == 0 {
+                    assert!(
+                        (period..events.len()).any(|i| events[i] != events[i % period]),
+                        "track {track} repeats after only {period} steps"
+                    );
+                }
+            }
+        }
+    }
+    #[test]
+    fn pause_game_over_and_sfx_only_preserve_music_position_for_retry() {
+        let mut synth = Synth::default();
+        let music = command(1, 2, Effect::None, 0, 6);
+        synth.run(music, &mut [0; 7000]);
+        let position = synth.sample;
+        let phases = (synth.lead_phase, synth.bass_phase);
+        for word in [
+            0,
+            command(0, 2, Effect::Over, 1, 6),
+            command(1, 1, Effect::Flap, 2, 6),
+        ] {
+            synth.run(word, &mut [0; 320]);
+            assert_eq!(synth.sample, position);
+            assert_eq!((synth.lead_phase, synth.bass_phase), phases);
+        }
+        synth.run(music, &mut [0; 320]);
+        assert_eq!(synth.sample, position + 320);
+        synth.run(command(2, 2, Effect::None, 0, 6), &mut [0; 320]);
+        assert_eq!(synth.sample, 320, "a different game starts its own theme");
+    }
+    #[test]
+    fn audio_is_independent_of_chunk_size_across_sections_and_loop_wrap() {
+        for track in 1..=3 {
+            let word = command(track, 2, Effect::None, 0, 10);
+            let length = music_loop_samples(track) as usize + 333;
+            let mut whole = std::vec![0; length];
+            Synth::default().run(word, &mut whole);
+            let mut chunked = std::vec![0; length];
+            let mut synth = Synth::default();
+            for chunk in chunked.chunks_mut(317) {
+                synth.run(word, chunk);
+            }
+            assert_eq!(synth.sample, 333);
+            assert_eq!(whole, chunked);
+        }
     }
     #[test]
     fn effects_finish_do_not_retrigger_and_mute_cancels() {

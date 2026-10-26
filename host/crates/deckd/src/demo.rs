@@ -356,6 +356,7 @@ pub fn default_faces() -> Vec<FaceEntry> {
         face(2, Template::Omarchy, "Omarchy"),
         face(3, Template::Macropad, "Macropad"),
         face(4, Template::Usage, "Usage"),
+        face(7, Template::System, "System"),
         face(6, Template::Arcade, "Arcade"),
         face(5, Template::Settings, "Settings"),
     ]
@@ -761,7 +762,7 @@ mod tests {
             flood,
             "{\"m\":\"agent\",\"id\":3,\"title\":\"Compiling openmicro ⠙ 11\"}\n"
         );
-        assert_eq!(default_faces().len(), 6);
+        assert_eq!(default_faces().len(), 7);
         if let HostLine::Usage { items, .. } = usage(30) {
             assert_eq!(items[1].percent, 100);
         }

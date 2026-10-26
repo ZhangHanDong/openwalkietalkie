@@ -19,6 +19,7 @@ use crate::{
 };
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use embassy_futures::select::{select3, select4, Either3, Either4};
+use embedded_graphics::{prelude::*, primitives::Rectangle};
 use sifli_hal::lcdc::Error;
 
 /// Set by `emit` when an update asks for the power-off; `run` acts on it
@@ -86,7 +87,9 @@ pub async fn run(mut display: Option<Co5300>, band: &'static mut Band) -> ! {
             // Nothing animates on a dark panel; timers are read lazily on wake.
             power.poll_ms()
         } else {
-            power.screen().animation_ms().min(if crate::ui::state::arcade::playing(state) { 33 } else { 500 }).min(if power.held() { power.poll_ms() } else { 500 })
+            power.screen().animation_ms()
+                .min(ui::state::arcade::poll_ms(state, now_ms()))
+                .min(if power.held() { power.poll_ms() } else { 500 })
         };
         dirty |= match select4(
             CONTROLS.receive(),
@@ -473,7 +476,7 @@ pub async fn render_splash(display: &mut Co5300, band: &mut Band) -> Result<(), 
     Ok(())
 }
 
-/// Draw and push the bands whose pixels changed since the last successful
+/// Draw and push the rectangles whose pixels changed since the last successful
 /// render (all of them when `force`d or after a failure), one at a time.
 async fn render(
     display: &mut Co5300,
@@ -485,21 +488,15 @@ async fn render(
     ui::scene::signature(state, &mut frames.next);
     let previous = (!force && frames.valid).then_some(&frames.previous);
     let mut damage = Damage::between(previous, &frames.next);
-    let mut stale = [false; BANDS as usize];
-    while let Some(region) = damage.next() {
-        if let Some(slot) = stale.get_mut((region.y0 / BAND_H) as usize) {
-            *slot = true;
-        }
-    }
-    // A failed transfer leaves `previous` as it was, so the next render
-    // covers this frame's bands again.
+    // A failed transfer invalidates the retained frame, so the next render
+    // repairs the entire screen, including any partially transmitted region.
     frames.valid = false;
-    for index in 0..BANDS {
-        let logical = panel_band(index);
-        if !stale[logical as usize] {
-            continue;
-        }
-        band.set_row(logical);
+    while let Some(region) = damage.next() {
+        band.set_row(region.y0 / BAND_H);
+        band.clip_to(Rectangle::new(
+            Point::new(region.x0 as i32, region.y0 as i32),
+            Size::new((region.x1 - region.x0) as u32, (region.y1 - region.y0) as u32),
+        ));
         ui::scene::draw(band, state);
         display.write_band(band).await?;
     }

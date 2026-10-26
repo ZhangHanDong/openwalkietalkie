@@ -136,6 +136,7 @@ const TEMPLATES: &[(&str, Template)] = &[
     ("usage", Template::Usage),
     ("settings", Template::Settings),
     ("arcade", Template::Arcade),
+    ("system", Template::System),
 ];
 const SETTINGS: &[(&str, SettingKey)] = &[
     ("arcadesound", SettingKey::ArcadeSound),
@@ -549,6 +550,19 @@ fn parse_into(line: &[u8], out: &mut HostMsg) -> Result<(), ErrWhy> {
                 // later keys in place after the deck's editor clears one.
                 key.present = !key.label.is_empty();
             }
+        }
+        b"system" => {
+            let status = super::msg::SystemStatus {
+                cpu: object.get("cpu")?.map(|v| v.u8()).transpose()?,
+                gpu: object.get("gpu")?.map(|v| v.u8()).transpose()?,
+                memory_used_mib: object.need("mu")?.u32()?,
+                memory_total_mib: object.need("mt")?.u32()?,
+                disk_free_mib: object.need("df")?.u32()?,
+                disk_total_mib: object.need("dt")?.u32()?,
+                sample: object.need("seq")?.u32()?,
+            };
+            if !status.valid() { return Err(ErrWhy::Range); }
+            *out = HostMsg::System(status);
         }
         b"usage" => {
             *out = USAGE;
@@ -1335,7 +1349,7 @@ mod tests {
     #[test]
     fn hello_and_faces_carry_the_strip() {
         let mut ui = ui();
-        let strip = r#"[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]"#;
+        let strip = r#"[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":7,"t":"system","n":"System"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]"#;
         assert_eq!(
             encoded(Event::Hello, &ui),
             std::format!(r#"{{"m":"hello","v":1,"fw":"{FW_VERSION}","sid":0,"boot":1,"rx":1024,"faces":{strip}}}"#)
@@ -1352,9 +1366,9 @@ mod tests {
         let json = encoded(Event::Faces, &ui);
         let mut out = Box::new(HostMsg::None);
         parse(json.as_bytes(), &mut out).unwrap();
-        let HostMsg::Faces { list, count: 6 } = *out else { panic!("{out:?}") };
+        let HostMsg::Faces { list, count: 7 } = *out else { panic!("{out:?}") };
         assert_eq!(list[1].name, "Desk");
-        assert_eq!(list[5].template, Template::Settings);
+        assert_eq!(list[6].template, Template::Settings);
         ui.global.strip_len = 0;
         assert_eq!(encoded(Event::Faces, &ui), r#"{"m":"faces","list":[]}"#);
     }

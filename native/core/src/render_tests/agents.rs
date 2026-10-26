@@ -408,7 +408,7 @@ fn channel_partial_refresh_matches_full_through_cards_replies_and_touches() {
     // repaint the lane, not the frame — and it must repaint *something*, or the
     // thumb is not moving with the text.
     assert!(moved[2] > 0, "windowed reply scroll repainted nothing");
-    assert!(moved[2] <= 416 * layout::channel_reply(None).height() as usize, "windowed reply scroll: {}", moved[2]);
+    assert!(moved[2] <= 416 * (layout::channel_reply(None).height() + font::top_overhang(Font::Row) + 1) as usize, "windowed reply scroll: {}", moved[2]);
     assert!(moved[6] < FULL / 2, "reply scroll: {}", moved[6]);
     assert!(moved[9] < FULL / 4, "button press: {}", moved[9]);
 }
@@ -973,5 +973,17 @@ fn session_settings_partial_refresh_matches_full_across_pages_and_connection_cha
         ("confirmed", &|ui| { ui.agents.settings.menu.status = 1; ui.agents.settings.menu.selected = Some(1); ui.agents.settings.menu.model.set("Model B"); }),
         ("offline", &|ui| ui.deck.host_present = false),
         ("close", &|ui| ui.agents.settings.open = false),
+    ]);
+}
+
+#[test]
+fn cjk_reply_overhang_is_erased_when_the_reply_changes() {
+    let start = scene(|ui| {
+        channel(ui, 3);
+        host(ui, HostMsg::Reply { agent: 3, text: Text::from_str("日本語 München"), rev: 1 });
+    });
+    walk(&start, &[
+        ("replace tall glyphs", &|ui| host(ui, HostMsg::Reply { agent: 3, text: Text::from_str("ok"), rev: 2 })),
+        ("another channel", &|ui| channel(ui, 1)),
     ]);
 }

@@ -89,7 +89,7 @@ fn sketch(band: &mut Band, card: Rect, template: Template, bar: u32) {
                 key(band, card, ox + (index % 3) * 27, oy + 1 + (index / 3) * 21, 22, 16, bar);
             }
         }
-        Template::Usage => {
+        Template::Usage | Template::System => {
             for (row, (label, percent, color)) in [(30, 60, theme::BLUE), (24, 35, theme::GREEN), (36, 85, theme::AMBER)].into_iter().enumerate() {
                 let y = oy + 1 + row as i32 * 25;
                 pill(band, card, ox, y, label, 5, bar);
@@ -225,6 +225,7 @@ const fn gallery_blurb(template: Template) -> &'static str {
         Template::Macropad => "nine keys from your dotfile",
         Template::Usage => "subscription limits",
         Template::Arcade => "three pocket games",
+        Template::System => "computer resources",
         Template::Agents | Template::Settings => "",
     }
 }
@@ -448,17 +449,17 @@ mod tests {
         let mut ui = std::boxed::Box::new(UiState::new());
         ui.reset();
         ui.load_demo();
-        assert_eq!(card_count(&ui), 7);
+        assert_eq!(card_count(&ui), 8);
         assert_eq!(card_at(&ui, 0).map(|c| c.map(|f| f.template)), Some(Some(Template::Agents)));
-        ui.manager.first_visible = 3;
+        ui.manager.first_visible = 4;
         assert_eq!(card_at(&ui, 3), Some(None), "slot 3 shows the + card");
         ui.manager.first_visible = 9;
-        assert_eq!(viewport(&ui).top, 3, "the viewport clamps");
-        assert_eq!(more(&ui), (3, 0), "three cards off the left edge");
+        assert_eq!(viewport(&ui).top, 4, "the viewport clamps");
+        assert_eq!(more(&ui), (4, 0), "four cards off the left edge");
         ui.manager.first_visible = 0;
-        assert_eq!(more(&ui), (0, 3), "Arcade, Settings and + off the right edge");
+        assert_eq!(more(&ui), (0, 4), "System, Arcade, Settings and + off the right edge");
         ui.manager.first_visible = 1;
-        assert_eq!(more(&ui), (1, 2));
+        assert_eq!(more(&ui), (1, 3));
         ui.global.strip_len = 8;
         assert_eq!(card_count(&ui), 8);
         ui.global.strip_len = 200;

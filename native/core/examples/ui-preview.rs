@@ -31,7 +31,7 @@ const BASE_SCENES: [&str; 2] = ["default", "splash"];
 
 /// Deck scenes; the first eight are the mockups (`tools/preview-all.py` knows
 /// which `mock/*.png` each one reproduces).
-const DECK_SCENES: [&str; 99] = [
+const DECK_SCENES: [&str; 102] = [
     "screen-locked",
     "screen-unlocking",
     "question-answer",
@@ -93,6 +93,9 @@ const DECK_SCENES: [&str; 99] = [
     "arcade-snake",
     "arcade-raiden",
     "arcade-paused",
+    "system",
+    "system-stale",
+    "system-unavailable",
     "usage",
     "usage-accounts",
     "usage-fable",
@@ -571,6 +574,18 @@ fn deck_scene(ui: &mut UiState, scene: &str) {
                 }
                 if scene == "arcade-paused" { ui.apply(Control::Button(Button::Enter,Edge::Press),end_ms,&mut ui::Update::new()); }
             }
+        }
+        "system" | "system-stale" | "system-unavailable" => {
+            ui.on_face(Template::System);
+            ui.deck.settings.demo = false;
+            ui.deck.host_present = true;
+            ui.host(&deck::msg::HostMsg::System(deck::msg::SystemStatus {
+                cpu: Some(23), gpu: Some(67), memory_used_mib: 23_552,
+                memory_total_mib: 65_536, disk_free_mib: 421_888,
+                disk_total_mib: 976_000, sample: 1,
+            }), 100, &mut ui::Update::new());
+            if scene == "system-stale" { ui.deck.system_stale = true; }
+            if scene == "system-unavailable" { ui.deck.system = deck::msg::SystemStatus::EMPTY; }
         }
         "usage" => ui.on_face(Template::Usage),
         "usage-accounts" | "usage-fable" | "usage-reset-expiring" => {

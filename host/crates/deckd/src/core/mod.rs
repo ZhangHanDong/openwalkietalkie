@@ -773,6 +773,7 @@ impl Core {
     /// One message from a door.
     pub fn on_msg(&mut self, msg: CoreMsg, now: Instant) {
         match msg {
+            CoreMsg::SystemStatus(status) => { self.step(Command::SystemStatus(status), now); },
             CoreMsg::SessionControls { agent, session, settled, controls } => {
                 self.step(Command::SessionControls { agent, session, settled, controls }, now);
             }
@@ -2660,8 +2661,9 @@ pub fn run(opts: RunOptions) -> Result<i32, CoreError> {
             api.core.adapters().claude_channels.clone(),
             stop_liveness.subscribe(),
         ));
+        let system = tokio::spawn(crate::system_status::run(api.core.clone(), stop_liveness.subscribe()));
         let usage = tokio::spawn(crate::usage::claude::run(api, usage_rx));
-        (served, stop_liveness, (liveness, codexd, usage, channels))
+        (served, stop_liveness, (liveness, codexd, usage, channels, system))
     });
     // **B10.** §2.3 requires a CFRunLoop on the main thread, and V13 makes
     // it load-bearing rather than decorative: AVSpeech's `writeUtterance`
@@ -2688,11 +2690,12 @@ pub fn run(opts: RunOptions) -> Result<i32, CoreError> {
     }
     runtime.block_on(async {
         let _ = stop_liveness.send(true);
-        let (liveness, codexd, usage, channels) = liveness;
+        let (liveness, codexd, usage, channels, system) = liveness;
         let _ = tokio::time::timeout(Duration::from_secs(2), liveness).await;
         let _ = tokio::time::timeout(Duration::from_secs(2), codexd).await;
         let _ = tokio::time::timeout(Duration::from_secs(2), usage).await;
         let _ = tokio::time::timeout(Duration::from_secs(2), channels).await;
+        let _ = tokio::time::timeout(Duration::from_secs(2), system).await;
         served.shutdown().await;
     });
     runtime.shutdown_timeout(Duration::from_secs(2));

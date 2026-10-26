@@ -23,6 +23,8 @@ use sifli_hal::lcdc::{Error, Lcdc, Spi};
 use sifli_hal::peripherals::LCDC1;
 
 use crate::logln;
+use crate::ui::damage::Region;
+use embedded_graphics::prelude::Dimensions;
 
 mod framebuffer;
 // Glob: shared `ui`/`deck` code sees the whole framebuffer API as
@@ -178,17 +180,23 @@ impl Co5300 {
         }
     }
 
-    /// Rotate a freshly drawn band and push it to the panel. Redraw the band
-    /// before another call; the transfer changes the source pixel order.
+    /// Rotate and pack a freshly drawn clip, then push it to the panel.
+    /// Redraw before another call; the transfer changes the source layout.
     pub async fn write_band(&mut self, band: &mut Band) -> Result<(), Error> {
-        let y0 = if crate::orientation::ROTATE_180 {
-            HEIGHT - band.y0() - BAND_H
-        } else {
-            band.y0()
-        };
-        let y1 = y0 + BAND_H - 1;
+        let clip = band.bounding_box();
+        if clip.size.width == 0 || clip.size.height == 0 {
+            return Ok(());
+        }
+        let region = Region {
+            x0: clip.top_left.x as u16,
+            y0: clip.top_left.y as u16,
+            x1: clip.top_left.x as u16 + clip.size.width as u16,
+            y1: clip.top_left.y as u16 + clip.size.height as u16,
+        }
+        .panel();
         band.orient_for_panel();
-        self.set_window(0, y0, WIDTH - 1, y1)?;
+        let pixels = band.pack_for_dma();
+        self.set_window(region.x0, region.y0, region.x1 - 1, region.y1 - 1)?;
 
         // Open the pixel transaction, then let the layer DMA stream into it.
         // `send_pixel_data` only configures the controller's ROI and starts the
@@ -197,7 +205,9 @@ impl Co5300 {
         self.lcdc
             .send_cmd(qspi_header(QSPI_WRITE_PIXELS, CMD_WRITE_RAM), 4, true)?;
         self.lcdc
-            .send_pixel_data(0, y0, WIDTH - 1, y1, band.data())
+            .send_pixel_data(
+                region.x0, region.y0, region.x1 - 1, region.y1 - 1, pixels,
+            )
             .await
     }
 

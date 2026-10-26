@@ -129,6 +129,26 @@ pub enum Tone {
     Gray,
 }
 
+/// Live computer metrics; zero capacity and absent percentages mean unavailable.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SystemStatus {
+    pub cpu: Option<u8>,
+    pub gpu: Option<u8>,
+    pub memory_used_mib: u32,
+    pub memory_total_mib: u32,
+    pub disk_free_mib: u32,
+    pub disk_total_mib: u32,
+    pub sample: u32,
+}
+impl SystemStatus {
+    pub const EMPTY: Self = Self { cpu: None, gpu: None, memory_used_mib: 0,
+        memory_total_mib: 0, disk_free_mib: 0, disk_total_mib: 0, sample: 0 };
+    pub fn valid(&self) -> bool {
+        self.cpu.is_none_or(|v| v <= 100) && self.gpu.is_none_or(|v| v <= 100)
+            && self.memory_used_mib <= self.memory_total_mib && self.disk_free_mib <= self.disk_total_mib
+    }
+}
+
 /// What a face is; several strip entries may share one template.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Template {
@@ -138,17 +158,19 @@ pub enum Template {
     Usage,
     Settings,
     Arcade,
+    System,
 }
 impl Template {
-    pub const ALL: [Template; 6] = [
+    pub const ALL: [Template; 7] = [
         Template::Agents,
         Template::Omarchy,
         Template::Macropad,
         Template::Usage,
         Template::Settings,
         Template::Arcade,
+        Template::System,
     ];
-    /// Keep the existing five face IDs stable when extending the default strip.
+    /// Append enum variants to keep existing face IDs stable as the strip grows.
     pub const fn default_id(self) -> u8 { self as u8 + 1 }
     /// Header label and the default instance name.
     pub const fn label(self) -> &'static str {
@@ -159,6 +181,7 @@ impl Template {
             Template::Usage => "Usage",
             Template::Settings => "Settings",
             Template::Arcade => "Arcade",
+            Template::System => "System",
         }
     }
 }
@@ -560,6 +583,7 @@ pub enum HostMsg {
         source: Option<Text<16>>,
         keys: [MacroKey; 9],
     },
+    System(SystemStatus),
     Usage {
         period: Text<12>,
         items: [UsageItem; 6],

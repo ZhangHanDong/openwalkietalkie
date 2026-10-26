@@ -10,11 +10,12 @@ use super::msg::{FaceEntry, HostMsg, Template};
 pub const MAX_FACES: usize = 8;
 
 /// The power-on strip (`src/ui/state/mod.rs`, `DEFAULT_STRIP`).
-pub const DEFAULT_STRIP: [Template; 6] = [
+pub const DEFAULT_STRIP: [Template; 7] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
+    Template::System,
     Template::Arcade,
     Template::Settings,
 ];

@@ -15,7 +15,7 @@ pub enum Lane {
     P1,
     /// Content: replies, titles (4/s/slot).
     P2,
-    /// Faces: ws, usage, macro.
+    /// Faces: ws, usage, system, macro.
     P3,
 }
 
@@ -28,7 +28,7 @@ pub struct FaceId(pub u8);
 
 /// One entry per key in the `DeviceView`. The declaration order is the
 /// barrier order (§6.5), so a `BTreeMap<Key, _>` dumps in sync order:
-/// agents → cards → replies → focus → macros → usage → ws → faces → set;
+/// agents → cards → replies → focus → macros → usage → system → ws → faces → set;
 /// the trailing control keys are never part of a barrier.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
@@ -52,6 +52,7 @@ pub enum Key {
     Focus,
     Macro(FaceId),
     Usage,
+    System,
     Ws,
     Faces,
     Set(SetKey),
@@ -75,7 +76,7 @@ impl Key {
             Key::Card(..) | Key::AgentState(_) | Key::AgentGone(_) => Lane::P1,
             // A window rides behind the line whose body it is a window of.
             Key::Reply(_) | Key::AgentTitle(_) | Key::DocText(..) => Lane::P2,
-            Key::Ws | Key::Usage | Key::Macro(_) => Lane::P3,
+            Key::Ws | Key::Usage | Key::System | Key::Macro(_) => Lane::P3,
         }
     }
 

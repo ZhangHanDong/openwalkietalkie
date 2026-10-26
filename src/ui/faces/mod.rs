@@ -14,3 +14,4 @@ pub mod macropad;
 pub mod omarchy;
 pub mod settings;
 pub mod usage;
+pub mod system;

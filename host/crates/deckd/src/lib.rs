@@ -35,5 +35,6 @@ pub mod tokens;
 pub mod trust;
 pub mod uninstall;
 pub mod usage;
+pub mod system_status;
 
 pub mod firmware;

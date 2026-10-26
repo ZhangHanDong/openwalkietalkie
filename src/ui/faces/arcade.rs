@@ -379,6 +379,27 @@ pub fn signature(ui: &UiState, _id: u8, sig: &mut SigBuilder) {
         sig.region_with(Rect::SCREEN, |h| {
             h.u8(a.selection).u8(ui.deck.settings.arcade_sound);
         });
+    } else if a.game == Game::Flappy {
+        // Fixed slots let damage erase each sprite's previous bounds as well
+        // as draw its new ones. The sky and transparent HUD stay stationary;
+        // a simulation revision must not invalidate all 230,400 pixels.
+        sig.region(
+            Rect::new(i32::from(games::BIRD_X) - 22, a.flappy.y / 256 - 20, 48, 32),
+            0,
+        );
+        for p in a.flappy.pipes {
+            let x = i32::from(p.x) - 4;
+            let top = i32::from(p.gap - games::PIPE_GAP);
+            let bottom = i32::from(p.gap + games::PIPE_GAP);
+            let width = i32::from(games::PIPE_WIDTH) + 8;
+            sig.region(Rect::new(x, 0, width, top), 0);
+            sig.region(Rect::new(x, bottom, width, i32::from(H) - bottom), 0);
+        }
+        // Includes the text shadow and five-digit u16 scores. Moving pipes
+        // beneath it redraw the HUD through the same clipped scene renderer.
+        sig.region_with(Rect::new(80, 8, 302, 26), |h| {
+            h.u16(a.score()).u16(a.best[a.game as usize]);
+        });
     } else {
         sig.region_with(FIELD, |h| {
             h.u32(a.visual).u16(a.score()).u16(a.best[a.game as usize]);

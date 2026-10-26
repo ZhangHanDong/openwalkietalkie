@@ -29,15 +29,11 @@ fn main() -> std::io::Result<()> {
         .unwrap_or_else(|| "target/arcade-audio".into());
     let out = Path::new(&out);
     fs::create_dir_all(out)?;
-    for (track, name, samples) in [
-        (1, "flappy-bgm", 128000),
-        (2, "snake-bgm", 153600),
-        (3, "raiden-bgm", 102400),
-    ] {
+    for (track, name) in [(1, "flappy-bgm"), (2, "snake-bgm"), (3, "raiden-bgm")] {
         wav(
             &out.join(format!("{name}.wav")),
             sound::command(track, 2, sound::Effect::None, 0, 6),
-            samples,
+            sound::music_loop_samples(track) as usize,
         )?;
     }
     use sound::Effect::*;

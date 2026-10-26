@@ -142,6 +142,11 @@ impl DeviceView {
         self.strip().iter().any(|f| f.t == t)
     }
 
+    pub fn system_allowed(&self) -> bool {
+        self.faces.iter().any(|f| f.t == Template::System)
+            && self.strip_has(Template::System)
+    }
+
     pub fn ws_gate(&self) -> WsGate {
         match self.visible_face {
             Some(f) => {
@@ -198,7 +203,7 @@ impl DeviceView {
 
     /// The sync barrier (§6.5), in order: `agent` (full record, ascending
     /// slot) → `card` → `reply` → `focus` (PC-sourced only) → `macro` (faces
-    /// in the strip) → `usage` → `ws` (Omarchy visible, or face unknown and
+    /// in the strip) → `usage` → `system` (supported and enabled) → `ws` (Omarchy visible, or face unknown and
     /// in the strip) → (`boot` only) `faces` then every `set` → `synced`.
     pub fn barrier_plan(&self, boot: bool) -> Vec<BarrierItem> {
         let mut out = Vec::with_capacity(self.entries.len() + 1);
@@ -208,6 +213,7 @@ impl DeviceView {
                 Key::AgentState(_) | Key::AgentTitle(_) => false,
                 Key::Card(..) | Key::DocText(..) | Key::Reply(_) | Key::Focus | Key::Usage => true,
                 Key::Macro(face) => self.macro_allowed(*face),
+                Key::System => self.system_allowed(),
                 Key::Ws => self.ws_gate() != WsGate::No,
                 Key::Faces => boot,
                 Key::Set(key) => boot && self.set_allowed(*key),
@@ -452,6 +458,26 @@ mod tests {
         // A retained setting must not leak when a legacy deck is connected.
         v.set_faces(vec![]);
         assert!(!has_sound(&v));
+    }
+
+    #[test]
+    fn system_telemetry_requires_device_support_and_an_enabled_face() {
+        let mut v = view();
+        let status = HostLine::System(deck_proto::SystemStatus::EMPTY);
+        v.apply(&DeviceOp::Put(Key::System, status.clone()));
+        assert!(!v.barrier(true).contains(&status));
+        let system = vec![FaceEntry { f: 7, t: Template::System, n: "System".into() }];
+        v.apply(&DeviceOp::Put(Key::Faces, HostLine::Faces { list: system.clone() }));
+        assert!(!v.barrier(true).contains(&status), "saved layout cannot enable legacy firmware");
+        v.set_faces(system);
+        assert!(v.barrier(true).contains(&status));
+        assert!(v.barrier(false).contains(&status));
+        v.apply(&DeviceOp::Put(Key::Faces, HostLine::Faces { list: vec![FaceEntry {
+            f: 1, t: Template::Agents, n: "Agents".into(),
+        }] }));
+        assert!(!v.barrier(true).contains(&status), "removed face receives no updates");
+        v.set_faces(vec![]);
+        assert!(!v.system_allowed(), "another connected deck must advertise support again");
     }
 
     #[test]

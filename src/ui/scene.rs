@@ -44,6 +44,7 @@ pub fn draw_face(band: &mut Band, ui: &UiState, face: FaceEntry) {
         Template::Omarchy => faces::omarchy::draw(band, ui, face.id),
         Template::Macropad => faces::macropad::draw(band, ui, face.id),
         Template::Arcade => faces::arcade::draw(band, ui, face.id),
+        Template::System => faces::system::draw(band, ui, face.id),
         Template::Usage => faces::usage::draw(band, ui, face.id),
         Template::Settings => faces::settings::draw(band, ui, face.id),
     }
@@ -55,6 +56,7 @@ pub fn face_signature(ui: &UiState, face: FaceEntry, sig: &mut SigBuilder) {
         Template::Omarchy => faces::omarchy::signature(ui, face.id, sig),
         Template::Macropad => faces::macropad::signature(ui, face.id, sig),
         Template::Arcade => faces::arcade::signature(ui, face.id, sig),
+        Template::System => faces::system::signature(ui, face.id, sig),
         Template::Usage => faces::usage::signature(ui, face.id, sig),
         Template::Settings => faces::settings::signature(ui, face.id, sig),
     }

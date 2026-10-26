@@ -96,7 +96,7 @@ keypad: TCA8418 ready (5x4 matrix), PA11 interrupt + 50ms fallback
 
 The screen is a strip of faces, one on screen at a time. The default strip,
 left to right: **Agents** (the agent-session roster, home), **Omarchy** (a
-remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage**, **Arcade** and
+remote for the Omarchy/Hyprland desktop), **Macropad**, **Usage**, **System**, **Arcade** and
 **Settings**.
 
 - **Boot and home are the Agents face.** Until a deck host says hello the deck
@@ -197,6 +197,21 @@ reset; ENTER on the face probes both at once. `[usage] providers` in
 `config.toml` picks the providers, and a chained `deckd hook claude-statusline`
 is read too when the operator has one.
 
+### System Status
+
+The deck's **System** face shows the connected Mac's CPU load, memory used / total,
+GPU load and free / total startup-volume storage. `deckd` samples every two seconds;
+the meters refresh only when their displayed values change. CPU load is normalized
+across all cores, memory includes app, wired and compressed memory, and storage is
+the writable startup data volume. GPU load comes from the graphics driver's IOKit
+counters (the busiest accelerator when there is more than one).
+
+Unavailable counters show **Not available**. After ten seconds without a sample,
+the retained readings are gray and marked **STALE**; a lost host is **OFFLINE**.
+The Mac app has no additional page. System follows Usage in a fresh default strip;
+for a saved layout, double-tap Shift → **+** → **System** to add it. Matching
+firmware and `deckd` are required; telemetry is not sent to older decks.
+
 ### Arcade
 
 Three offline games with original pixel art and synthesized 8-bit music:
@@ -222,6 +237,12 @@ music loops and seven effects are synthesized locally, with no recorded audio
 assets. Pausing/leaving stops sound, host speech takes priority, and microphone
 capture silences game audio. A connected app remembers the sound preference;
 without the app it lasts for the current boot (the next boot starts Off).
+
+Each tune has a 48-bar arrangement with an intro, theme, answering melodies,
+a quieter middle, build and return: Flappy Bird runs 96 seconds, Snake 115.2
+seconds and Raiden 76.8 seconds before repeating. Bass patterns, percussion
+fills and pulse tones vary between sections. Pausing or retrying the same game
+continues its music position; choosing a different game starts that game's tune.
 
 Arcade is in the new default strip before Settings. For a previously saved
 layout, double-tap Shift → **+** → **Arcade** to add it. Use matching firmware and

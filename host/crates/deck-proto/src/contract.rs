@@ -121,6 +121,7 @@ fn fw_template(t: Template) -> msg::Template {
         Template::Usage => msg::Template::Usage,
         Template::Settings => msg::Template::Settings,
         Template::Arcade => msg::Template::Arcade,
+        Template::System => msg::Template::System,
     }
 }
 
@@ -222,6 +223,12 @@ fn assert_same(mine: &HostLine, fw: &HostMsg) {
             assert_eq!(*fw_hm, hm.as_deref().map(minute_of_day));
         }
         (HostLine::Synced, HostMsg::Synced) => {}
+        (HostLine::System(s), HostMsg::System(f)) => {
+            assert_eq!((s.cpu, s.gpu, s.memory_used_mib, s.memory_total_mib,
+                s.disk_free_mib, s.disk_total_mib, s.sample),
+                (f.cpu, f.gpu, f.memory_used_mib, f.memory_total_mib,
+                f.disk_free_mib, f.disk_total_mib, f.sample));
+        }
         (
             HostLine::Agent {
                 slot,
@@ -443,13 +450,14 @@ fn assert_same(mine: &HostLine, fw: &HostMsg) {
 // ---- corpora -----------------------------------------------------------------
 
 const ALL_TONES: [Tone; 5] = [Tone::Blue, Tone::Amber, Tone::Green, Tone::Red, Tone::Gray];
-const ALL_TEMPLATES: [Template; 6] = [
+const ALL_TEMPLATES: [Template; 7] = [
     Template::Agents,
     Template::Omarchy,
     Template::Macropad,
     Template::Usage,
     Template::Settings,
     Template::Arcade,
+    Template::System,
 ];
 const ALL_BINDINGS: [Binding; 8] = [
     Binding::Left,
@@ -482,6 +490,10 @@ fn corpus() -> Vec<HostLine> {
             hm: None,
         },
         HostLine::Synced,
+        HostLine::System(SystemStatus::EMPTY),
+        HostLine::System(SystemStatus { cpu: Some(100), gpu: Some(0),
+            memory_used_mib: 32_000, memory_total_mib: 65_536,
+            disk_free_mib: u32::MAX, disk_total_mib: u32::MAX, sample: u32::MAX }),
         HostLine::Agent {
             slot: 1,
             kind: Some(Kind::Codex),
@@ -1116,7 +1128,7 @@ fn the_deck_sim_mockup_session_is_byte_identical() {
         r#"{"m":"ws","active":2,"count":4,"sel":0,"windows":[{"c":"blue","t":"term · claude — header refactor"},{"c":"amber","t":"firefox — github · pulls"},{"c":"green","t":"term · codex — compiling..."}]}"#,
         r#"{"m":"macro","f":3,"src":"deck.toml","keys":[{"l":"build","b":"left"},{"l":"test","b":"right"},{"l":"deploy","b":"enter"},{"l":"git push","b":"shift+left"},{"l":"screenshot"},{"l":"lock"},{"l":"mute","b":"shift+right"},{"l":"term","b":"shift+enter"}]}"#,
         r#"{"m":"usage","period":"SEP 2026","items":[{"n":"Claude Pro","p":62,"r":"resets in 4 days"},{"n":"Codex · OpenAI","p":81,"r":"resets tomorrow"},{"n":"Gemini","p":12,"r":"resets in 11 days"}]}"#,
-        r#"{"m":"faces","list":[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]}"#,
+        r#"{"m":"faces","list":[{"f":1,"t":"agents","n":"Agents"},{"f":2,"t":"omarchy","n":"Omarchy"},{"f":3,"t":"macropad","n":"Macropad"},{"f":4,"t":"usage","n":"Usage"},{"f":7,"t":"system","n":"System"},{"f":6,"t":"arcade","n":"Arcade"},{"f":5,"t":"settings","n":"Settings"}]}"#,
         r#"{"m":"synced"}"#,
         r#"{"m":"agent","id":3,"title":"Compiling openmicro ⠋ 0"}"#,
         r#"{"m":"agent","id":3,"title":"Compiling openmicro ⠙ 1"}"#,
@@ -1127,7 +1139,7 @@ fn the_deck_sim_mockup_session_is_byte_identical() {
     ];
     /// What deck-sim's framing makes of exactly these lines (its full
     /// session's `dry run: N reports` counts the whole roster).
-    const MOCKUP_REPORTS: usize = 50;
+    const MOCKUP_REPORTS: usize = 51;
     let mut chunker = Chunker::new();
     let mut ui = ui();
     let mut update = crate::fw::ui::Update::new();
@@ -1570,4 +1582,21 @@ fn image_chunks_round_trip_and_reject_bad_base64() {
     let wire = fw_encode(event, &ui());
     assert!(wire.len() <= PAYLOAD_MAX);
     assert_eq!(parse_device_line(&stripped(&wire)).unwrap(), DeviceLine::Image { slot:8, rev:65535, index:255, offset:16512 });
+}
+
+#[test]
+fn invalid_system_readings_are_rejected_at_both_ends() {
+    for fields in [
+        r#""cpu":101,"mu":0,"mt":0,"df":0,"dt":0,"seq":1"#,
+        r#""gpu":-1,"mu":0,"mt":0,"df":0,"dt":0,"seq":1"#,
+        r#""mu":2,"mt":1,"df":0,"dt":0,"seq":1"#,
+        r#""mu":0,"mt":0,"df":2,"dt":1,"seq":1"#,
+        r#""mu":0,"mt":0,"df":0,"dt":0,"seq":4294967296"#,
+        r#""mu":0,"mt":0,"df":0,"dt":0"#,
+    ] {
+        let line = format!(r#"{{"m":"system",{fields}}}"#);
+        assert!(parse_host_line(line.as_bytes()).is_err(), "{line}");
+        assert!(fw_parse(line.as_bytes()).is_err(), "{line}");
+    }
+    assert!(encode(&HostLine::System(SystemStatus { cpu: Some(101), ..SystemStatus::EMPTY })).is_err());
 }
